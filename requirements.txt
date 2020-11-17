@@ -1,0 +1,14 @@
+yacs
+tensorboardx
+torch
+torch-scatter
+torch-geometric
+deepsnap
+ogb
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+seaborn
+notebook
