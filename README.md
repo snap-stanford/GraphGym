@@ -10,7 +10,7 @@ GraphGym is a platform for designing and evaluating Graph Neural Networks (GNN).
 **2. Reproducible experiment configuration** 
 - Each experiment is *fully described by a configuration file*
 
-**3. Scalable experimental management**
+**3. Scalable experiment management**
 - Easily launch *thousands of GNN experiments in parallel* 
 - *Auto-generate* experiment analyses and figures across random seeds and experiments.
 
