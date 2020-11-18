@@ -28,7 +28,7 @@ GraphGym is a perfect place for your to start learning *standardized GNN impleme
 
 <div align="center">
   <img align="center" src="docs/design_space.png" width="400px" />
-  <figcaption><b><br>Figure 1: Modularized GNN implementation</b></figcaption>
+  <figcaption><b><br>Figure 1: Modularized GNN implementation.</b></figcaption>
 </div>
 
 <br>
@@ -36,7 +36,7 @@ GraphGym is a perfect place for your to start learning *standardized GNN impleme
 **Scenario 2:** You want to apply GNN to your exciting applications.
 
 You probably know that there are hundreds of possible GNN models, and selecting the best model is notoriously hard.
-Even worse, we have shown in our [paper](https://papers.nips.cc/paper/2020/file/c5c3d4fe6b2cc463c7d7ecba17cc9de7-Paper.pdf) that the best GNN designs for different tasks differ drastically.
+Even worse, we have shown in our [paper](https://arxiv.org/abs/2011.08843) that the best GNN designs for different tasks differ drastically.
 GraphGym provides a *simple interface to try out thousands of GNNs in parallel* and understand the best designs for your specific task.
 GraphGym also recommends a "go-to" GNN design space, after investigating 10 million GNN model-task combinations.
 
@@ -247,7 +247,8 @@ Further details on the data representation is described in [DeepSNAP documentati
 
 ## Use case: Design Space for Graph Neural Networks (NeurIPS 2020 Spotlight)
 
-Reproducing experiments in *[Design Space for Graph Neural Networks](https://papers.nips.cc/paper/2020/file/c5c3d4fe6b2cc463c7d7ecba17cc9de7-Paper.pdf)*, Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**. 
+Reproducing experiments in *[Design Space for Graph Neural Networks](https://arxiv.org/abs/2011.08843)*, Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
+You may refer to the [paper](https://arxiv.org/abs/2011.08843) or [project webpage](http://snap.stanford.edu/gnn-design/) for more details. 
 
 ```bash
 # NOTE: We include the raw results with GraphGym
@@ -259,6 +260,11 @@ cd ../analysis
 jupyter notebook
 design_space.ipynb   # reproducing all the analyses in the paper
 ```
+
+<div align="center">
+  <img align="center" src="docs/overview.png" width="900px" />
+  <figcaption><b><br>Figure 4: Overview of the proposed GNN design space and task space.</b></figcaption>
+</div>
 
 
 ## Contributors
