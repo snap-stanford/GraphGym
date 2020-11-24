@@ -147,7 +147,7 @@ class GNN(nn.Module):
             EdgeEncoder = edge_encoder_dict[cfg.dataset.edge_encoder_name]
             self.edge_encoder = EdgeEncoder(cfg.dataset.encoder_dim)
             if cfg.dataset.edge_encoder_bn:
-                self.edge_encoder_bn = BatchNorm1dEdge(cfg.dataset.encoder_dim)
+                self.edge_encoder_bn = BatchNorm1dEdge(cfg.dataset.edge_dim)
 
         self.preprocess = Preprocess(dim_in)
         d_in = self.preprocess.dim_out
