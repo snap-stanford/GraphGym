@@ -82,15 +82,27 @@ class Linear(nn.Module):
         return batch
 
 
-class BatchNorm1d(nn.Module):
+class BatchNorm1dNode(nn.Module):
     '''General wrapper for layers'''
 
     def __init__(self, dim_in):
-        super(BatchNorm1d, self).__init__()
+        super(BatchNorm1dNode, self).__init__()
         self.bn = nn.BatchNorm1d(dim_in, eps=cfg.bn.eps, momentum=cfg.bn.mom)
 
     def forward(self, batch):
         batch.node_feature = self.bn(batch.node_feature)
+        return batch
+
+
+class BatchNorm1dEdge(nn.Module):
+    '''General wrapper for layers'''
+
+    def __init__(self, dim_in):
+        super(BatchNorm1dEdge, self).__init__()
+        self.bn = nn.BatchNorm1d(dim_in, eps=cfg.bn.eps, momentum=cfg.bn.mom)
+
+    def forward(self, batch):
+        batch.node_feature = self.bn(batch.edge_feature)
         return batch
 
 

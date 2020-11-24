@@ -4,7 +4,8 @@ import torch.nn.functional as F
 
 from graphgym.config import cfg
 from graphgym.models.head import head_dict
-from graphgym.models.layer import GeneralLayer, GeneralMultiLayer, BatchNorm1d
+from graphgym.models.layer import (GeneralLayer, GeneralMultiLayer,
+                                   BatchNorm1dNode, BatchNorm1dEdge)
 from graphgym.models.act import act_dict
 from graphgym.models.feature_augment import Preprocess
 from graphgym.init import init_weights
@@ -135,16 +136,18 @@ class GNN(nn.Module):
         # Currently only for OGB datasets
         if cfg.dataset.node_encoder:
             # Encode integer node features via nn.Embeddings
-            FeatureEncoder = node_encoder_dict[cfg.dataset.node_encoder_name]
-            self.input_encoder = FeatureEncoder(cfg.dataset.encoder_dim)
+            NodeEncoder = node_encoder_dict[cfg.dataset.node_encoder_name]
+            self.node_encoder = NodeEncoder(cfg.dataset.encoder_dim)
             if cfg.dataset.node_encoder_bn:
-                self.input_encoder_bn = BatchNorm1d(cfg.dataset.encoder_dim)
+                self.node_encoder_bn = BatchNorm1dNode(cfg.dataset.encoder_dim)
             # Update dim_in to reflect the new dimension fo the node features
             dim_in = cfg.dataset.encoder_dim
         if cfg.dataset.edge_encoder:
             # Encode integer edge features via nn.Embeddings
             EdgeEncoder = edge_encoder_dict[cfg.dataset.edge_encoder_name]
             self.edge_encoder = EdgeEncoder(cfg.dataset.encoder_dim)
+            if cfg.dataset.edge_encoder_bn:
+                self.edge_encoder_bn = BatchNorm1dEdge(cfg.dataset.encoder_dim)
 
         self.preprocess = Preprocess(dim_in)
         d_in = self.preprocess.dim_out

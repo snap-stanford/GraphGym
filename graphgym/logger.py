@@ -37,7 +37,7 @@ class Logger(object):
 
         if task_type == None:
             if cfg.dataset.task_type == 'classification':
-                if self._num_labels == 2:
+                if self._num_labels <= 2:
                     self.task_type = 'classification_binary'
                 else:
                     self.task_type = 'classification_multi'

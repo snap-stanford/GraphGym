@@ -107,6 +107,9 @@ def set_cfg(cfg):
     # Name of edge encoder
     cfg.dataset.edge_encoder_name = 'Bond'
 
+    # If add batchnorm after edge encoder
+    cfg.dataset.edge_encoder_bn = True
+
     # Dimension of the encoded features.
     # For now the node and edge encoding dimensions
     # are the same.
