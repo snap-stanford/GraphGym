@@ -2,6 +2,7 @@ from graphgym.config import cfg
 
 import torch.optim as optim
 
+from graphgym.contrib.optimizer import *
 import graphgym.register as register
 
 

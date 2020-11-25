@@ -9,6 +9,7 @@ from deepsnap.graph import Graph
 from graphgym.config import cfg
 from graphgym.contrib.transform.identity import compute_identity
 
+from graphgym.contrib.feature_augment import *
 import graphgym.register as register
 
 

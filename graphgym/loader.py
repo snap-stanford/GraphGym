@@ -14,6 +14,7 @@ from graphgym.config import cfg
 import graphgym.models.feature_augment as preprocess
 from graphgym.models.transform import (ego_nets, remove_node_feature,
                                        edge_nets, path_len)
+from graphgym.contrib.loader import *
 import graphgym.register as register
 
 from ogb.graphproppred import PygGraphPropPredDataset

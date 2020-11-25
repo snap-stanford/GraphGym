@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from graphgym.contrib.loss import *
 import graphgym.register as register
 from graphgym.config import cfg
 

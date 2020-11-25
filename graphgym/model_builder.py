@@ -3,6 +3,7 @@ import torch
 from graphgym.config import cfg
 from graphgym.models.gnn import GNN
 
+from graphgym.contrib.network import *
 import graphgym.register as register
 
 network_dict = {

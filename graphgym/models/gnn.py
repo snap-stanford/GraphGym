@@ -11,6 +11,7 @@ from graphgym.models.feature_augment import Preprocess
 from graphgym.init import init_weights
 from graphgym.models.feature_encoder import node_encoder_dict, edge_encoder_dict
 
+from graphgym.contrib.stage import *
 import graphgym.register as register
 
 

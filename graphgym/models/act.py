@@ -1,5 +1,6 @@
 import torch.nn as nn
 from graphgym.config import cfg
+from graphgym.contrib.act import *
 import graphgym.register as register
 
 act_dict = {
