@@ -102,7 +102,7 @@ class BatchNorm1dEdge(nn.Module):
         self.bn = nn.BatchNorm1d(dim_in, eps=cfg.bn.eps, momentum=cfg.bn.mom)
 
     def forward(self, batch):
-        batch.node_feature = self.bn(batch.edge_feature)
+        batch.edge_feature = self.bn(batch.edge_feature)
         return batch
 
 
