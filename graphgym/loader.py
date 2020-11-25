@@ -1,4 +1,3 @@
-import os
 import networkx as nx
 import time
 import logging
@@ -15,13 +14,10 @@ from graphgym.config import cfg
 import graphgym.models.feature_augment as preprocess
 from graphgym.models.transform import (ego_nets, remove_node_feature,
                                        edge_nets, path_len)
-from graphgym.contrib.loader import *
-import graphgym.models.register as register
+import graphgym.register as register
 
 from ogb.graphproppred import PygGraphPropPredDataset
 from deepsnap.batch import Batch
-
-import pdb
 
 
 def load_pyg(name, dataset_dir):

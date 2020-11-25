@@ -1,9 +1,7 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_scatter import scatter
 from graphgym.config import cfg
-from graphgym.models.register import register_stage
+from graphgym.register import register_stage
 
 import graphgym.models.gnn as gnn
 

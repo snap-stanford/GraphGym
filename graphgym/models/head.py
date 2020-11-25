@@ -5,16 +5,12 @@ They are constructed in the init function of the gnn.GNN.
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from graphgym.config import cfg
-from graphgym.models.layer import layer_dict, MLP, GeneralLayer
+from graphgym.models.layer import MLP
 from graphgym.models.pooling import pooling_dict
 
-from graphgym.contrib.head import *
-import graphgym.models.register as register
-
-import pdb
+import graphgym.register as register
 
 
 ########### Head ############
@@ -61,8 +57,8 @@ class GNNEdgeHead(nn.Module):
                                      num_layers=cfg.gnn.layers_post_mp,
                                      bias=True)
             # requires parameter
-            self.decode_module = lambda v1, v2: torch.sigmoid(
-                self.layer_post_mp(torch.cat((v1, v2), dim=-1)))
+            self.decode_module = lambda v1, v2: \
+                self.layer_post_mp(torch.cat((v1, v2), dim=-1))
         else:
             if dim_out > 1:
                 raise ValueError(

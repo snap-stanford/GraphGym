@@ -1,8 +1,6 @@
 import torch
-import torch.nn as nn
-from graphgym.config import cfg
-from graphgym.models.register import (register_node_encoder,
-                                      register_edge_encoder)
+from graphgym.register import (register_node_encoder,
+                               register_edge_encoder)
 
 from ogb.utils.features import get_bond_feature_dims
 

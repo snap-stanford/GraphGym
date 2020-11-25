@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from graphgym.config import cfg
-from graphgym.models.register import register_act
+from graphgym.register import register_act
 
 
 class SWISH(nn.Module):

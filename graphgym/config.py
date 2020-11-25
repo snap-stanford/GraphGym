@@ -4,8 +4,7 @@ from yacs.config import CfgNode as CN
 
 from graphgym.utils.io import makedirs_rm_exist
 
-from graphgym.contrib.config import *
-import graphgym.models.register as register
+import graphgym.register as register
 
 # Global config object
 cfg = CN()

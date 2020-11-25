@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from graphgym.contrib.loss import *
-import graphgym.models.register as register
+import graphgym.register as register
 from graphgym.config import cfg
 
 def compute_loss(pred, true):

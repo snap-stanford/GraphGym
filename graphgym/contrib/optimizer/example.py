@@ -1,6 +1,6 @@
 import torch.optim as optim
 
-from graphgym.models.register import register_optimizer, register_scheduler
+from graphgym.register import register_optimizer, register_scheduler
 
 from graphgym.config import cfg
 

@@ -8,7 +8,7 @@ from torch_geometric.utils import add_remaining_self_loops, softmax
 
 from torch_geometric.nn.inits import glorot, zeros
 from graphgym.config import cfg
-from graphgym.models.register import register_layer
+from graphgym.register import register_layer
 
 
 class GeneralAddAttConvLayer(MessagePassing):

@@ -1,6 +1,6 @@
 import networkx as nx
 
-from graphgym.models.register import register_feature_augment
+from graphgym.register import register_feature_augment
 
 
 def example_node_augmentation_func(graph, **kwargs):

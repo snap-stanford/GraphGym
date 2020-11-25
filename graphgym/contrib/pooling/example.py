@@ -1,8 +1,5 @@
-import torch
-import torch.nn as nn
 from torch_scatter import scatter
-from graphgym.config import cfg
-from graphgym.models.register import register_pooling
+from graphgym.register import register_pooling
 
 
 def global_example_pool(x, batch, size=None):

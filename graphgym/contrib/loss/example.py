@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from graphgym.models.register import register_loss
+from graphgym.register import register_loss
 
 from graphgym.config import cfg
 

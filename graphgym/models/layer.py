@@ -8,8 +8,7 @@ from graphgym.models.act import act_dict
 from graphgym.contrib.layer.generalconv import (GeneralConvLayer,
                                                 GeneralEdgeConvLayer)
 
-from graphgym.contrib.layer import *
-import graphgym.models.register as register
+import graphgym.register as register
 
 
 ## General classes

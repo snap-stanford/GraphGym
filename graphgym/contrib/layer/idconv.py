@@ -10,7 +10,7 @@ from torch_geometric.utils import remove_self_loops, add_self_loops, softmax
 from torch_geometric.nn.inits import glorot, zeros, reset
 
 from graphgym.config import cfg
-from graphgym.models.register import register_layer
+from graphgym.register import register_layer
 
 
 class GeneralIDConvLayer(MessagePassing):

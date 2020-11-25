@@ -5,8 +5,8 @@ from torch.nn import Parameter
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.utils import add_remaining_self_loops
 
-from torch_geometric.nn.inits import glorot, zeros, reset
-from graphgym.models.register import register_layer
+from torch_geometric.nn.inits import glorot, zeros
+from graphgym.register import register_layer
 
 
 class SAGEConvLayer(MessagePassing):

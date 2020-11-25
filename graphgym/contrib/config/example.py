@@ -1,6 +1,6 @@
 from yacs.config import CfgNode as CN
 
-from graphgym.models.register import register_config
+from graphgym.register import register_config
 
 
 def set_cfg_example(cfg):

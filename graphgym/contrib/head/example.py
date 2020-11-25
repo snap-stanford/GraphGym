@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from graphgym.models.register import register_head
+from graphgym.register import register_head
 
 
 class ExampleNodeHead(nn.Module):

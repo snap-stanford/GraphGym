@@ -2,8 +2,7 @@ import torch
 from torch_scatter import scatter
 from graphgym.config import cfg
 
-from graphgym.contrib.pooling import *
-import graphgym.models.register as register
+import graphgym.register as register
 
 
 # Pooling options (pool nodes into graph representations)

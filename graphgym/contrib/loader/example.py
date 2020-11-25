@@ -1,7 +1,7 @@
 from deepsnap.dataset import GraphDataset
 from torch_geometric.datasets import *
 
-from graphgym.models.register import register_loader
+from graphgym.register import register_loader
 
 
 def load_dataset_example(format, name, dataset_dir):

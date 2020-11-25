@@ -5,7 +5,7 @@ import torch_geometric.nn as pyg_nn
 
 from graphgym.config import cfg
 from graphgym.models.head import head_dict
-from graphgym.models.register import register_network
+from graphgym.register import register_network
 
 
 class ExampleGNN(torch.nn.Module):

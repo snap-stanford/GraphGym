@@ -8,9 +8,9 @@ from torch_geometric.utils import add_remaining_self_loops
 from torch_geometric.nn.inits import glorot, zeros
 from graphgym.config import cfg
 
-from graphgym.models.register import register_layer
+from graphgym.register import register_layer
 
-from ogb.utils.features import get_atom_feature_dims, get_bond_feature_dims
+from ogb.utils.features import get_bond_feature_dims
 
 full_bond_feature_dims = get_bond_feature_dims()
 
