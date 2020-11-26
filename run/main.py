@@ -16,6 +16,8 @@ from graphgym.train import train
 from graphgym.utils.agg_runs import agg_runs
 from graphgym.utils.comp_budget import params_count
 from graphgym.utils.device import auto_select_device
+from graphgym.contrib.train import *
+from graphgym.register import train_dict
 
 if __name__ == '__main__':
     # Load cmd line args
@@ -50,7 +52,11 @@ if __name__ == '__main__':
         cfg.params = params_count(model)
         logging.info('Num parameters: {}'.format(cfg.params))
         # Start training
-        train(meters, loaders, model, optimizer, scheduler)
+        if cfg.train.mode == 'standard':
+            train(meters, loaders, model, optimizer, scheduler)
+        else:
+            train_dict[cfg.train.mode](
+                meters, loaders, model, optimizer, scheduler)
     # Aggregate results from different seeds
     agg_runs(get_parent_dir(out_dir_parent, args.cfg_file), cfg.metric_best)
     # When being launched in batch mode, mark a yaml as done

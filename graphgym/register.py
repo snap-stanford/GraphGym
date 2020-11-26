@@ -64,3 +64,7 @@ def register_loss(key, module):
 feature_augment_dict = {}
 def register_feature_augment(key, module):
     register(key, module, feature_augment_dict)
+
+train_dict = {}
+def register_train(key, module):
+    register(key, module, train_dict)

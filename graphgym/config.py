@@ -170,6 +170,9 @@ def set_cfg(cfg):
     # ------------------------------------------------------------------------ #
     cfg.train = CN()
 
+    # Training (and validation) pipeline mode
+    cfg.train.mode = 'standard'
+
     # Total graph mini-batch size
     cfg.train.batch_size = 16
 
