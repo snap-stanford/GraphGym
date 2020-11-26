@@ -24,7 +24,7 @@ from ogb.graphproppred import PygGraphPropPredDataset
 from deepsnap.batch import Batch
 
 
-def load_pyg(name: str, dataset_dir: str) -> List["Graph Object"]:
+def load_pyg(name: str, dataset_dir: str) -> List["Graph"]:
     r"""Loads pytorch-geometric (pyg) format dataset
 
     Args:
@@ -81,7 +81,7 @@ def load_pyg(name: str, dataset_dir: str) -> List["Graph Object"]:
     return graphs
 
 
-def load_nx(name: str, dataset_dir: str) -> List["Graph Object"]:
+def load_nx(name: str, dataset_dir: str) -> List["Graph"]:
     r"""Loads networkx format dataset.
 
     Args:
@@ -100,7 +100,7 @@ def load_nx(name: str, dataset_dir: str) -> List["Graph Object"]:
     return graphs
 
 
-def load_dataset() -> List["Graph Object"]:
+def load_dataset() -> List["Graph"]:
     r"""Loads raw datasets.
 
     Returns:
