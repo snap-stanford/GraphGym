@@ -3,6 +3,9 @@ import time
 import logging
 import pickle
 
+from typing import List
+
+import deepsnap
 from deepsnap.dataset import GraphDataset
 import torch
 from torch.utils.data import DataLoader
@@ -21,13 +24,16 @@ from ogb.graphproppred import PygGraphPropPredDataset
 from deepsnap.batch import Batch
 
 
-def load_pyg(name, dataset_dir):
-    '''
-    load pyg format dataset
-    :param name: dataset name
-    :param dataset_dir: data directory
-    :return: a list of networkx/deepsnap graphs
-    '''
+def load_pyg(name: str, dataset_dir: str) -> List["Graph Object"]:
+    r"""Loads pytorch-geometric (pyg) format dataset
+
+    Args:
+        name: the dataset name.
+        dataset_dir: the data directory.
+
+    Returns:
+        A list of networkx/deepsnap graphs
+    """
     dataset_dir = '{}/{}'.format(dataset_dir, name)
     if name in ['Cora', 'CiteSeer', 'PubMed']:
         dataset_raw = Planetoid(dataset_dir, name)
@@ -75,13 +81,15 @@ def load_pyg(name, dataset_dir):
     return graphs
 
 
-def load_nx(name, dataset_dir):
-    '''
-    load networkx format dataset
-    :param name: dataset name
-    :param dataset_dir: data directory
-    :return: a list of networkx/deepsnap graphs
-    '''
+def load_nx(name: str, dataset_dir: str) -> List["Graph Object"]:
+    r"""Loads networkx format dataset.
+
+    Args:
+        name: the dataset name.
+        dataset_dir: the data directory.
+    Returns:
+        A list of networkx/deepsnap graphs.
+    """
     try:
         with open('{}/{}.pkl'.format(dataset_dir, name), 'rb') as file:
             graphs = pickle.load(file)
@@ -92,11 +100,12 @@ def load_nx(name, dataset_dir):
     return graphs
 
 
-def load_dataset():
-    '''
-    load raw datasets.
-    :return: a list of networkx/deepsnap graphs, plus additional info if needed
-    '''
+def load_dataset() -> List["Graph Object"]:
+    r"""Loads raw datasets.
+
+    Returns:
+        A list of networkx/deepsnap graphs, plus additional info if needed.
+    """
     format = cfg.dataset.format
     name = cfg.dataset.name
     # dataset_dir = '{}/{}'.format(cfg.dataset.dir, name)
@@ -126,11 +135,12 @@ def load_dataset():
     return graphs
 
 
-def filter_graphs():
-    '''
-    Filter graphs by the min number of nodes
-    :return: min number of nodes
-    '''
+def filter_graphs() -> int:
+    r""" Filters graphs by the min number of nodes.
+
+    Returns:
+        min number of nodes.
+    """
     if cfg.dataset.task == 'graph':
         min_node = 0
     else:
@@ -138,12 +148,15 @@ def filter_graphs():
     return min_node
 
 
-def transform_before_split(dataset):
-    '''
-    Dataset transformation before train/val/test split
-    :param dataset: A DeepSNAP dataset object
-    :return: A transformed DeepSNAP dataset object
-    '''
+def transform_before_split(dataset: deepsnap.dataset.GraphDataset) -> deepsnap.dataset.GraphDataset:
+    r"""Transforms the whole dataset before train/val/test split.
+
+    Args:
+        dataset: A DeepSNAP dataset object
+
+    Returns:
+        A transformed DeepSNAP dataset object
+    """
     if cfg.dataset.remove_feature:
         dataset.apply_transform(remove_node_feature,
                                 update_graph=True, update_tensor=False)
@@ -166,12 +179,15 @@ def transform_before_split(dataset):
     return dataset
 
 
-def transform_after_split(datasets):
-    '''
-    Dataset transformation after train/val/test split
-    :param dataset: A list of DeepSNAP dataset objects
-    :return: A list of transformed DeepSNAP dataset objects
-    '''
+def transform_after_split(datasets: List[deepsnap.dataset.GraphDataset]) -> List[deepsnap.dataset.GraphDataset]:
+    r"""Transform datasets after train/val/test split
+
+    Args:
+        datasets: A list of DeepSNAP dataset objects
+
+    Returns:
+        A list of transformed DeepSNAP dataset objects
+    """
     if cfg.dataset.transform == 'ego':
         for split_dataset in datasets:
             split_dataset.apply_transform(ego_nets,
@@ -189,19 +205,24 @@ def transform_after_split(datasets):
     return datasets
 
 
-def create_dataset():
-    ## Load dataset
+def create_dataset() -> List[deepsnap.dataset.GraphDataset]:
+    r"""Loads the dataset from configuration file and splits datasets into train, validation, (and test) sets.
+
+    Returns:
+        A list of 2 (3) deepsnap.dataset.GraphDataset objects corresponding to train, validation (and test) sets.
+    """
+    # Load dataset
     time1 = time.time()
     if cfg.dataset.format == 'OGB':
         graphs, splits = load_dataset()
     else:
         graphs = load_dataset()
 
-    ## Filter graphs
+    # Filter graphs
     time2 = time.time()
     min_node = filter_graphs()
 
-    ## Create whole dataset
+    # Create whole dataset
     dataset = GraphDataset(
         graphs,
         task=cfg.dataset.task,
@@ -210,10 +231,10 @@ def create_dataset():
         edge_negative_sampling_ratio=cfg.dataset.edge_negative_sampling_ratio,
         minimum_node_per_graph=min_node)
 
-    ## Transform the whole dataset
+    # Transform the whole dataset
     dataset = transform_before_split(dataset)
 
-    ## Split dataset
+    # Split dataset
     time3 = time.time()
     # Use custom data splits
     if cfg.dataset.format == 'OGB':
@@ -227,7 +248,7 @@ def create_dataset():
             transductive=cfg.dataset.transductive,
             split_ratio=cfg.dataset.split)
 
-    ## Transform each split dataset
+    # Transform each split dataset
     time4 = time.time()
     datasets = transform_after_split(datasets)
 
@@ -239,7 +260,18 @@ def create_dataset():
     return datasets
 
 
-def create_loader(datasets):
+def create_loader(
+    datasets: List[deepsnap.dataset.GraphDataset]
+) -> List[torch.utils.data.DataLoader]:
+    r"""Converts the list of graphs into pytorch data loaders.
+
+    Args:
+        datasets: A list of 3 lists of deepsnap.graph.Graph objects corresponding to train, validation, and test sets.
+
+    Returns:
+        A list of 2 (3) lists of torch.utils.data.DataLoader objects corresponding to
+            train, validation, (and test) loaders.
+    """
     loader_train = DataLoader(datasets[0], collate_fn=Batch.collate(),
                               batch_size=cfg.train.batch_size, shuffle=True,
                               num_workers=cfg.num_workers, pin_memory=False)
