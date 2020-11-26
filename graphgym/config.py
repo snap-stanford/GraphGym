@@ -1,5 +1,7 @@
 import logging
 import os
+
+import yacs
 from yacs.config import CfgNode as CN
 
 from graphgym.utils.io import makedirs_rm_exist
@@ -11,21 +13,24 @@ import graphgym.register as register
 cfg = CN()
 
 
-def set_cfg(cfg):
-    r'''
-    This function sets the default config value.
-    1) Note that for an experiment, only part of the arguments will be used
+def set_cfg(cfg: yacs.config.CfgNode) -> None:
+    r"""This function sets the default config value.
+
+    (1) Note that for an experiment, only part of the arguments will be used
     The remaining unused arguments won't affect anything.
     So feel free to register any argument in graphgym.contrib.config
-    2) We support *at most* two levels of configs, e.g., cfg.dataset.name
+    (2) We support *at most* two levels of configs, e.g., cfg.dataset.name
 
-    :return: configuration use by the experiment.
-    '''
+    Args:
+        cfg: the base configuration node.
+
+    Returns:
+        None, this method updates the passed-in configuration cfg directly.
+    """
 
     # ------------------------------------------------------------------------ #
     # Basic options
     # ------------------------------------------------------------------------ #
-
     # Set print destination: stdout / file
     cfg.print = 'both'
 
@@ -363,8 +368,12 @@ def set_cfg(cfg):
         func(cfg)
 
 
-def assert_cfg(cfg):
-    """Checks config values invariants."""
+def assert_cfg(cfg: yacs.config.CfgNode) -> None:
+    r"""Checks config values invariants.
+
+    Args:
+        cfg: a configuration node to be checked.
+    """
     if cfg.dataset.task not in ['node', 'edge', 'graph', 'link_pred']:
         raise ValueError('Task {} not supported, must be one of'
                          'node, edge, graph, link_pred'.format(
@@ -386,14 +395,18 @@ def assert_cfg(cfg):
         logging.warning('Layers after message passing should be >=1')
 
 
-def dump_cfg(cfg):
-    """Dumps the config to the output directory."""
+def dump_cfg(cfg: yacs.config.CfgNode) -> None:
+    r"""Dumps the config to the output directory.
+
+    Args:
+        cfg: the configuration node to be dumped.
+    """
     cfg_file = os.path.join(cfg.out_dir, cfg.cfg_dest)
     with open(cfg_file, 'w') as f:
         cfg.dump(stream=f)
 
 
-def update_out_dir(out_dir, fname):
+def update_out_dir(out_dir: str, fname: str) -> None:
     fname = fname.split('/')[-1][:-5]
     cfg.out_dir = os.path.join(out_dir, fname, str(cfg.seed))
     # Make output directory
@@ -403,12 +416,12 @@ def update_out_dir(out_dir, fname):
         makedirs_rm_exist(cfg.out_dir)
 
 
-def get_parent_dir(out_dir, fname):
+def get_parent_dir(out_dir: str, fname: str) -> str:
     fname = fname.split('/')[-1][:-5]
     return os.path.join(out_dir, fname)
 
 
-def rm_parent_dir(out_dir, fname):
+def rm_parent_dir(out_dir: str, fname: str) -> str:
     fname = fname.split('/')[-1][:-5]
     makedirs_rm_exist(os.path.join(out_dir, fname))
 
