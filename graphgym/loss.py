@@ -13,8 +13,9 @@ def compute_loss(pred, true):
     :param true: label
     :return: loss, normalized prediction score
     '''
-    bce_loss = nn.BCEWithLogitsLoss(size_average=cfg.model.size_average)
-    mse_loss = nn.MSELoss(size_average=cfg.model.size_average)
+    r = 'mean' if cfg.model.size_average else 'sum'
+    bce_loss = nn.BCEWithLogitsLoss(reduction=r)
+    mse_loss = nn.MSELoss(reduction=r)
 
     # default manipulation for pred and true
     # can be skipped if special loss computation is needed
