@@ -228,8 +228,8 @@ def set_cfg(cfg):
     # Loss function: cross_entropy, mse
     cfg.model.loss_fun = 'cross_entropy'
 
-    # size average for loss function
-    cfg.model.size_average = True
+    # size average for loss function. 'mean' or 'sum'
+    cfg.model.size_average = 'mean'
 
     # Threshold for binary classification
     cfg.model.thresh = 0.5
