@@ -1,0 +1,40 @@
+out_dir: results
+dataset:
+  format: nx
+  name: ba500
+  task: graph
+  task_type: classification
+  transductive: False
+  split: [0.8, 0.2]
+  augment_feature: []
+  augment_feature_dims: [10]
+  augment_feature_repr: position
+  augment_label: graph_path_len
+  augment_label_dims: 10
+  transform: ego
+train:
+  batch_size: 128
+  eval_period: 20
+  ckpt_period: 100
+model:
+  type: gnn
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: add
+gnn:
+  layers_pre_mp: 1
+  layers_mp: 3
+  layers_post_mp: 3
+  dim_inner: 64
+  layer_type: gatidconv
+  stage_type: stack
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: add
+  normalize_adj: False
+  l2norm: True
+optim:
+  optimizer: adam
+  base_lr: 0.01
+  max_epoch: 100

@@ -1,0 +1,33 @@
+# name in config.py; short name; range to search
+
+
+# task: node, dataset: syn; model: gnn
+dataset.format format ['OGB']
+dataset.name dataset ['ogbg-molhiv']
+dataset.transform transform ['none']
+dataset.task task ['graph']
+dataset.transductive trans [False]
+dataset.augment_feature feature [[],['node_identity']]
+dataset.augment_label label ['']
+dataset.feature_encoder_name encoder ['Atom']
+gnn.layers_pre_mp l_pre [1]
+gnn.layers_mp l_mp [3]
+gnn.layers_post_mp l_post [3]
+gnn.layer_type layer ['gcnconv','sageconv','gatconv','ginconv']
+optim.max_epoch epoch [100]
+
+
+# task: node, dataset: syn; model: idgnn
+dataset.format format ['OGB']
+dataset.name dataset ['ogbg-molhiv']
+dataset.transform transform ['ego']
+dataset.task task ['graph']
+dataset.transductive trans [False]
+dataset.augment_feature feature [[]]
+dataset.augment_label label ['']
+dataset.feature_encoder_name encoder ['Atom']
+gnn.layers_pre_mp l_pre [1]
+gnn.layers_mp l_mp [3]
+gnn.layers_post_mp l_post [3]
+gnn.layer_type layer ['gcnidconv','sageidconv','gatidconv','ginidconv']
+optim.max_epoch epoch [100]

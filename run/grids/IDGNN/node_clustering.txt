@@ -1,0 +1,29 @@
+# name in config.py; short name; range to search
+
+# task: node, dataset: real; model: gnn
+dataset.format format ['PyG']
+dataset.name dataset ['TU_ENZYMES','TU_PROTEINS']
+dataset.transform transform ['none']
+dataset.task task ['node']
+dataset.transductive trans [False]
+dataset.augment_feature feature [[],['node_identity']]
+dataset.augment_label label ['node_clustering_coefficient']
+gnn.layers_pre_mp l_pre [1]
+gnn.layers_mp l_mp [3]
+gnn.layers_post_mp l_post [1]
+gnn.layer_type layer ['gcnconv','sageconv','gatconv','ginconv']
+optim.max_epoch epoch [1000]
+
+# task: node, dataset: real; model: idgnn
+dataset.format format ['PyG']
+dataset.name dataset ['TU_ENZYMES','TU_PROTEINS']
+dataset.transform transform ['ego']
+dataset.task task ['node']
+dataset.transductive trans [False]
+dataset.augment_feature feature [[]]
+dataset.augment_label label ['node_clustering_coefficient']
+gnn.layers_pre_mp l_pre [1]
+gnn.layers_mp l_mp [3]
+gnn.layers_post_mp l_post [1]
+gnn.layer_type layer ['gcnidconv','sageidconv','gatidconv','ginidconv']
+optim.max_epoch epoch [1000]

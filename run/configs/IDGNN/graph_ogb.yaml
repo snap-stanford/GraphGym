@@ -1,0 +1,46 @@
+out_dir: results
+dataset:
+  format: OGB
+  name: ogbg-molhiv
+  task: graph
+  task_type: classification
+  transductive: False
+  split: [0.0, 0.0, 0.0]
+  augment_feature: []
+  augment_feature_dims: [10]
+  augment_feature_repr: original
+  augment_label: ''
+  augment_label_dims: 10
+  transform: ego
+  node_encoder: True
+  node_encoder_name: 'SingleAtom'
+  node_encoder_bn: True
+  edge_encoder: False
+  encoder_dim: 128
+train:
+  batch_size: 128
+  eval_period: 1
+  ckpt_period: 100
+model:
+  type: gnn
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: add
+gnn:
+  layers_pre_mp: 1
+  layers_mp: 3
+  layers_post_mp: 3
+  dim_inner: 128
+  layer_type: idconv
+  stage_type: stack
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: add
+  normalize_adj: False
+  l2norm: True
+optim:
+  optimizer: adam
+  scheduler: none
+  base_lr: 0.001
+  max_epoch: 100

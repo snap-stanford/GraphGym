@@ -267,6 +267,30 @@ design_space.ipynb   # reproducing all the analyses in the paper
 </div>
 
 
+
+
+## Use case: Identity-aware Graph Neural Networks (AAAI 2021)
+
+Reproducing experiments in *[Identity-aware Graph Neural Networks](https://arxiv.org/abs/2101.10320)*, Jiaxuan You, Jonathan Gomes-Selman, Rex Ying, Jure Leskovec, **AAAI 2021**.
+You may refer to the [paper](https://arxiv.org/abs/2101.10320) or [project webpage](http://snap.stanford.edu/idgnn/) for more details. 
+
+```bash
+# NOTE: We include the raw results with GraphGym
+# If you run the following code, the results will be overridden.
+cd run
+bash run_design_round1.sh   # first round experiments, on a design space of 315K GNN designs
+bash run_design_round2.sh   # second round experiments, on a design space of 96 GNN designs
+cd ../analysis
+jupyter notebook
+design_space.ipynb   # reproducing all the analyses in the paper
+```
+
+<div align="center">
+  <img align="center" src="docs/IDGNN.png" width="900px" />
+  <figcaption><b><br>Figure 5: Overview of Identity-aware Graph Neural Networks (ID-GNN).</b></figcaption>
+</div>
+
+
 ## Contributors
 [Jiaxuan You](https://cs.stanford.edu/~jiaxuan/) initiates the project and majorly contributes to the entire GraphGym platform. 
 [Rex Ying](https://cs.stanford.edu/people/rexy/) contributes to the feature augmentation modules.
