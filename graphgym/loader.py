@@ -208,6 +208,7 @@ def create_dataset():
         edge_train_mode=cfg.dataset.edge_train_mode,
         edge_message_ratio=cfg.dataset.edge_message_ratio,
         edge_negative_sampling_ratio=cfg.dataset.edge_negative_sampling_ratio,
+        resample_disjoint=cfg.dataset.resample_disjoint,
         minimum_node_per_graph=min_node)
 
     ## Transform the whole dataset
@@ -226,6 +227,9 @@ def create_dataset():
         datasets = dataset.split(
             transductive=cfg.dataset.transductive,
             split_ratio=cfg.dataset.split)
+    # We only change the training negative sampling ratio
+    for i in range(1, len(datasets)):
+        dataset.edge_negative_sampling_ratio = 1
 
     ## Transform each split dataset
     time4 = time.time()

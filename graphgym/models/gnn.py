@@ -154,7 +154,7 @@ class GNN(nn.Module):
         if cfg.gnn.layers_pre_mp > 0:
             self.pre_mp = GNNPreMP(d_in, cfg.gnn.dim_inner)
             d_in = cfg.gnn.dim_inner
-        if cfg.gnn.layers_mp > 1:
+        if cfg.gnn.layers_mp > 0:
             self.mp = GNNStage(dim_in=d_in,
                                dim_out=cfg.gnn.dim_inner,
                                num_layers=cfg.gnn.layers_mp)

@@ -130,6 +130,9 @@ def set_cfg(cfg):
     # The ratio of negative samples to positive samples
     cfg.dataset.edge_negative_sampling_ratio = 1.0
 
+    # Whether resample disjoint when dataset.edge_train_mode is 'disjoint'
+    cfg.dataset.resample_disjoint = False
+
     # ==============
 
     # feature augmentation
