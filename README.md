@@ -101,17 +101,26 @@ pip install torch-spline-conv==latest+${CUDA} -f https://pytorch-geometric.com/w
 pip install torch-geometric
 ```
 
-**4. Clone GraphGym and install other dependencies:**
+**4. Install the latest DeepSNAP package:**
 
 ```bash
+git clone https://github.com/snap-stanford/DeepSNAP
+cd DeepSNAP
+pip install -e .
+```
+
+**5. Install GraphGym and other dependencies:**
+
+```bash
+cd ..
 git clone https://github.com/snap-stanford/GraphGym
 cd GraphGym
 pip install -r requirements.txt
-python setup.py develop
+pip install -e .
 ```
 
 
-**5. Test the installation**
+**6. Test the installation**
 
 Run a test GNN experiment using GraphGym, specified in [`run/configs/example.yaml`](run/configs/example.yaml). 
 The experiment is about node classification on Cora dataset (random 80/20 train/val split).
