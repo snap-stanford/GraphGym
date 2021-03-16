@@ -28,6 +28,7 @@ def train_epoch(logger, loader, model, optimizer, scheduler):
     scheduler.step()
 
 
+@torch.no_grad()
 def eval_epoch(logger, loader, model):
     model.eval()
     time_start = time.time()
