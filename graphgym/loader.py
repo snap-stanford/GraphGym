@@ -86,7 +86,7 @@ def load_nx(name, dataset_dir):
         with open('{}/{}.pkl'.format(dataset_dir, name), 'rb') as file:
             graphs = pickle.load(file)
     except:
-        graphs = nx.read_gpickle('{}.gpickle'.format(dataset_dir, name))
+        graphs = nx.read_gpickle('{}/{}.gpickle'.format(dataset_dir, name))
         if not isinstance(graphs, list):
             graphs = [graphs]
     return graphs
@@ -226,7 +226,8 @@ def create_dataset():
     else:
         datasets = dataset.split(
             transductive=cfg.dataset.transductive,
-            split_ratio=cfg.dataset.split)
+            split_ratio=cfg.dataset.split,
+            shuffle=cfg.dataset.shuffle_split)
     # We only change the training negative sampling ratio
     for i in range(1, len(datasets)):
         dataset.edge_negative_sampling_ratio = 1
