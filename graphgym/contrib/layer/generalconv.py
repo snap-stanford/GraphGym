@@ -24,6 +24,8 @@ class GeneralConvLayer(MessagePassing):
         self.normalize = cfg.gnn.normalize_adj
 
         self.weight = Parameter(torch.Tensor(in_channels, out_channels))
+        if cfg.gnn.self_msg == 'cat':
+            self.weight_self = Parameter(torch.Tensor(in_channels, out_channels))
 
         if bias:
             self.bias = Parameter(torch.Tensor(out_channels))
@@ -34,6 +36,8 @@ class GeneralConvLayer(MessagePassing):
 
     def reset_parameters(self):
         glorot(self.weight)
+        if cfg.gnn.self_msg == 'cat':
+            glorot(self.weight_self)
         zeros(self.bias)
         self.cached_result = None
         self.cached_num_edges = None
@@ -59,6 +63,8 @@ class GeneralConvLayer(MessagePassing):
     def forward(self, x, edge_index, edge_weight=None, edge_feature=None):
         """"""
         x = torch.matmul(x, self.weight)
+        if cfg.gnn.self_msg == 'cat':
+            x_self = torch.matmul(x, self.weight_self)
 
         if self.cached and self.cached_result is not None:
             if edge_index.size(1) != self.cached_num_edges:
@@ -79,9 +85,16 @@ class GeneralConvLayer(MessagePassing):
             self.cached_result = edge_index, norm
 
         edge_index, norm = self.cached_result
-
-        return self.propagate(edge_index, x=x, norm=norm,
+        x_msg = self.propagate(edge_index, x=x, norm=norm,
                               edge_feature=edge_feature)
+        if cfg.gnn.self_msg == 'none':
+            return x_msg
+        elif cfg.gnn.self_msg == 'add':
+            return x_msg + x
+        elif cfg.gnn.self_msg == 'cat':
+            return x_msg + x_self
+        else:
+            raise ValueError('self_msg {} not defined'.format(cfg.gnn.self_msg))
 
     def message(self, x_j, norm, edge_feature):
         if edge_feature is None:
@@ -122,6 +135,8 @@ class GeneralEdgeConvLayer(MessagePassing):
         else:
             self.linear_msg = nn.Linear(in_channels * 2 + cfg.dataset.edge_dim,
                                         out_channels, bias=False)
+        if cfg.gnn.self_msg == 'add' or cfg.gnn.self_msg == 'cat':
+            self.linear_self = nn.Linear(in_channels, out_channels, bias=False)
 
         if bias:
             self.bias = Parameter(torch.Tensor(out_channels))
@@ -174,8 +189,14 @@ class GeneralEdgeConvLayer(MessagePassing):
 
         edge_index, norm = self.cached_result
 
-        return self.propagate(edge_index, x=x, norm=norm,
+        x_msg = self.propagate(edge_index, x=x, norm=norm,
                               edge_feature=edge_feature)
+
+        if cfg.gnn.self_msg == 'add' or cfg.gnn.self_msg == 'cat':
+            x_self = self.linear_self(x)
+            return x_self + x_msg
+        else:
+            return x_msg
 
     def message(self, x_i, x_j, norm, edge_feature):
         if self.msg_direction == 'both':
