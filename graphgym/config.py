@@ -92,6 +92,9 @@ def set_cfg(cfg):
     # Split ratio of dataset. Len=2: Train, Val. Len=3: Train, Val, Test
     cfg.dataset.split = [0.8, 0.1, 0.1]
 
+    # Whether to shuffle the graphs for splitting
+    cfg.dataset.shuffle_split = True
+
     # Whether to use an encoder for the node features
     cfg.dataset.node_encoder = False
 
