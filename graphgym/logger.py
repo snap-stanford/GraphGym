@@ -9,7 +9,7 @@ import pdb
 
 from sklearn.metrics import *
 from tensorboardX import SummaryWriter
-
+from graphgym.utils.device import get_current_gpu_usage
 
 def setup_printing():
     logging.root.handlers = []
@@ -74,7 +74,8 @@ class Logger(object):
         return {'loss': round(self._loss / self._size_current, cfg.round),
                 'lr': round(self._lr, cfg.round),
                 'params': self._params,
-                'time_iter': round(self.time_iter(), cfg.round)
+                'time_iter': round(self.time_iter(), cfg.round),
+                'gpu_memory': get_current_gpu_usage()
                 }
 
     def _get_pred_int(self, pred_score):
