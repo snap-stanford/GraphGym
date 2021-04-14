@@ -59,6 +59,9 @@ def set_cfg(cfg):
     # The metric for selecting the best epoch for each run
     cfg.metric_best = 'auto'
 
+    # argmax or argmin in aggregating results
+    cfg.metric_agg = 'argmax'
+
     # If visualize embedding.
     cfg.view_emb = False
 
