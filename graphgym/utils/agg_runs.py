@@ -84,7 +84,7 @@ def agg_runs(dir, metric_best='auto'):
                 else:
                     metric = metric_best
                 performance_np = np.array([stats[metric] for stats in stats_list])
-                best_epoch = stats_list[performance_np.argmax()]['epoch']
+                best_epoch = stats_list[eval("performance_np.{}()".format(cfg.metric_agg))]['epoch']
                 print(best_epoch)
 
             for split in os.listdir(dir_seed):
@@ -189,7 +189,7 @@ def agg_batch(dir, metric_best='auto'):
                     else:
                         metric = metric_best
                     performance_np = np.array([stats[metric] for stats in dict_stats])
-                    dict_stats = dict_stats[performance_np.argmax()]
+                    dict_stats = dict_stats[eval("performance_np.{}()".format(cfg.metric_agg))]
                     rm_keys(dict_stats, ['lr', 'lr_std', 'eta', 'eta_std','params_std'])
                     results[split].append({**dict_name, **dict_stats})
     dir_out = os.path.join(dir, 'agg')
