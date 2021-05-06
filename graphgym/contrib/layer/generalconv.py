@@ -135,7 +135,7 @@ class GeneralEdgeConvLayer(MessagePassing):
         else:
             self.linear_msg = nn.Linear(in_channels * 2 + cfg.dataset.edge_dim,
                                         out_channels, bias=False)
-        if cfg.gnn.self_msg == 'add' or cfg.gnn.self_msg == 'cat':
+        if cfg.gnn.self_msg == 'cat':
             self.linear_self = nn.Linear(in_channels, out_channels, bias=False)
 
         if bias:
@@ -192,9 +192,11 @@ class GeneralEdgeConvLayer(MessagePassing):
         x_msg = self.propagate(edge_index, x=x, norm=norm,
                               edge_feature=edge_feature)
 
-        if cfg.gnn.self_msg == 'add' or cfg.gnn.self_msg == 'cat':
+        if cfg.gnn.self_msg == 'cat':
             x_self = self.linear_self(x)
             return x_self + x_msg
+        elif cfg.gnn.self_msg == 'add':
+            return x + x_msg
         else:
             return x_msg
 
