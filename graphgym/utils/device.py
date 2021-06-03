@@ -18,18 +18,21 @@ def get_gpu_memory_map():
 
 
 def get_current_gpu_usage():
-    result = subprocess.check_output(
-        [
-            'nvidia-smi', '--query-compute-apps=pid,used_memory',
-            '--format=csv,nounits,noheader'
-        ], encoding='utf-8')
-    current_pid = os.getpid()
-    used_memory = 0
-    for line in result.strip().split('\n'):
-        line = line.split(', ')
-        if current_pid == int(line[0]):
-            used_memory += int(line[1])
-    return used_memory
+    if cfg.device != 'cpu' and torch.cuda.is_available():
+        result = subprocess.check_output(
+            [
+                'nvidia-smi', '--query-compute-apps=pid,used_memory',
+                '--format=csv,nounits,noheader'
+            ], encoding='utf-8')
+        current_pid = os.getpid()
+        used_memory = 0
+        for line in result.strip().split('\n'):
+            line = line.split(', ')
+            if current_pid == int(line[0]):
+                used_memory += int(line[1])
+        return used_memory
+    else:
+        return 0
 
 
 def auto_select_device(memory_max=8000, memory_bias=200, strategy='random'):
