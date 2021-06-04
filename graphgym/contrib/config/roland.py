@@ -18,8 +18,7 @@ def set_cfg_roland(cfg):
     # gru: new embedding = GRU(node_feature, old_embedding).
     # masked_gru: only apply GRU to active nodes.
     cfg.gnn.embed_update_method = 'moving_average'
-    # what kind of GRU kernel to use if GRU is required for embedding updating.
-    cfg.gnn.gru_kernel = 'linear'
+
     # how many layers to use in the MLP updater.
     # default: 1, use a simple linear layer.
     cfg.gnn.mlp_update_layers = 2
@@ -31,7 +30,7 @@ def set_cfg_roland(cfg):
     cfg.meta.is_meta = False
 
     # choose between 'moving_average' and 'online_mean'
-    cfg.meta.method = 'moving_average'
+    cfg.meta.method = 'moving_average'  # TODO: remove, only use moving_average.
     # For online mean:
     # new_mean = (n-1)/n * old_mean + 1/n * new_value.
     # where *_mean corresponds to W_init.
