@@ -33,6 +33,10 @@ layer_dict = {}
 def register_layer(key, module):
     register(key, module, layer_dict)
 
+update_dict = {}
+def register_update(key, module):
+    register(key, module, update_dict)
+
 pooling_dict = {}
 def register_pooling(key, module):
     register(key, module, pooling_dict)
