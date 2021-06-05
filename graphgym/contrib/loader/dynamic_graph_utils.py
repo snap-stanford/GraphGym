@@ -3,10 +3,12 @@ Helper functions and utilities for dynamic graphs.
 
 Mar. 31, 2021.
 """
+from typing import List
+
 import numpy as np
 import pandas as pd
+import torch
 from deepsnap.graph import Graph
-from typing import List
 
 
 def make_graph_snapshot(g_all: Graph,
@@ -76,5 +78,26 @@ def make_graph_snapshot(g_all: Graph,
         if is_hetero and hasattr(g_all, 'node_type'):
             g_incr.node_type = g_all.node_type
             g_incr.edge_type = g_all.edge_type[period_members]
+        snapshot_list.append(g_incr)
+    return snapshot_list
+
+
+def make_graph_snapshot_by_seconds(g_all: Graph,
+                                   freq_sec: int) -> List[Graph]:
+    """
+    Split the entire graph into snapshots by frequency in terms of seconds.
+    """
+    split_criterion = g_all.edge_time // freq_sec
+    groups = torch.sort(torch.unique(split_criterion))[0]
+    snapshot_list = list()
+    for t in groups:
+        period_members = (split_criterion == t)
+        g_incr = Graph(
+            node_feature=g_all.node_feature,
+            edge_feature=g_all.edge_feature[period_members, :],
+            edge_index=g_all.edge_index[:, period_members],
+            edge_time=g_all.edge_time[period_members],
+            directed=g_all.directed
+        )
         snapshot_list.append(g_incr)
     return snapshot_list
