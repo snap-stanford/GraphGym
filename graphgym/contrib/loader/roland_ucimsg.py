@@ -45,8 +45,6 @@ def load_single_dataset(dataset_dir: str) -> Graph:
 
     node_feature = torch.ones(num_nodes, 1)
 
-    print('feature_node_int_num: ', node_feature.max() + 1)
-
     edge_time = torch.FloatTensor(df_trans['TIMESTAMP'].values)
 
     graph = Graph(
