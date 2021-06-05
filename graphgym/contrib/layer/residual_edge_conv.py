@@ -11,10 +11,10 @@ from graphgym.register import register_layer
 
 
 class ResidualEdgeConvLayer(MessagePassing):
-    r'''
+    """
     A general GNN layer with arbitrary edge features and self residual
     connections.
-    '''
+    """
 
     def __init__(self, in_channels: int, out_channels: int,
                  improved: bool = False, cached: bool = False, bias: bool = True,
