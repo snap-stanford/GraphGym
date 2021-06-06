@@ -12,6 +12,7 @@ def set_cfg_roland(cfg):
     # ----------------------------------------------------------------------- #
     # Customized options
     # ----------------------------------------------------------------------- #
+    # TODO: add documentation.
     # Method to update node embedding from old node embedding and new node features.
     # Options: 'moving_average', 'masked_gru', 'gru'
     # moving average: new embedding = r * old + (1-r) * node_feature.
@@ -46,19 +47,13 @@ def set_cfg_roland(cfg):
     cfg.remark = ''
     # Experimental Features, use this name space to save all controls for
     # experimental features.
-    cfg.experimental = CN()
-
-    # How many negative edges for each node to compute rank-based evaluation
-    # metrics such as MRR and recall at K.
-    # E.g., if multiplier = 1000 and a node has 3 positive edges, then we
-    # compute the MRR using 1000 randomly generated negative edges
-    # + 3 existing positive edges.
-    cfg.experimental.rank_eval_multiplier = 1000
+    # TODO: consider remove experiment field.
+    # cfg.experimental = CN()
 
     # Only use the first n snapshots (time periods) to train the model.
     # Empirically, the model learns rich dynamics from only a few periods.
     # Set to -1 if using all snapshots.
-    cfg.experimental.restrict_training_set = -1
+    # cfg.experimental.restrict_training_set = -1
 
     # Whether to visualize edge attention of GNN layer after training.
     cfg.experimental.visualize_gnn_layer = False
@@ -171,6 +166,14 @@ def set_cfg_roland(cfg):
     cfg.transaction.keep_ratio = 'linear'
 
     cfg.metric = CN()
+    # How many negative edges for each node to compute rank-based evaluation
+    # metrics such as MRR and recall at K.
+    # E.g., if multiplier = 1000 and a node has 3 positive edges, then we
+    # compute the MRR using 1000 randomly generated negative edges
+    # + 3 existing positive edges.
+    # Use 100 ~ 1000 for fast and reliable results.
+    cfg.metric.mrr_num_negative_edges = 1000
+
     # how to compute MRR.
     # available: f = 'min', 'max', 'mean'.
     # Step 1: get the p* = f(scores of positive edges)
@@ -180,9 +183,10 @@ def set_cfg_roland(cfg):
     # expected MRR(min) <= MRR(mean) <= MRR(max).
     cfg.metric.mrr_method = 'max'
 
+    # TODO: consider remove link_pred_spec field.
     # Specs for the link prediction task using BSI dataset.
     # All units are days.
-    cfg.link_pred_spec = CN()
+    # cfg.link_pred_spec = CN()
 
     # The period of `today`'s increase: how often the system is making forecast.
     # E.g., when = 1,
@@ -192,12 +196,12 @@ def set_cfg_roland(cfg):
     # When = 7, the system makes prediction every week.
     # E.g., the system forecasts transactions in upcoming 7 days
     # on every Monday.
-    cfg.link_pred_spec.forecast_frequency = 1
+    # cfg.link_pred_spec.forecast_frequency = 1
 
     # How many days into the future the model is trained to predict.
     # The model forecasts transactions in (today, today + forecast_horizon].
     # NOTE: forecast_horizon should >= forecast_frequency to cover all days.
-    cfg.link_pred_spec.forecast_horizon = 7
+    # cfg.link_pred_spec.forecast_horizon = 7
 
 
 register_config('roland', set_cfg_roland)
