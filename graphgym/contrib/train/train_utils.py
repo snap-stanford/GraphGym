@@ -1,19 +1,19 @@
 """
 Metrics, other utility, and helper functions.
 """
-from typing import Dict, List, Optional
-
 import deepsnap
 import numpy as np
 import torch
 from graphgym.config import cfg
 from graphgym.loss import compute_loss
 from torch_scatter import scatter_max, scatter_mean, scatter_min
-from tqdm import tqdm
+# TODO: proof-read this file.
+# TODO: remove comments.
 
 
-def get_keep_ratio(existing: torch.Tensor, new: torch.Tensor,
-                   mode: str='linear') -> torch.Tensor:
+def get_keep_ratio(existing: torch.Tensor,
+                   new: torch.Tensor,
+                   mode: str = 'linear') -> torch.Tensor:
     """
     Get the keep ratio for individual nodes to update node embeddings.
     Specifically:
@@ -78,7 +78,7 @@ def move_batch_to_device(batch: deepsnap.graph.Graph,
             batch.node_states[layer] = batch.node_states[layer].to(device)
 
     if hasattr(batch, 'node_cells'):
-        # node_cells exist only for LSTM type RNNs.   
+        # node_cells exist only for LSTM type RNNs.
         for layer in range(len(batch.node_cells)):
             if torch.is_tensor(batch.node_cells[layer]):
                 batch.node_cells[layer] = batch.node_cells[layer].to(device)
@@ -122,7 +122,7 @@ def gen_negative_edges(edge_index: torch.LongTensor,
         num_neg_per_node (int): 'approximate' number of negative edges generated
             for each source node in edge_index.
         num_nodes (int): total number of nodes.
-    
+
     Returns:
         torch.LongTensor: approximate num_nodes * num_neg_per_node
             negative edges.
@@ -139,91 +139,91 @@ def gen_negative_edges(edge_index: torch.LongTensor,
     return neg_edge_index
 
 
-def compute_src_mrr_and_recall(edge_label_index: torch.LongTensor,
-                               edge_label: torch.LongTensor,
-                               pred_score: torch.Tensor,
-                               recall_k_lst: List[int],
-                               mrr_top_k: Optional[int] = None
-                               ) -> (float, Dict[int, float]):
-    """
-    Computes source-based MRR and recall at K for each source node in
-        edge_label_index.
+# def compute_src_mrr_and_recall(edge_label_index: torch.LongTensor,
+#                                edge_label: torch.LongTensor,
+#                                pred_score: torch.Tensor,
+#                                recall_k_lst: List[int],
+#                                mrr_top_k: Optional[int] = None
+#                                ) -> (float, Dict[int, float]):
+#     """
+#     Computes source-based MRR and recall at K for each source node in
+#         edge_label_index.
 
-    Args:
-        edge_label_index: combination of positive and negative edges.
-        edge_label: label of edges in edge_label_index.
-        pred_score: P(E=positive) for each edge in edge_label_index.
-        recall_k_lst: to report recall at k for all k in this list.
-        mrr_top_k: calculating MRR for each source node using mean(1/rank) for
-            k positive edges with the highest pred_score. Set to None to use
-            all positive edges.
-    """
-    assert edge_label_index.shape[1] == len(edge_label) == len(pred_score)
+#     Args:
+#         edge_label_index: combination of positive and negative edges.
+#         edge_label: label of edges in edge_label_index.
+#         pred_score: P(E=positive) for each edge in edge_label_index.
+#         recall_k_lst: to report recall at k for all k in this list.
+#         mrr_top_k: calculating MRR for each source node using mean(1/rank) for
+#             k positive edges with the highest pred_score. Set to None to use
+#             all positive edges.
+#     """
+#     assert edge_label_index.shape[1] == len(edge_label) == len(pred_score)
 
-    src_lst = torch.unique(edge_label_index[0])  # source nodes to consider.
-    # edge_label_index were constructed by adding negative edges to every
-    # node in edge_index[0], thus every node in src_lst has at least one
-    # positive edge in edge_label_index.
-    # I.e., src_lst == torch.unique(edge_label_index[0][edge_label == 1])
+#     src_lst = torch.unique(edge_label_index[0])  # source nodes to consider.
+#     # edge_label_index were constructed by adding negative edges to every
+#     # node in edge_index[0], thus every node in src_lst has at least one
+#     # positive edge in edge_label_index.
+#     # I.e., src_lst == torch.unique(edge_label_index[0][edge_label == 1])
 
-    node_level_mrr = []  # store MRR for each node.
-    node_recall_at = dict((k, []) for k in recall_k_lst)
-    for src in tqdm(src_lst, leave=False, desc='Node level MRR/Recall'):
-        # get positive/negative edges emitted from src node.
-        self_mask = (edge_label_index[0] == src)
-        self_label = edge_label[self_mask]
-        self_pred_score = pred_score[self_mask]
+#     node_level_mrr = []  # store MRR for each node.
+#     node_recall_at = dict((k, []) for k in recall_k_lst)
+#     for src in tqdm(src_lst, leave=False, desc='Node level MRR/Recall'):
+#         # get positive/negative edges emitted from src node.
+#         self_mask = (edge_label_index[0] == src)
+#         self_label = edge_label[self_mask]
+#         self_pred_score = pred_score[self_mask]
 
-        # Alternative implementation.
-        best = torch.max(self_pred_score[self_label == 1])
-        rank = torch.sum(self_pred_score[self_label == 0] >= best) + 1
-        # print(pos_edge_rank[0], true, torch.sum(label == 0))
-        mrr = float(1 / rank)
-        node_level_mrr.append(mrr)  # mrr for this node.
+#         # Alternative implementation.
+#         best = torch.max(self_pred_score[self_label == 1])
+#         rank = torch.sum(self_pred_score[self_label == 0] >= best) + 1
+#         # print(pos_edge_rank[0], true, torch.sum(label == 0))
+#         mrr = float(1 / rank)
+#         node_level_mrr.append(mrr)  # mrr for this node.
 
-        for k in recall_k_lst:
-            recall = _calculate_recall_at_k(self_pred_score, self_label, k)
-            node_recall_at[k].append(recall)
+#         for k in recall_k_lst:
+#             recall = _calculate_recall_at_k(self_pred_score, self_label, k)
+#             node_recall_at[k].append(recall)
 
-    # Average over all nodes.
-    macro_recall = dict((k, np.mean(v)) for (k, v) in node_recall_at.items())
-    macro_mrr = float(np.mean(node_level_mrr))
-    return macro_mrr, macro_recall
+#     # Average over all nodes.
+#     macro_recall = dict((k, np.mean(v)) for (k, v) in node_recall_at.items())
+#     macro_mrr = float(np.mean(node_level_mrr))
+#     return macro_mrr, macro_recall
 
 
-def _calculate_recall_at_k(pred_score: torch.Tensor,
-                           label: torch.Tensor,
-                           k: int) -> int:
-    """Computes whether the score of the most confident positive edge is
-        within the highest k scores. I.e., whether the most confident
-        positive edge beats at least k most confident negative edges.
+# def _calculate_recall_at_k(pred_score: torch.Tensor,
+#                            label: torch.Tensor,
+#                            k: int) -> int:
+#     """Computes whether the score of the most confident positive edge is
+#         within the highest k scores. I.e., whether the most confident
+#         positive edge beats at least k most confident negative edges.
 
-    Args:
-        pred_score: a tensor of scores of predictions.
-        label: a tensor of labels.
-        k: get whether successful recall at k.
+#     Args:
+#         pred_score: a tensor of scores of predictions.
+#         label: a tensor of labels.
+#         k: get whether successful recall at k.
 
-    Returns:
-        an indicator whether there is a successful recall at rank k.
-    """
-    neg_score = pred_score[label == 0]
-    if len(neg_score) == 0:
-        return 0
-    best_pos_score = torch.max(pred_score[label == 1])
-    rank = torch.sum(neg_score >= best_pos_score) + 1
-    return int(rank <= k)
+#     Returns:
+#         an indicator whether there is a successful recall at rank k.
+#     """
+#     neg_score = pred_score[label == 0]
+#     if len(neg_score) == 0:
+#         return 0
+#     best_pos_score = torch.max(pred_score[label == 1])
+#     rank = torch.sum(neg_score >= best_pos_score) + 1
+#     return int(rank <= k)
 
 
 @torch.no_grad()
-def fast_batch_mrr_and_recall(edge_label_index: torch.Tensor,
-                              edge_label: torch.Tensor,
-                              pred_score: torch.Tensor,
-                              num_neg_per_node: int,
-                              num_nodes: int
-                              ) -> (float, Dict[int, float]):
+def fast_batch_mrr(edge_label_index: torch.Tensor,
+                   edge_label: torch.Tensor,
+                   pred_score: torch.Tensor,
+                   num_neg_per_node: int,
+                   num_nodes: int,
+                   method: str) -> float:
     """
     A vectorized implementation to compute average rank-based metrics over
-    all source nodes.
+        all source nodes.
 
     Args:
         edge_label_index:
@@ -231,9 +231,10 @@ def fast_batch_mrr_and_recall(edge_label_index: torch.Tensor,
         pred_score: P(edge i is positive) from the model.
         num_neg_per_node: number of negative edges per node.
         num_nodes: total number of nodes in the graph.
-    """
-    # start = datetime.now()
 
+    Returns:
+        the MRR for all nodes.
+    """
     # A list of source nodes to consider.
     src_lst = torch.unique(edge_label_index[0], sorted=True)
     num_users = len(src_lst)
@@ -252,27 +253,22 @@ def fast_batch_mrr_and_recall(edge_label_index: torch.Tensor,
     # from src.
     # We want to compute the rank of this edge.
     # Construct an interval of model's performance.
-    if cfg.metric.mrr_method == 'mean':
+    if method == 'mean':
         best_p_pos = scatter_mean(src=p_pos, index=edge_pos[0],
                                   dim_size=num_nodes)
-    elif cfg.metric.mrr_method == 'min':
+    elif method == 'min':
         best_p_pos, _ = scatter_min(src=p_pos, index=edge_pos[0],
                                     dim_size=num_nodes)
-    else:
+    elif method == 'max':
         # The default setting, consider the rank of the most confident edge.
         best_p_pos, _ = scatter_max(src=p_pos, index=edge_pos[0],
                                     dim_size=num_nodes)
+    else:
+        raise ValueError(f'Unrecognized method: {method}.')
     # best_p_pos has shape (num_nodes), for nodes not in src_lst has value 0.
     best_p_pos_by_user = best_p_pos[src_lst]
 
-    # Sanity check.
-    # src_lst_2, inverse = torch.unique(edge_pos[0], return_inverse=True)
-    # best_p_pos, _ = scatter_max(p_pos, inverse)
-    # assert torch.all(best_p_pos_by_user == best_p_pos)
-
     uni, counts = torch.unique(edge_neg[0], sorted=True, return_counts=True)
-    # assert torch.all(counts >= num_neg_per_node)
-    # assert torch.all(uni == src_lst)
     # note: edge_neg (src, dst) are sorted by src.
     # find index of first occurrence of each src in edge_neg[0].
     # neg edges[0], [1,1,...1, 2, 2, ... 2, 3, ..]
@@ -283,11 +279,6 @@ def fast_batch_mrr_and_recall(edge_label_index: torch.Tensor,
     score_idx = first_occ_idx.view(-1, 1) + add.view(1, -1)
 
     assert torch.all(edge_neg[0][score_idx].float().std(axis=1) == 0)
-    # Z = edge_neg[0][first_occ_idx - 1]
-    # A = edge_neg[0][first_occ_idx]
-    # B = edge_neg[0][first_occ_idx + 1]
-    # assert torch.all(Z != A)
-    # assert torch.all(B == A)
 
     p_neg_by_user = p_neg[score_idx]  # (num_users, num_neg_per_node)
     compare = (p_neg_by_user >= best_p_pos_by_user.view(num_users, 1)).float()
@@ -300,70 +291,66 @@ def fast_batch_mrr_and_recall(edge_label_index: torch.Tensor,
     assert rank_by_user.shape == (num_users,)
 
     mrr = float(torch.mean(1 / rank_by_user))
-    # print(f'MRR={mrr}, time taken: {datetime.now() - start}')
-    # computes recall at k as well
-    recall_at = dict()
-    for k in [1, 3, 10]:
-        recall_at[k] = float((rank_by_user <= k).float().mean())
-
-    return mrr, recall_at
+    return mrr
 
 
-@torch.no_grad()
-def report_rank_based_eval(eval_batch, model, num_neg_per_node: int = 1000):
-    if num_neg_per_node == -1:
-        # Do not report rank-based metrics, used in debug mode.
-        return 0, 0, 0, 0
-    # Get positive edge indices.
-    edge_index = eval_batch.edge_label_index[:, eval_batch.edge_label == 1]
-    edge_index = edge_index.to('cpu')
+# @torch.no_grad()
+# def report_rank_based_eval(eval_batch, model, method: str,
+#                            num_neg_per_node: int=1000):
+#     if num_neg_per_node == -1:
+#         # Do not report rank-based metrics, used in debug mode.
+#         return 0, 0, 0, 0
+#     # Get positive edge indices.
+#     edge_index = eval_batch.edge_label_index[:, eval_batch.edge_label == 1]
+#     edge_index = edge_index.to('cpu')
 
-    neg_edge_index = gen_negative_edges(edge_index, num_neg_per_node,
-                                        num_nodes=eval_batch.num_nodes)
+#     neg_edge_index = gen_negative_edges(edge_index, num_neg_per_node,
+#                                         num_nodes=eval_batch.num_nodes)
 
-    new_edge_label_index = torch.cat((edge_index, neg_edge_index),
-                                     dim=1).long()
-    new_edge_label = torch.cat((torch.ones(edge_index.shape[1]),
-                                torch.zeros(neg_edge_index.shape[1])
-                                ), dim=0).long()
+#     new_edge_label_index = torch.cat((edge_index, neg_edge_index),
+#                                      dim=1).long()
+#     new_edge_label = torch.cat((torch.ones(edge_index.shape[1]),
+#                                 torch.zeros(neg_edge_index.shape[1])
+#                                 ), dim=0).long()
 
-    # Construct evaluation samples.
-    eval_batch.edge_label_index = new_edge_label_index
-    eval_batch.edge_label = new_edge_label
+#     # Construct evaluation samples.
+#     eval_batch.edge_label_index = new_edge_label_index
+#     eval_batch.edge_label = new_edge_label
 
-    eval_batch.to(torch.device(cfg.device))
-    # move state to gpu
-    for layer in range(len(eval_batch.node_states)):
-        if torch.is_tensor(eval_batch.node_states[layer]):
-            eval_batch.node_states[layer] = eval_batch.node_states[layer].to(
-                torch.device(cfg.device))
-    pred, true = model(eval_batch)
-    loss, pred_score = compute_loss(pred, true)
+#     eval_batch.to(torch.device(cfg.device))
+#     # move state to gpu
+#     for layer in range(len(eval_batch.node_states)):
+#         if torch.is_tensor(eval_batch.node_states[layer]):
+#             eval_batch.node_states[layer] = eval_batch.node_states[layer].to(
+#                 torch.device(cfg.device))
+#     pred, true = model(eval_batch)
+#     loss, pred_score = compute_loss(pred, true)
 
-    mrr, recall_at = fast_batch_mrr_and_recall(eval_batch.edge_label_index,
-                                               eval_batch.edge_label,
-                                               pred_score,
-                                               num_neg_per_node,
-                                               eval_batch.num_nodes)
+#     mrr, recall_at = fast_batch_mrr_and_recall(eval_batch.edge_label_index,
+#                                                eval_batch.edge_label,
+#                                                pred_score,
+#                                                num_neg_per_node,
+#                                                eval_batch.num_nodes,
+#                                                method)
 
-    # return mrr, 0, 0, 0
-    #
-    # mrr_old, recall_at_old = compute_src_mrr_and_recall(
-    #     eval_batch.edge_label_index,
-    #     eval_batch.edge_label,
-    #     pred_score,
-    #     recall_k_lst=[1, 3, 10],
-    #     mrr_top_k=1)
-    #
-    # print(f'Old MRR: {mrr_old: 0.6f}, new MRR {mrr: 0.6f}')
-    # print(
-    #     f'Old Recall@1: {recall_at_old[1]: 0.6f}, new Recall@1 {recall_at[1]: 0.6f}')
-    # print(
-    #     f'Old Recall@3: {recall_at_old[3]: 0.6f}, new Recall@3 {recall_at[3]: 0.6f}')
-    # print(
-    #     f'Old Recall@10: {recall_at_old[10]: 0.6f}, new Recall@10 {recall_at[10]: 0.6f}')
+#     # return mrr, 0, 0, 0
+#     #
+#     # mrr_old, recall_at_old = compute_src_mrr_and_recall(
+#     #     eval_batch.edge_label_index,
+#     #     eval_batch.edge_label,
+#     #     pred_score,
+#     #     recall_k_lst=[1, 3, 10],
+#     #     mrr_top_k=1)
+#     #
+#     # print(f'Old MRR: {mrr_old: 0.6f}, new MRR {mrr: 0.6f}')
+#     # print(
+#     #     f'Old Recall@1: {recall_at_old[1]: 0.6f}, new Recall@1 {recall_at[1]: 0.6f}')
+#     # print(
+#     #     f'Old Recall@3: {recall_at_old[3]: 0.6f}, new Recall@3 {recall_at[3]: 0.6f}')
+#     # print(
+#     #     f'Old Recall@10: {recall_at_old[10]: 0.6f}, new Recall@10 {recall_at[10]: 0.6f}')
 
-    return mrr, recall_at[1], recall_at[3], recall_at[10]
+#     return mrr, recall_at[1], recall_at[3], recall_at[10]
 
 
 def get_row_MRR(probs, true_classes):
@@ -382,7 +369,8 @@ def get_row_MRR(probs, true_classes):
 
 
 @torch.no_grad()
-def report_baseline_MRR(eval_batch, model):
+def report_baseline_MRR(eval_batch: deepsnap.graph.Graph,
+                        model: torch.nn.Module) -> float:
     # Get positive edge indices.
     edge_index = eval_batch.edge_label_index[:, eval_batch.edge_label == 1]
     edge_index = edge_index.to('cpu')
@@ -442,3 +430,71 @@ def report_baseline_MRR(eval_batch, model):
 
     avg_MRR = torch.tensor(row_MRRs).mean()
     return float(avg_MRR)
+
+
+def compute_MRR(eval_batch: deepsnap.graph.Graph,
+                model: torch.nn.Module,
+                num_neg_per_node: int,
+                method: str) -> float:
+    """Computes the MRR score on the evaluation batch.
+
+    Args:
+        eval_batch (deepsnap.graph.Graph): a graph snapshot.
+        model (torch.nn.Module): a GNN model for this graph snapshot
+        num_neg_per_node (int): how many negative edges per node required for
+            computing the MRR score.
+            For example, if num_neg_per_node = 1000, this method firstly
+            sample 1,000 negative edges for each source node, and compute the
+            average rank of positive edges from each source node among these
+            1,000 sampled negative edges.
+            Setting num_neg_per_node = -1 to use all possible negative edges.
+        method (str): {'min', 'mean', 'max', 'all'}
+            All methods firstly compute MRR for each source node, and then
+            average MRRs over all source nodes.
+            For each source node v,
+            let P denote scores of all positive edges from v, the rank()
+            operator computes the rank among all negative edges from v.
+            'min' computes 1/rank(min(P))
+            'mean' computes 1/rank(mean(P))
+            'max' computes 1/rank(max(P))
+            'all' computes mean[1/rank(x) for x in P]
+    """
+    if method == 'all':
+        # NOTE: this method requires iterating over all nodes, which is slow.
+        assert num_neg_per_node == -1
+        return report_baseline_MRR(eval_batch, model)
+    else:
+        assert num_neg_per_node > 0
+        # Sample negative edges for each node.
+        edge_index = eval_batch.edge_label_index[:, eval_batch.edge_label == 1]
+        edge_index = edge_index.to('cpu')
+
+        neg_edge_index = gen_negative_edges(edge_index, num_neg_per_node,
+                                            num_nodes=eval_batch.num_nodes)
+
+        new_edge_label_index = torch.cat((edge_index, neg_edge_index),
+                                         dim=1).long()
+        new_edge_label = torch.cat((torch.ones(edge_index.shape[1]),
+                                    torch.zeros(neg_edge_index.shape[1])
+                                    ), dim=0).long()
+
+        # Construct evaluation samples.
+        eval_batch.edge_label_index = new_edge_label_index
+        eval_batch.edge_label = new_edge_label
+
+        eval_batch.to(torch.device(cfg.device))
+        # move state to gpu
+        for layer in range(len(eval_batch.node_states)):
+            if torch.is_tensor(eval_batch.node_states[layer]):
+                eval_batch.node_states[layer] = eval_batch.node_states[layer].to(
+                    torch.device(cfg.device))
+        pred, true = model(eval_batch)
+        loss, pred_score = compute_loss(pred, true)
+
+        mrr = fast_batch_mrr(eval_batch.edge_label_index,
+                             eval_batch.edge_label,
+                             pred_score,
+                             num_neg_per_node,
+                             eval_batch.num_nodes,
+                             method)
+        return mrr
