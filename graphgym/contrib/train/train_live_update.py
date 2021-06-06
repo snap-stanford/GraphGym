@@ -4,7 +4,6 @@ The ROLAND training pipeline with live-update.
 import copy
 import datetime
 import logging
-import os
 from typing import Dict, List, Optional, Tuple
 
 import deepsnap
@@ -42,6 +41,7 @@ def average_state_dict(dict1: dict, dict2: dict, weight: float) -> dict:
     return out
 
 
+@torch.no_grad()
 def precompute_edge_degree_info(dataset: deepsnap.dataset.GraphDataset):
     """Pre-computes edge_degree_existing, edge_degree_new and keep ratio
     at each snapshot. Inplace modifications.
@@ -53,6 +53,7 @@ def precompute_edge_degree_info(dataset: deepsnap.dataset.GraphDataset):
             # No previous edges for any nodes.
             dataset[t].node_degree_existing = torch.zeros(num_nodes)
         else:
+            # degree[<t] = degree[<t-1] + degree[=t-1].
             dataset[t].node_degree_existing \
                 = dataset[t - 1].node_degree_existing \
                 + dataset[t - 1].node_degree_new
@@ -73,12 +74,15 @@ def get_task_batch(dataset: deepsnap.dataset.GraphDataset,
                    prev_node_states: Optional[Dict[str, List[torch.Tensor]]]
                    ) -> deepsnap.graph.Graph:
     """
-    Construct batch required for the task (today, tomorrow). As defined in
-    batch's get_item method (used to get edge_label and get_label_index),
-    edge_label and edge_label_index returned would be different everytime
-    get_task_batch() is called.
+    Construct batch required for the task (today, tomorrow).
+    For current implementation, we use tomorrow = today + 1.
+    As defined in batch's get_item method (used to get edge_label and
+    get_label_index), edge_label and edge_label_index returned would be
+    different everytime get_task_batch() is called.
 
     Moreover, copy node-memories (node_states and node_cells) to the batch.
+    
+    Lastly, this method moves the created task batch to the appropriate device.
     """
     assert today < tomorrow < len(dataset)
     # Get edges for message passing and prediction task.
@@ -116,10 +120,12 @@ def update_node_states(model, dataset, task: Tuple[int, int],
     today, tomorrow = task
     batch = get_task_batch(dataset, today, tomorrow, prev_node_states).clone()
     # Let the model modify batch.node_states (and batch.node_cells).
-    _, _ = model(batch)
+    # This operation does not track gradient, so should not affect back-prop.
+    _, _ = model(batch)  # Inplace modification on batch.
     # Collect the updated node states.
     out = dict()
     out['node_states'] = [x.detach().clone() for x in batch.node_states]
+    # If node cells are also used.
     if isinstance(batch.node_cells[0], torch.Tensor):
         out['node_cells'] = [x.detach().clone() for x in batch.node_cells]
 
@@ -129,7 +135,7 @@ def update_node_states(model, dataset, task: Tuple[int, int],
 def train_step(model, optimizer, scheduler, dataset,
                task: Tuple[int, int],
                prev_node_states: Optional[Dict[str, torch.Tensor]]
-               ) -> dict:
+               ) -> Dict[str, float]:
     """
     After receiving ground truth from a particular task, update the model by
     performing back-propagation.
@@ -149,13 +155,13 @@ def train_step(model, optimizer, scheduler, dataset,
     optimizer.step()
 
     scheduler.step()
-    return {'loss': loss}
+    return {'loss': loss.item()}
 
 
 @torch.no_grad()
 def evaluate_step(model, dataset, task: Tuple[int, int],
                   prev_node_states: Optional[Dict[str, List[torch.Tensor]]],
-                  fast: bool = False) -> dict:
+                  fast: bool=False) -> Dict[str, float]:
     """
     Evaluate model's performance on task = (today, tomorrow)
         where today and tomorrow are integers indexing snapshots.
@@ -174,12 +180,13 @@ def evaluate_step(model, dataset, task: Tuple[int, int],
     mrr_batch = get_task_batch(dataset, today, tomorrow,
                                prev_node_states).clone()
 
-    mrr, rck1, rck3, rck10 = train_utils.report_rank_based_eval(
-        mrr_batch, model,
-        num_neg_per_node=cfg.metric.mrr_num_negative_edges)
+    mrr = train_utils.compute_MRR(
+        mrr_batch,
+        model,
+        num_neg_per_node=cfg.metric.mrr_num_negative_edges,
+        method=cfg.metric.mrr_method)
 
-    return {'loss': loss.item(), 'mrr': mrr, 'rck1': rck1, 'rck3': rck3,
-            'rck10': rck10}
+    return {'loss': loss.item(), 'mrr': mrr}
 
 
 def train_live_update(loggers, loaders, model, optimizer, scheduler, datasets,
@@ -190,15 +197,15 @@ def train_live_update(loggers, loaders, model, optimizer, scheduler, datasets,
         if not hasattr(dataset[0], 'keep_ratio'):
             precompute_edge_degree_info(dataset)
 
-    if cfg.dataset.premade_datasets == 'fresh_save_cache':
-        if not os.path.exists(f'{cfg.dataset.dir}/cache/'):
-            os.mkdir(f'{cfg.dataset.dir}/cache/')
-        cache_path = '{}/cache/cached_datasets_{}_{}_{}.pt'.format(
-            cfg.dataset.dir, cfg.dataset.format.replace('.tsv', ''),
-            cfg.transaction.snapshot_freq,
-            datetime.now().strftime('%Y_%m_%d__%H_%M_%S')
-        )
-        torch.save(datasets, cache_path)
+    # if cfg.dataset.premade_datasets == 'fresh_save_cache':
+    #     if not os.path.exists(f'{cfg.dataset.dir}/cache/'):
+    #         os.mkdir(f'{cfg.dataset.dir}/cache/')
+    #     cache_path = '{}/cache/cached_datasets_{}_{}_{}.pt'.format(
+    #         cfg.dataset.dir, cfg.dataset.format.replace('.tsv', ''),
+    #         cfg.transaction.snapshot_freq,
+    #         datetime.now().strftime('%Y_%m_%d__%H_%M_%S')
+    #     )
+    #     torch.save(datasets, cache_path)
 
     num_splits = len(loggers)  # train/val/test splits.
     # range for today in (today, tomorrow) task pairs.
@@ -224,13 +231,17 @@ def train_live_update(loggers, loaders, model, optimizer, scheduler, datasets,
     prev_node_states = None  # no previous state on day 0.
     # {'node_states': [Tensor, Tensor], 'node_cells: [Tensor, Tensor]}
 
-    model_init = None  # for meta-learning only, a model.state_dict() object.
+    model_meta = None  # the state_dict() object of the meta-model.
 
-    for t in tqdm(task_range, desc='snapshot', leave=True):
+    # TODO: How to incorporate logger?
+
+    for t in tqdm(task_range, desc='Snapshot'):
         # current task: t --> t+1.
         # (1) Evaluate model's performance on this task, at this time, the
         # model has seen no information on t+1, this evaluation is fair.
+        # TODO: modify here to predict on all edges?
         for i in range(1, num_splits):
+            # Validation and test edges.
             perf = evaluate_step(model, datasets[i], (t, t + 1),
                                  prev_node_states)
 
@@ -253,13 +264,13 @@ def train_live_update(loggers, loaders, model, optimizer, scheduler, datasets,
         # choose the best model using current validation set, prepare for
         # next task.
 
-        if cfg.meta.is_meta and (model_init is not None):
-            # For meta-learning, start fine-tuning from the pre-computed
-            # initialization weight.
-            model.load_state_dict(copy.deepcopy(model_init))
+        if cfg.meta.is_meta and (model_meta is not None):
+            # For meta-learning, start fine-tuning from the meta-model.
+            model.load_state_dict(copy.deepcopy(model_meta))
 
+        # Internal training loop.
         for i in tqdm(range(cfg.optim.max_epoch + 1), desc='live update',
-                      leave=True):
+                      leave=False):
             # Start with the un-trained model (i = 0), evaluate the model.
             internal_val_perf = evaluate_step(model, datasets[1],
                                               (t, t + 1),
@@ -295,20 +306,13 @@ def train_live_update(loggers, loaders, model, optimizer, scheduler, datasets,
         model.load_state_dict(best_model['state'])
 
         if cfg.meta.is_meta:  # update meta-learning's initialization weights.
-            if model_init is None:  # for the first task.
-                model_init = copy.deepcopy(best_model['state'])
+            if model_meta is None:  # for the first task.
+                model_meta = copy.deepcopy(best_model['state'])
             else:  # for subsequent task, update init.
-                if cfg.meta.method == 'moving_average':
-                    new_weight = cfg.meta.alpha
-                elif cfg.meta.method == 'online_mean':
-                    new_weight = 1 / (t + 1)  # for t=1, the second item, 1/2.
-                else:
-                    raise ValueError(f'Invalid method: {cfg.meta.method}')
-
-                # (1-new_weight)*model_init + new_weight*best_model.
-                model_init = average_state_dict(model_init,
+                # (1-alpha)*model_meta + alpha*best_model.
+                model_meta = average_state_dict(model_meta,
                                                 best_model['state'],
-                                                new_weight)
+                                                cfg.meta.alpha)
 
         prev_node_states = update_node_states(model, datasets[0], (t, t + 1),
                                               prev_node_states)
