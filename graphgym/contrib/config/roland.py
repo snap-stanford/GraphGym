@@ -30,12 +30,6 @@ def set_cfg_roland(cfg):
     # Default to False.
     cfg.meta.is_meta = False
 
-    # choose between 'moving_average' and 'online_mean'
-    cfg.meta.method = 'moving_average'  # TODO: remove, only use moving_average.
-    # For online mean:
-    # new_mean = (n-1)/n * old_mean + 1/n * new_value.
-    # where *_mean corresponds to W_init.
-
     # Weight used in moving average for model parameters.
     # After fine-tuning the model in period t and get model M[t],
     # Set W_init = (1-alpha) * W_init + alpha * M[t].
@@ -54,9 +48,6 @@ def set_cfg_roland(cfg):
     # Empirically, the model learns rich dynamics from only a few periods.
     # Set to -1 if using all snapshots.
     # cfg.experimental.restrict_training_set = -1
-
-    # Whether to visualize edge attention of GNN layer after training.
-    cfg.experimental.visualize_gnn_layer = False
 
     cfg.train.tbptt_freq = 5
 
