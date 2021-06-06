@@ -6,7 +6,7 @@ from graphgym.register import register_edge_encoder, register_node_encoder
 
 
 class TransactionEdgeEncoder(torch.nn.Module):
-    r"""A module that encodes edge features in the transaction graph.
+    """A module that encodes edge features in the transaction graph.
 
     Example:
         TransactionEdgeEncoder(
@@ -68,7 +68,7 @@ register_edge_encoder('roland', TransactionEdgeEncoder)
 
 
 class TransactionNodeEncoder(torch.nn.Module):
-    r"""A module that encodes node features in the transaction graph.
+    """A module that encodes node features in the transaction graph.
 
     Parameters:
         num_classes - the number of classes for the embedding mapping to learn
@@ -113,3 +113,30 @@ class TransactionNodeEncoder(torch.nn.Module):
 
 
 register_node_encoder('roland', TransactionNodeEncoder)
+
+
+class LinearEdgeEncoder(torch.nn.Module):
+    """
+    Basic edge encoder for temporal graphs, this encoder does not assume edge dim,
+    this encoder uses linear layers to contract/expand raw edge features to
+    dimension cfg.transaction.feature_amount_dim + feature_time_dim for consistency.
+    """
+    def __init__(self, emb_dim: int):
+        # emb_dim is not used here.
+        super(LinearEdgeEncoder, self).__init__()
+        # For consistency, for non-transaction datasets with only timestamp,
+        # we use the feature amount dimension + time dimension to generate
+        # the same dimension as transaction datasets.
+        # TODO: change to feature_time_dim only for better naming?
+        expected_dim = cfg.transaction.feature_amount_dim \
+            + cfg.transaction.feature_time_dim
+        
+        self.linear = nn.Linear(cfg.dataset.edge_dim, expected_dim)
+        cfg.dataset.edge_dim = expected_dim
+
+    def forward(self, batch: deepsnap.batch.Batch) -> deepsnap.batch.Batch:
+        batch.edge_feature = self.linear(batch.edge_feature)
+        return batch
+
+
+register_edge_encoder('roland_general', LinearEdgeEncoder)
