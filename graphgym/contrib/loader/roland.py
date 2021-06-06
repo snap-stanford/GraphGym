@@ -336,4 +336,5 @@ def load_generic_dataset(format, name, dataset_dir):
         return graphs
 
 
+# TODO: change name.
 register_loader('roland_bsi_v3', load_generic_dataset)
