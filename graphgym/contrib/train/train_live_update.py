@@ -150,16 +150,6 @@ def train_live_update(loggers, loaders, model, optimizer, scheduler, datasets,
         if not hasattr(dataset[0], 'keep_ratio'):
             train_utils.precompute_edge_degree_info(dataset)
 
-    # if cfg.dataset.premade_datasets == 'fresh_save_cache':
-    #     if not os.path.exists(f'{cfg.dataset.dir}/cache/'):
-    #         os.mkdir(f'{cfg.dataset.dir}/cache/')
-    #     cache_path = '{}/cache/cached_datasets_{}_{}_{}.pt'.format(
-    #         cfg.dataset.dir, cfg.dataset.format.replace('.tsv', ''),
-    #         cfg.transaction.snapshot_freq,
-    #         datetime.now().strftime('%Y_%m_%d__%H_%M_%S')
-    #     )
-    #     torch.save(datasets, cache_path)
-
     num_splits = len(loggers)  # train/val/test splits.
     # range for today in (today, tomorrow) task pairs.
     task_range = range(len(datasets[0]) - cfg.transaction.horizon)
