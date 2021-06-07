@@ -61,7 +61,7 @@ class ScalableLinkPred(nn.Module):
             batch.edge_label
 
     def forward_pred(self, batch):
-        predict_batch_size = cfg.metric.link_pred_batch_size
+        predict_batch_size = cfg.gnn.link_pred_batch_size
         num_pred = len(batch.edge_label)
         label = batch.edge_label
         if num_pred >= predict_batch_size:
