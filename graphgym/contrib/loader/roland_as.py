@@ -114,8 +114,7 @@ def load_generic_dataset(format, name, dataset_dir):
         scaled_edge_time = 2 * (edge_time.clone() - base) / scale
         
         assert cfg.dataset.AS_node_feature in ['one', 'one_hot_id',
-                                               'one_hot_degree_global',
-                                               'one_hot_degree_local']
+                                               'one_hot_degree_global']
 
         if cfg.dataset.AS_node_feature == 'one':
             node_feature = torch.ones(num_nodes, 1)
