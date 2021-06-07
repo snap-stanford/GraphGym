@@ -15,13 +15,13 @@ from graphgym.models.layer import MLP
 from graphgym.register import register_head
 
 
-class LargeGNNEdgeHead(nn.Module):
+class ScalableLinkPred(nn.Module):
     def __init__(self, dim_in: int, dim_out: int):
         # Use dim_in for graph conv, since link prediction dim_out could be
         # binary
         # E.g. if decoder='dot', link probability is dot product between
         # node embeddings, of dimension dim_in
-        super(LargeGNNEdgeHead, self).__init__()
+        super(ScalableLinkPred, self).__init__()
         # module to decode edges from node embeddings
 
         if cfg.model.edge_decoding == 'concat':
@@ -61,8 +61,7 @@ class LargeGNNEdgeHead(nn.Module):
             batch.edge_label
 
     def forward_pred(self, batch):
-        # TODO: consider moving this to config.
-        predict_batch_size = 500000  # depends on GPU memroy size.
+        predict_batch_size = cfg.metric.link_pred_batch_size
         num_pred = len(batch.edge_label)
         label = batch.edge_label
         if num_pred >= predict_batch_size:
@@ -106,4 +105,4 @@ class LargeGNNEdgeHead(nn.Module):
         return pred, label
 
 
-register_head('link_pred_large', LargeGNNEdgeHead)
+register_head('scalable_link_pred', ScalableLinkPred)
