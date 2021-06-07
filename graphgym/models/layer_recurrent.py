@@ -1,6 +1,6 @@
-'''
+"""
 This file contains wrapper layers and constructors for dynamic/recurrent GNNs.
-'''
+"""
 from graphgym.register import register_layer
 import torch
 import torch.nn as nn
@@ -11,8 +11,8 @@ from graphgym.models.layer import layer_dict
 from graphgym.models.update import update_dict
 
 
-class RecurrentGraphLayer(nn.Module):
-    '''
+class GeneralRecurrentLayer(nn.Module):
+    """
     The recurrent graph layer for snapshot-based dynamic graphs.
     This layer requires
         (1): a GNN block for message passing.
@@ -23,11 +23,11 @@ class RecurrentGraphLayer(nn.Module):
     
     This layer corresponds to a particular l-th layer in multi-layer setting,
         the layer id is specified by 'id' in '__init__'.
-    '''
+    """
     def __init__(self, name: str, dim_in: int, dim_out: int, has_act: bool=True,
                  has_bn: bool=True, has_l2norm: bool=False, layer_id: int=0,
                  **kwargs):
-        '''
+        """
         Args:
             name (str): The name of GNN layer to use for message-passing.
             dim_in (int): Dimension of input node feature.
@@ -40,8 +40,8 @@ class RecurrentGraphLayer(nn.Module):
                 message passing result. Defaults to False.
             layer_id (int, optional): The layer id in multi-layer setting.
                 Defaults to 0.
-        '''
-        super(RecurrentGraphLayer, self).__init__()
+        """
+        super(GeneralRecurrentLayer, self).__init__()
         self.has_l2norm = has_l2norm
         if layer_id < 0:
             raise ValueError(f'layer_id must be non-negative, got {layer_id}.')
@@ -62,8 +62,7 @@ class RecurrentGraphLayer(nn.Module):
         if has_act:
             layer_wrapper.append(act_dict[cfg.gnn.act])
         self.post_layer = nn.Sequential(*layer_wrapper)
-        # self.update = self.construct_update_block(self.dim_in, self.dim_out,
-        #                                           self.layer_id)
+
         self.update = update_dict[cfg.gnn.embed_update_method](self.dim_in,
                                                                self.dim_out,
                                                                self.layer_id)
@@ -88,6 +87,3 @@ class RecurrentGraphLayer(nn.Module):
         # batch.node_states[self.layer_id] = node_states_new
         batch.node_feature = batch.node_states[self.layer_id]
         return batch
-
-
-register_layer('recurrent_graph_layer', RecurrentGraphLayer)
