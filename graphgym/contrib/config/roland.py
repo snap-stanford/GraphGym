@@ -34,6 +34,9 @@ def set_cfg_roland(cfg):
     # Options: {'none', 'identity', 'affine'}.
     cfg.gnn.skip_connection = 'none'
 
+    # The bath size while making link prediction, useful when number of negative
+    # edges is huge, use a smaller number depends on GPU memroy size..
+    cfg.gnn.link_pred_batch_size = 500000
     # ----------------------------------------------------------------------- #
     # Meta-Learning options.
     # ----------------------------------------------------------------------- #
