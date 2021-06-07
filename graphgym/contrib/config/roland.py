@@ -4,30 +4,43 @@ from graphgym.register import register_config
 
 
 def set_cfg_roland(cfg):
-    r'''
+    """
     This function sets the default config value for customized options
     :return: customized configuration use by the experiment.
-    '''
+    """
 
     # ----------------------------------------------------------------------- #
     # Customized options
     # ----------------------------------------------------------------------- #
-    # TODO: add documentation.
+
+    # Use to identify experiments, tensorboard will be saved to this path.
+    # Options: any string.
+    cfg.remark = ''
+
+    # ----------------------------------------------------------------------- #
+    # Additional GNN options.
+    # ----------------------------------------------------------------------- #
     # Method to update node embedding from old node embedding and new node features.
-    # Options: 'moving_average', 'masked_gru', 'gru'
-    # moving average: new embedding = r * old + (1-r) * node_feature.
-    # gru: new embedding = GRU(node_feature, old_embedding).
-    # masked_gru: only apply GRU to active nodes.
+    # Options: {'moving_average', 'mlp', 'gru'}
     cfg.gnn.embed_update_method = 'moving_average'
 
-    # how many layers to use in the MLP updater.
-    # default: 1, use a simple linear layer.
+    # How many layers to use in the MLP updater.
+    # Options: integers >= 1.
+    # NOTE: there is a known issue when set to 1, use >= 2 for now.
+    # Only effective when cfg.gnn.embed_update_method == 'mlp'.
     cfg.gnn.mlp_update_layers = 2
-    
+
+    # What kind of skip-connection to use.
+    # Options: {'none', 'identity', 'affine'}.
+    cfg.gnn.skip_connection = 'none'
+
+    # ----------------------------------------------------------------------- #
+    # Meta-Learning options.
+    # ----------------------------------------------------------------------- #
     # For meta-learning.
     cfg.meta = CN()
     # Whether to do meta-learning via initialization moving average.
-    # Default to False.
+    # Options: {True, False}
     cfg.meta.is_meta = False
 
     # Weight used in moving average for model parameters.
@@ -35,36 +48,36 @@ def set_cfg_roland(cfg):
     # Set W_init = (1-alpha) * W_init + alpha * M[t].
     # For the next period, use W_init as the initialization for fine-tune
     # Set cfg.meta.alpha = 1.0 to recover the original algorithm.
+    # Options: float between 0.0 and 1.0.
     cfg.meta.alpha = 0.9
 
-    # Use to identify experiments.
-    cfg.remark = ''
-    # Experimental Features, use this name space to save all controls for
-    # experimental features.
-    # TODO: consider remove experiment field.
-    # cfg.experimental = CN()
+    # ----------------------------------------------------------------------- #
+    # Additional GNN options.
+    # ----------------------------------------------------------------------- #
+    # How many snapshots for the truncated back-propagation.
+    # Set to a very large integer to use full-back-prop-through-time
+    # Options: integers >= 1.
+    cfg.train.tbptt_freq = 10
 
-    # Only use the first n snapshots (time periods) to train the model.
-    # Empirically, the model learns rich dynamics from only a few periods.
-    # Set to -1 if using all snapshots.
-    # cfg.experimental.restrict_training_set = -1
-
-    cfg.train.tbptt_freq = 5
-
+    # Early stopping tolerance in live-update.
+    # Options: integers >= 1.
     cfg.train.internal_validation_tolerance = 5
 
     # Computing MRR is slow in the baseline setting.
     # Only start to compute MRR in the test set range after certain time.
+    # Options: integers >= 0.
     cfg.train.start_compute_mrr = 0
-    
-    # How to handle node features in AS dataset.
-    # available: ['one', 'one_hot_id', 'one_hot_degree_global', 'one_hot_degree_local']
-    cfg.dataset.AS_node_feature = 'one'
 
     # ----------------------------------------------------------------------- #
-    # Additional dataset option for the BSI dataset.
+    # Additional dataset options.
     # ----------------------------------------------------------------------- #
+
+    # How to handle node features in AS-733 dataset.
+    # Options: ['one', 'one_hot_id', 'one_hot_degree_global']
+    cfg.dataset.AS_node_feature = 'one'
+
     # Method used to sample negative edges for edge_label_index.
+    # Options:
     # 'uniform': all non-existing edges have same probability of being sampled
     #            as negative edges.
     # 'src':  non-existing edges from high-degree nodes are more likely to be
@@ -73,10 +86,13 @@ def set_cfg_roland(cfg):
     #         to be sampled as negative edges.
     cfg.dataset.negative_sample_weight = 'uniform'
 
-    # whether to load heterogeneous graphs.
+    # Whether to load dataset as heterogeneous graphs.
+    # Options: {True, False}.
     cfg.dataset.is_hetero = False
 
-    # where to put type information. 'append' or 'graph_attribute'.
+    # Where to put type information.
+    # Options: {'append', 'graph_attribute'}.
+    # Only effective if cfg.dataset.is_hetero == True.
     cfg.dataset.type_info_loc = 'append'
 
     # whether to look for and load cached graph. By default (load_cache=False)
@@ -93,9 +109,8 @@ def set_cfg_roland(cfg):
     # are for validation and the last 10% snapshots are for testing.
     cfg.dataset.split_method = 'default'
 
-    cfg.gnn.skip_connection = 'none'  # {'none', 'identity', 'affine'}
     # ----------------------------------------------------------------------- #
-    # Customized options
+    # Customized options: `transaction` for ROLAND dynamic graphs.
     # ----------------------------------------------------------------------- #
 
     # example argument group
@@ -117,7 +132,6 @@ def set_cfg_roland(cfg):
     # how to use transaction history
     # full or rolling
     cfg.transaction.history = 'full'
-
 
     # type of loss: supervised / meta
     cfg.transaction.loss = 'meta'
@@ -156,6 +170,10 @@ def set_cfg_roland(cfg):
     # and its degree in snapshot t.
     cfg.transaction.keep_ratio = 'linear'
 
+    # ----------------------------------------------------------------------- #
+    # Customized options: metrics.
+    # ----------------------------------------------------------------------- #
+
     cfg.metric = CN()
     # How many negative edges for each node to compute rank-based evaluation
     # metrics such as MRR and recall at K.
@@ -173,26 +191,6 @@ def set_cfg_roland(cfg):
     # Step 4: average over all users.
     # expected MRR(min) <= MRR(mean) <= MRR(max).
     cfg.metric.mrr_method = 'max'
-
-    # TODO: consider remove link_pred_spec field.
-    # Specs for the link prediction task using BSI dataset.
-    # All units are days.
-    # cfg.link_pred_spec = CN()
-
-    # The period of `today`'s increase: how often the system is making forecast.
-    # E.g., when = 1,
-    # the system forecasts transactions in upcoming 7 days for everyday.
-    # One training epoch loops over
-    # {Jan-1-2020, Jan-2-2020, Jan-3-2020..., Dec-31-2020}
-    # When = 7, the system makes prediction every week.
-    # E.g., the system forecasts transactions in upcoming 7 days
-    # on every Monday.
-    # cfg.link_pred_spec.forecast_frequency = 1
-
-    # How many days into the future the model is trained to predict.
-    # The model forecasts transactions in (today, today + forecast_horizon].
-    # NOTE: forecast_horizon should >= forecast_frequency to cover all days.
-    # cfg.link_pred_spec.forecast_horizon = 7
 
 
 register_config('roland', set_cfg_roland)
