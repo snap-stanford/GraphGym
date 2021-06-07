@@ -10,18 +10,25 @@ from typing import List
 
 import deepsnap
 import graphgym.contrib.loader.dynamic_graph_utils as utils
+import torch
 from deepsnap.graph import Graph
 from graphgym.config import cfg
 from graphgym.register import register_loader
 
 
 def load_single_dataset(dataset_dir: str) -> Graph:
-    # TODO: Load your data here.
-    node_feature = None  # (num_nodes, *)
-    edge_feature = None  # (num_edges, *)
-    edge_index = None  # (2, num_edges)
+    # TODO: Load your data from dataset_dir here.
+    # Example:
+    num_nodes = 500
+    num_node_feature = 16
+    num_edges = 10000
+    num_edge_feature = 32
+    node_feature = torch.rand((num_nodes, num_node_feature))
+    edge_feature = torch.rand((num_edges, num_edge_feature))
+    edge_index = torch.randint(0, num_nodes - 1, (2, num_edges))
     # edge time should be unix timestmap integers.
-    edge_time = None  # (num_edges)
+    # random generate timestamps from 2021-05-01 to 2021-06-01
+    edge_time = torch.randint(1619852450, 1622530850, (num_edges,)).sort()[0]
 
     graph = Graph(
         node_feature=node_feature,
@@ -48,7 +55,7 @@ def load_generic_dataset(format: str, name: str, dataset_dir: str
         List[deepsnap.graph.Graph]: a list of graph snapshots.
     """
     # TODO: change the format name.
-    if format == 'generic':
+    if format == 'YOUR_FORMAT_NAME_HERE':
         dataset_dir = os.path.join(dataset_dir, name)
         g_all = load_single_dataset(dataset_dir)
         snapshot_list = utils.make_graph_snapshot(
@@ -59,4 +66,4 @@ def load_generic_dataset(format: str, name: str, dataset_dir: str
 
 
 # TODO: don't forget to register the loader.
-register_loader('roland_generic', load_generic_dataset)
+register_loader('YOUR_LOADER_NAME_HERE', load_generic_dataset)
