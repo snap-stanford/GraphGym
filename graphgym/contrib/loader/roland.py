@@ -1,37 +1,113 @@
 """
-A refined version for loading the roland dataset. This version has the
-following key points:
-
-(1) Node's features are determined by their first transaction, so that
-    payer and payee information are no longer included as a edge features.
-
-    Node features include:
-        company identity, bank, country, region, Skd, SkdL1, SkdL2, Skis,
-        SkisL1, SkisL2.
-
-(2) edge features include: # system, currency, scaled amount (EUR), and
-    scaled timestamp.
-
-Mar. 31, 2021
+One single loader for the roland project.
 """
 import os
-from typing import List, Union
+from datetime import datetime
+from typing import List
 
 import dask.dataframe as dd
-import deepsnap
 import graphgym.contrib.loader.dynamic_graph_utils as utils
 import numpy as np
 import pandas as pd
 import torch
-from dask_ml.preprocessing import OrdinalEncoder
+from dask_ml.preprocessing import OrdinalEncoder as DaskOrdinalEncoder
 from deepsnap.graph import Graph
 from graphgym.config import cfg
 from graphgym.register import register_loader
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
+from tqdm import tqdm
 
 # =============================================================================
-# Configure and instantiate the loader here.
+# AS-733 Dataset.
+# =============================================================================
+
+
+def load_AS_dataset(dataset_dir: str) -> Graph:
+    all_files = [x for x in sorted(os.listdir(dataset_dir))
+                 if (x.startswith('as') and x.endswith('.txt'))]
+    assert len(all_files) == 733
+    assert all(x.endswith('.txt') for x in all_files)
+
+    def file2timestamp(file_name: str) -> int:
+        t = file_name.strip('.txt').strip('as')
+        ts = int(datetime.strptime(t, '%Y%m%d').timestamp())
+        return ts
+
+    edge_index_lst, edge_time_lst = list(), list()
+    all_files = sorted(all_files)
+
+    for graph_file in tqdm(all_files):
+        today = file2timestamp(graph_file)
+        graph_file = os.path.join(dataset_dir, graph_file)
+
+        src, dst = list(), list()
+        with open(graph_file, 'r') as f:
+            for line in f.readlines():
+                if line.startswith('#'):
+                    continue
+                line = line.strip('\n')
+                v1, v2 = line.split('\t')
+                src.append(int(v1))
+                dst.append(int(v2))
+
+        edge_index = np.stack((src, dst))
+        edge_index_lst.append(edge_index)
+
+        edge_time = np.ones(edge_index.shape[1]) * today
+        edge_time_lst.append(edge_time)
+
+    edge_index_raw = np.concatenate(edge_index_lst, axis=1).astype(int)
+
+    num_nodes = len(np.unique(edge_index_raw))
+
+    # encode node indices to consecutive integers.
+    node_indices = np.sort(np.unique(edge_index_raw))
+    enc = SkOrdinalEncoder(categories=[node_indices, node_indices])
+    edge_index = enc.fit_transform(edge_index_raw.transpose()).transpose()
+    edge_index = torch.Tensor(edge_index).long()
+    edge_time = torch.Tensor(np.concatenate(edge_time_lst))
+
+    # Use scaled datetime as edge_feature.
+    scale = edge_time.max() - edge_time.min()
+    base = edge_time.min()
+    scaled_edge_time = 2 * (edge_time.clone() - base) / scale
+
+    assert cfg.dataset.AS_node_feature in ['one', 'one_hot_id',
+                                           'one_hot_degree_global']
+
+    if cfg.dataset.AS_node_feature == 'one':
+        node_feature = torch.ones(num_nodes, 1)
+    elif cfg.dataset.AS_node_feature == 'one_hot_id':
+        # One hot encoding the node ID.
+        node_feature = torch.Tensor(np.eye(num_nodes))
+    elif cfg.dataset.AS_node_feature == 'one_hot_degree_global':
+        # undirected graph, use only out degree.
+        _, node_degree = torch.unique(edge_index[0], sorted=True,
+                                      return_counts=True)
+        node_feature = np.zeros((num_nodes, node_degree.max() + 1))
+        node_feature[np.arange(num_nodes), node_degree] = 1
+        # 1 ~ 63748 degrees, but only 710 possible levels, exclude all zero
+        # columns.
+        non_zero_cols = (node_feature.sum(axis=0) > 0)
+        node_feature = node_feature[:, non_zero_cols]
+        node_feature = torch.Tensor(node_feature)
+    else:
+        raise NotImplementedError
+
+    g_all = Graph(
+        node_feature=node_feature,
+        edge_feature=scaled_edge_time.reshape(-1, 1),
+        edge_index=edge_index,
+        edge_time=edge_time,
+        directed=True
+    )
+
+    return g_all
+
+
+# =============================================================================
+# BSI-SVT Dataset
 # =============================================================================
 # Required for all graphs.
 SRC_NODE: str = 'Payer'
@@ -82,39 +158,39 @@ def construct_additional_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Constructs additional features of the transaction dataset.
     """
-    # for p in ('Payer', 'Payee'):
-    #     # %% Location of companies.
-    #     mask = (df[p + 'Country'] != 'SI')
-    #     out_of_country = np.empty(len(df), dtype=object)
-    #     out_of_country[mask] = 'OutOfCountry'
-    #     out_of_country[~mask] = 'InCountry'
-    #     df[p + 'OutOfCountry'] = out_of_country
-    #
-    # mask = (df['PayerCountry'] != df['PayeeCountry'])
-    # missing_mask = np.logical_or(df['PayerCountry'] == 'missing',
-    #                              df['PayeeCountry'] == 'missing')
-    # cross_country = np.empty(len(df), dtype=object)
-    # cross_country[mask] = 'CrossCountry'
-    # cross_country[~mask] = 'WithinCountry'
-    # cross_country[missing_mask] = 'Missing'
-    # df['CrossCountry'] = cross_country
-    #
-    # amount_level = np.empty(len(df), dtype=object)
-    # mask_small = df['AmountEUR'] < 500
-    # mask_medium = np.logical_and(df['AmountEUR'] >= 500,
-    #                              df['AmountEUR'] < 1000)
-    # mask_large = df['AmountEUR'] >= 1000
-    # amount_level[mask_small] = '$<500'
-    # amount_level[mask_medium] = '500<=$<1k'
-    # amount_level[mask_large] = '$>=1k'
-    #
-    # df['AmountLevel'] = amount_level
+    for p in ('Payer', 'Payee'):
+        # %% Location of companies.
+        mask = (df[p + 'Country'] != 'SI')
+        out_of_country = np.empty(len(df), dtype=object)
+        out_of_country[mask] = 'OutOfCountry'
+        out_of_country[~mask] = 'InCountry'
+        df[p + 'OutOfCountry'] = out_of_country
+
+    mask = (df['PayerCountry'] != df['PayeeCountry'])
+    missing_mask = np.logical_or(df['PayerCountry'] == 'missing',
+                                 df['PayeeCountry'] == 'missing')
+    cross_country = np.empty(len(df), dtype=object)
+    cross_country[mask] = 'CrossCountry'
+    cross_country[~mask] = 'WithinCountry'
+    cross_country[missing_mask] = 'Missing'
+    df['CrossCountry'] = cross_country
+
+    amount_level = np.empty(len(df), dtype=object)
+    mask_small = df['AmountEUR'] < 500
+    mask_medium = np.logical_and(df['AmountEUR'] >= 500,
+                                 df['AmountEUR'] < 1000)
+    mask_large = df['AmountEUR'] >= 1000
+    amount_level[mask_small] = '$<500'
+    amount_level[mask_medium] = '500<=$<1k'
+    amount_level[mask_large] = '$>=1k'
+
+    df['AmountLevel'] = amount_level
     return df
 
 
-def load_single_dataset(dataset_dir: str, is_hetero: bool = True,
-                        type_info_loc: str = 'append'
-                        ) -> Graph:
+def load_bsi_dataset(dataset_dir: str, is_hetero: bool = False,
+                     type_info_loc: str = 'append'
+                     ) -> Graph:
     """
     Loads a single graph object from tsv file.
 
@@ -130,7 +206,8 @@ def load_single_dataset(dataset_dir: str, is_hetero: bool = True,
     df_trans = dd.read_csv(dataset_dir, sep='\t', low_memory=False)
     df_trans = df_trans.fillna('missing')
     df_trans = df_trans.compute()
-    df_trans = construct_additional_features(df_trans)
+    if is_hetero:
+        df_trans = construct_additional_features(df_trans)
     df_trans.reset_index(drop=True, inplace=True)  # necessary for dask.
 
     # a unique values of node-level categorical variables.
@@ -155,7 +232,7 @@ def load_single_dataset(dataset_dir: str, is_hetero: bool = True,
 
     # Encoding categorical variables, the dask_ml.OrdinalEncoder only modify
     # and encode columns of categorical dtype.
-    enc = OrdinalEncoder()
+    enc = DaskOrdinalEncoder()
     df_encoded = enc.fit_transform(df_trans)
     df_encoded.reset_index(drop=True, inplace=True)
     print('Columns encoded to ordinal:')
@@ -174,9 +251,10 @@ def load_single_dataset(dataset_dir: str, is_hetero: bool = True,
     # Prepare for output.
     edge_feature = torch.Tensor(df_encoded[EDGE_FEATURE_COLS].values)
 
-    print('feature_edge_int_num',
-          [int(torch.max(edge_feature[:, i])) + 1
-           for i in range(len(EDGE_FEATURE_COLS) - 2)])
+    feature_edge_int_num = [int(torch.max(edge_feature[:, i])) + 1
+                            for i in range(len(EDGE_FEATURE_COLS) - 2)]
+    cfg.transaction.feature_edge_int_num = feature_edge_int_num
+    print('feature_edge_int_num', feature_edge_int_num)
 
     edge_index = torch.Tensor(
         df_encoded[[SRC_NODE, DST_NODE]].values.transpose()).long()  # (2, E)
@@ -245,76 +323,226 @@ def load_single_dataset(dataset_dir: str, is_hetero: bool = True,
 
     return graph
 
-
-# def make_graph_snapshot(g_all: Graph,
-#                         snapshot_freq: str,
-#                         is_hetero: bool = True) -> list:
-#     """
-#     Constructs a list of graph snapshots (Graph or HeteroGraph) based
-#         on g_all and snapshot_freq.
-#
-#     Args:
-#         g_all: the entire homogenous graph.
-#         snapshot_freq: snapshot frequency.
-#         is_hetero: if make heterogeneous graphs.
-#     """
-#     t = g_all.edge_time.numpy().astype(np.int64)
-#     snapshot_freq = snapshot_freq.upper()
-#
-#     period_split = pd.DataFrame(
-#         {'Timestamp': t,
-#          'TransactionTime': pd.to_datetime(t, unit='s')},
-#         index=range(len(g_all.edge_time)))
-#
-#     freq_map = {'D': '%j',  # day of year.
-#                 'W': '%W',  # week of year.
-#                 'M': '%m'  # month of year.
-#                 }
-#
-#     period_split['Year'] = period_split['TransactionTime'].dt.strftime(
-#         '%Y').astype(int)
-#
-#     period_split['SubYearFlag'] = period_split['TransactionTime'].dt.strftime(
-#         freq_map[snapshot_freq]).astype(int)
-#
-#     period2id = period_split.groupby(['Year', 'SubYearFlag']).indices
-#     # e.g., dictionary w/ key = (2021, 3) and val = array(edges).
-#
-#     periods = sorted(list(period2id.keys()))  # ascending order.
-#     # alternatively, sorted(..., key=lambda x: x[0] + x[1]/1000).
-#     snapshot_list = list()
-#     for p in periods:
-#         # unique IDs of edges in this period.
-#         period_members = period2id[p]
-#
-#         g_incr = Graph(
-#             node_feature=g_all.node_feature,
-#             edge_feature=g_all.edge_feature[period_members, :],
-#             edge_index=g_all.edge_index[:, period_members],
-#             edge_time=g_all.edge_time[period_members],
-#             directed=g_all.directed,
-#             list_n_type=g_all.list_n_type if is_hetero else None,
-#             list_e_type=g_all.list_e_type if is_hetero else None,
-#         )
-#         if is_hetero and hasattr(g_all, 'node_type'):
-#             g_incr.node_type = g_all.node_type
-#             g_incr.edge_type = g_all.edge_type[period_members]
-#         snapshot_list.append(g_incr)
-#     return snapshot_list
+# =============================================================================
+# Bitcoin Dataset.
+# =============================================================================
 
 
-def load_generic(dataset_dir: str,
-                 snapshot: bool = True,
-                 snapshot_freq: str = None,
-                 is_hetero: bool = False,
-                 type_info_loc: str = 'graph_attribute'
-                 ) -> Union[deepsnap.graph.Graph, List[deepsnap.graph.Graph]]:
-    g_all = load_single_dataset(dataset_dir, is_hetero=is_hetero,
-                                type_info_loc=type_info_loc)
-    if not snapshot:
-        return g_all
-    else:
-        snapshot_list = utils.make_graph_snapshot(g_all, snapshot_freq, is_hetero)
+def load_bitcoin_dataset(dataset_dir: str) -> Graph:
+    df_trans = pd.read_csv(dataset_dir, sep=',', header=None, index_col=None)
+    df_trans.columns = ['SOURCE', 'TARGET', 'RATING', 'TIME']
+    # NOTE: 'SOURCE' and 'TARGET' are not consecutive.
+    num_nodes = len(
+        pd.unique(df_trans[['SOURCE', 'TARGET']].to_numpy().ravel()))
+
+    # bitcoin OTC contains decimal numbers, round them.
+    df_trans['TIME'] = df_trans['TIME'].astype(np.int).astype(np.float)
+    assert not np.any(pd.isna(df_trans).values)
+
+    time_scaler = MinMaxScaler((0, 2))
+    df_trans['TimestampScaled'] = time_scaler.fit_transform(
+        df_trans['TIME'].values.reshape(-1, 1))
+
+    edge_feature = torch.Tensor(
+        df_trans[['RATING', 'TimestampScaled']].values)  # (E, edge_dim)
+
+    node_indices = np.sort(
+        pd.unique(df_trans[['SOURCE', 'TARGET']].to_numpy().ravel()))
+    enc = SkOrdinalEncoder(categories=[node_indices, node_indices])
+    raw_edges = df_trans[['SOURCE', 'TARGET']].values
+    edge_index = enc.fit_transform(raw_edges).transpose()
+    edge_index = torch.LongTensor(edge_index)
+
+    # num_nodes = torch.max(edge_index) + 1
+    # Use dummy node features.
+    node_feature = torch.ones(num_nodes, 1).float()
+
+    edge_time = torch.FloatTensor(df_trans['TIME'].values)
+
+    graph = Graph(
+        node_feature=node_feature,
+        edge_feature=edge_feature,
+        edge_index=edge_index,
+        edge_time=edge_time,
+        directed=True
+    )
+    return graph
+
+
+# =============================================================================
+# Reddit Dataset.
+# =============================================================================
+
+
+def load_reddit_dataset(dataset_dir: str) -> Graph:
+    df_trans = dd.read_csv(dataset_dir, sep='\t', low_memory=False)
+    df_trans = df_trans.compute()
+    assert not np.any(pd.isna(df_trans).values)
+    df_trans.reset_index(drop=True, inplace=True)  # required for dask.
+
+    # Encode src and dst node IDs.
+    # get unique values of src and dst.
+    unique_subreddits = pd.unique(
+        df_trans[['SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT']].to_numpy().ravel())
+    unique_subreddits = np.sort(unique_subreddits)
+    cate_type = pd.api.types.CategoricalDtype(categories=unique_subreddits,
+                                              ordered=True)
+    df_trans['SOURCE_SUBREDDIT'] = df_trans['SOURCE_SUBREDDIT'].astype(
+        cate_type)
+    df_trans['TARGET_SUBREDDIT'] = df_trans['TARGET_SUBREDDIT'].astype(
+        cate_type)
+    enc = DaskOrdinalEncoder(columns=['SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT'])
+    df_encoded = enc.fit_transform(df_trans)
+    df_encoded.reset_index(drop=True, inplace=True)
+
+    # Add node feature from the embedding dataset.
+    node_embedding_dir = os.path.join(cfg.dataset.dir,
+                                      'web-redditEmbeddings-subreddits.csv')
+
+    # index: subreddit name, values: embedding.
+    df_node = pd.read_csv(node_embedding_dir, header=None, index_col=0)
+
+    # ordinal encoding follows order in unique_subreddits.
+    # df_encoded['SOURCE_SUBREDDIT'] contains encoded integral values.
+    # unique_subreddits[df_encoded['SOURCE_SUBREDDIT']]
+    # tries to reverse encoded_integer --> original subreddit name.
+    # check if recovered sub-reddit name matched the raw data.
+    for col in ['SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT']:
+        assert all(unique_subreddits[df_encoded[col]] == df_trans[col])
+
+    num_nodes = len(cate_type.categories)
+    node_feature = torch.ones(size=(num_nodes, 300))
+    # for nodes without precomputed embedding, use the average value.
+    node_feature = node_feature * np.mean(df_node.values)
+
+    # cate_type.categories[i] is encoded to i, by construction.
+    for i, subreddit in enumerate(cate_type.categories):
+        if subreddit in df_node.index:
+            embedding = df_node.loc[subreddit]
+            node_feature[i, :] = torch.Tensor(embedding.values)
+
+    # Original format: df['TIMESTAMP'][0] = '2013-12-31 16:39:18'
+    # Convert to unix timestamp (integers).
+    df_encoded['TIMESTAMP'] = pd.to_datetime(df_encoded['TIMESTAMP'],
+                                             format='%Y-%m-%d %H:%M:%S')
+    df_encoded['TIMESTAMP'] = (df_encoded['TIMESTAMP'] - pd.Timestamp(
+        '1970-01-01')) // pd.Timedelta('1s')  # now integers.
+
+    # Scale edge time.
+    time_scaler = MinMaxScaler((0, 2))
+    df_encoded['TimestampScaled'] = time_scaler.fit_transform(
+        df_encoded['TIMESTAMP'].values.reshape(-1, 1))
+
+    # Link sentimental representation (86-dimension).
+    # comma-separated string: '3.1,5.1,0.0,...'
+    senti_str_lst = df_encoded['PROPERTIES'].values
+    edge_senti_embedding = [x.split(',') for x in senti_str_lst]
+    edge_senti_embedding = np.array(edge_senti_embedding).astype(np.float32)
+    # (E, 86)
+
+    ef = df_encoded[['TimestampScaled', 'LINK_SENTIMENT']].values
+    edge_feature = np.concatenate([ef, edge_senti_embedding], axis=1)
+    edge_feature = torch.Tensor(edge_feature).float()  # (E, 88)
+
+    edge_index = torch.Tensor(
+        df_encoded[['SOURCE_SUBREDDIT',
+                    'TARGET_SUBREDDIT']].values.transpose()).long()  # (2, E)
+    num_nodes = torch.max(edge_index) + 1
+
+    edge_time = torch.FloatTensor(df_encoded['TIMESTAMP'].values)
+
+    graph = Graph(
+        node_feature=node_feature,
+        edge_feature=edge_feature,
+        edge_index=edge_index,
+        edge_time=edge_time,
+        directed=True
+    )
+
+    return graph
+
+
+# =============================================================================
+# College Message Dataset.
+# =============================================================================
+
+
+def load_college_message_dataset(dataset_dir: str) -> Graph:
+    df_trans = pd.read_csv(dataset_dir, sep=' ', header=None)
+    df_trans.columns = ['SRC', 'DST', 'TIMESTAMP']
+    assert not np.any(pd.isna(df_trans).values)
+    df_trans.reset_index(drop=True, inplace=True)
+
+    # Node IDs of this dataset start from 1, re-index to 0-based.
+    df_trans['SRC'] -= 1
+    df_trans['DST'] -= 1
+
+    print('num of edges:', len(df_trans))
+    print('num of nodes:', np.max(df_trans[['SRC', 'DST']].values) + 1)
+
+    time_scaler = MinMaxScaler((0, 2))
+    df_trans['TimestampScaled'] = time_scaler.fit_transform(
+        df_trans['TIMESTAMP'].values.reshape(-1, 1))
+
+    edge_feature = torch.Tensor(
+        df_trans[['TimestampScaled']].values).view(-1, 1)
+    edge_index = torch.Tensor(
+        df_trans[['SRC', 'DST']].values.transpose()).long()  # (2, E)
+    num_nodes = torch.max(edge_index) + 1
+
+    node_feature = torch.ones(num_nodes, 1)
+
+    edge_time = torch.FloatTensor(df_trans['TIMESTAMP'].values)
+
+    graph = Graph(
+        node_feature=node_feature,
+        edge_feature=edge_feature,
+        edge_index=edge_index,
+        edge_time=edge_time,
+        directed=True
+    )
+
+    return graph
+
+
+def load_roland_dataset(format: str, name: str, dataset_dir: str
+                        ) -> List[Graph]:
+    if format == 'roland':
+        # Load the entire graph from specified dataset.
+        if name in ['AS-733']:
+            g_all = load_AS_dataset(os.path.join(dataset_dir, name))
+        elif name in ['bsi_svt_2008.tsv']:
+            # NOTE: only BSI dataset supports hetero graph.
+            g_all = load_bsi_dataset(os.path.join(dataset_dir, name),
+                                     is_hetero=cfg.dataset.is_hetero,
+                                     type_info_loc=cfg.dataset.type_info_loc)
+        elif name in ['bitcoinotc.csv', 'bitcoinalpha.csv']:
+            g_all = load_bitcoin_dataset(os.path.join(dataset_dir, name))
+        elif name in ['reddit-body.tsv', 'reddit-title.tsv']:
+            g_all = load_reddit_dataset(os.path.join(dataset_dir, name))
+        elif name in ['CollegeMsg.txt']:
+            g_all = load_college_message_dataset(
+                os.path.join(dataset_dir, name))
+        else:
+            raise ValueError(f'Unsupported filename')
+
+        # Make the graph snapshots.
+        snapshot_freq = cfg.transaction.snapshot_freq
+        if snapshot_freq.upper() in ['D', 'W', 'M']:
+            # Split snapshot using calendar frequency.
+            snapshot_list = utils.make_graph_snapshot(g_all,
+                                                      snapshot_freq,
+                                                      cfg.dataset.is_hetero)
+        elif snapshot_freq.endswith('s'):
+            # Split using frequency in terms of seconds.
+            assert snapshot_freq.endswith('s')
+            snapshot_freq = int(snapshot_freq.strip('s'))
+            assert not cfg.dataset.is_hetero, 'Hetero graph is not supported.'
+            snapshot_list = utils.make_graph_snapshot_by_seconds(g_all,
+                                                                 snapshot_freq)
+        else:
+            raise ValueError(f'Unsupported frequency type: {snapshot_freq}')
+
         num_nodes = g_all.edge_index.max() + 1
 
         for g_snapshot in snapshot_list:
@@ -322,19 +550,13 @@ def load_generic(dataset_dir: str,
             g_snapshot.node_cells = [0 for _ in range(cfg.gnn.layers_mp)]
             g_snapshot.node_degree_existing = torch.zeros(num_nodes)
 
-        return snapshot_list
+        # Filter small snapshots.
+        filtered_graphs = list()
+        for g in snapshot_list:
+            if g.num_edges >= 10:
+                filtered_graphs.append(g)
+
+        return filtered_graphs
 
 
-def load_generic_dataset(format, name, dataset_dir):
-    if format == 'roland_bsi_general':
-        dataset_dir = os.path.join(dataset_dir, name)
-        graphs = load_generic(dataset_dir,
-                              snapshot=cfg.transaction.snapshot,
-                              snapshot_freq=cfg.transaction.snapshot_freq,
-                              is_hetero=cfg.dataset.is_hetero,
-                              type_info_loc=cfg.dataset.type_info_loc)
-        return graphs
-
-
-# TODO: change name.
-register_loader('roland_bsi_v3', load_generic_dataset)
+register_loader('roland', load_roland_dataset)
