@@ -1,14 +1,37 @@
 """
 Metrics, other utility, and helper functions.
 """
+# TODO: proof-read this file.
+# TODO: remove comments.
+import copy
+
 import deepsnap
 import numpy as np
 import torch
 from graphgym.config import cfg
 from graphgym.loss import compute_loss
+from graphgym.utils.stats import node_degree
 from torch_scatter import scatter_max, scatter_mean, scatter_min
-# TODO: proof-read this file.
-# TODO: remove comments.
+
+
+@torch.no_grad()
+def average_state_dict(dict1: dict, dict2: dict, weight: float) -> dict:
+    """
+    Average two model.state_dict() objects,
+    ut = (1-w)*dict1 + w*dict2
+    when dict1, dict2 are model_dicts, this method updates the meta-model.
+    """
+    assert 0 <= weight <= 1
+    d1 = copy.deepcopy(dict1)
+    d2 = copy.deepcopy(dict2)
+    out = dict()
+    for key in d1.keys():
+        assert isinstance(d1[key], torch.Tensor)
+        param1 = d1[key].detach().clone()
+        assert isinstance(d2[key], torch.Tensor)
+        param2 = d2[key].detach().clone()
+        out[key] = (1 - weight) * param1 + weight * param2
+    return out
 
 
 def get_keep_ratio(existing: torch.Tensor,
@@ -50,6 +73,33 @@ def get_keep_ratio(existing: torch.Tensor,
     else:
         raise NotImplementedError(f'Mode {mode} is not supported.')
     return ratio
+
+
+@torch.no_grad()
+def precompute_edge_degree_info(dataset: deepsnap.dataset.GraphDataset):
+    """Pre-computes edge_degree_existing, edge_degree_new and keep ratio
+    at each snapshot. Inplace modifications.
+    """
+    # Assume all graph snapshots have the same number of nodes.
+    num_nodes = dataset[0].node_feature.shape[0]
+    for t in range(len(dataset)):
+        if t == 0:
+            # No previous edges for any nodes.
+            dataset[t].node_degree_existing = torch.zeros(num_nodes)
+        else:
+            # degree[<t] = degree[<t-1] + degree[=t-1].
+            dataset[t].node_degree_existing \
+                = dataset[t - 1].node_degree_existing \
+                + dataset[t - 1].node_degree_new
+
+        dataset[t].node_degree_new = node_degree(dataset[t].edge_index,
+                                                 n=num_nodes)
+
+        dataset[t].keep_ratio = get_keep_ratio(
+            existing=dataset[t].node_degree_existing,
+            new=dataset[t].node_degree_new,
+            mode=cfg.transaction.keep_ratio)
+        dataset[t].keep_ratio = dataset[t].keep_ratio.unsqueeze(-1)
 
 
 def size_of(batch: deepsnap.graph.Graph) -> int:

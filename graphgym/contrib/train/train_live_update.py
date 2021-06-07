@@ -22,53 +22,6 @@ from tqdm import tqdm
 
 
 @torch.no_grad()
-def average_state_dict(dict1: dict, dict2: dict, weight: float) -> dict:
-    """
-    Average two model.state_dict() objects,
-    ut = (1-w)*dict1 + w*dict2
-    when dict1, dict2 are model_dicts, this method updates the meta-model.
-    """
-    assert 0 <= weight <= 1
-    d1 = copy.deepcopy(dict1)
-    d2 = copy.deepcopy(dict2)
-    out = dict()
-    for key in d1.keys():
-        assert isinstance(d1[key], torch.Tensor)
-        param1 = d1[key].detach().clone()
-        assert isinstance(d2[key], torch.Tensor)
-        param2 = d2[key].detach().clone()
-        out[key] = (1 - weight) * param1 + weight * param2
-    return out
-
-
-@torch.no_grad()
-def precompute_edge_degree_info(dataset: deepsnap.dataset.GraphDataset):
-    """Pre-computes edge_degree_existing, edge_degree_new and keep ratio
-    at each snapshot. Inplace modifications.
-    """
-    # Assume all graph snapshots have the same number of nodes.
-    num_nodes = dataset[0].node_feature.shape[0]
-    for t in range(len(dataset)):
-        if t == 0:
-            # No previous edges for any nodes.
-            dataset[t].node_degree_existing = torch.zeros(num_nodes)
-        else:
-            # degree[<t] = degree[<t-1] + degree[=t-1].
-            dataset[t].node_degree_existing \
-                = dataset[t - 1].node_degree_existing \
-                + dataset[t - 1].node_degree_new
-
-        dataset[t].node_degree_new = node_degree(dataset[t].edge_index,
-                                                 n=num_nodes)
-
-        dataset[t].keep_ratio = train_utils.get_keep_ratio(
-            existing=dataset[t].node_degree_existing,
-            new=dataset[t].node_degree_new,
-            mode=cfg.transaction.keep_ratio)
-        dataset[t].keep_ratio = dataset[t].keep_ratio.unsqueeze(-1)
-
-
-@torch.no_grad()
 def get_task_batch(dataset: deepsnap.dataset.GraphDataset,
                    today: int, tomorrow: int,
                    prev_node_states: Optional[Dict[str, List[torch.Tensor]]]
@@ -81,7 +34,7 @@ def get_task_batch(dataset: deepsnap.dataset.GraphDataset,
     different everytime get_task_batch() is called.
 
     Moreover, copy node-memories (node_states and node_cells) to the batch.
-    
+
     Lastly, this method moves the created task batch to the appropriate device.
     """
     assert today < tomorrow < len(dataset)
@@ -161,7 +114,7 @@ def train_step(model, optimizer, scheduler, dataset,
 @torch.no_grad()
 def evaluate_step(model, dataset, task: Tuple[int, int],
                   prev_node_states: Optional[Dict[str, List[torch.Tensor]]],
-                  fast: bool=False) -> Dict[str, float]:
+                  fast: bool = False) -> Dict[str, float]:
     """
     Evaluate model's performance on task = (today, tomorrow)
         where today and tomorrow are integers indexing snapshots.
@@ -195,7 +148,7 @@ def train_live_update(loggers, loaders, model, optimizer, scheduler, datasets,
     for dataset in datasets:
         # Sometimes edge degree info is already included in dataset.
         if not hasattr(dataset[0], 'keep_ratio'):
-            precompute_edge_degree_info(dataset)
+            train_utils.precompute_edge_degree_info(dataset)
 
     # if cfg.dataset.premade_datasets == 'fresh_save_cache':
     #     if not os.path.exists(f'{cfg.dataset.dir}/cache/'):
@@ -310,9 +263,9 @@ def train_live_update(loggers, loaders, model, optimizer, scheduler, datasets,
                 model_meta = copy.deepcopy(best_model['state'])
             else:  # for subsequent task, update init.
                 # (1-alpha)*model_meta + alpha*best_model.
-                model_meta = average_state_dict(model_meta,
-                                                best_model['state'],
-                                                cfg.meta.alpha)
+                model_meta = train_utils.average_state_dict(model_meta,
+                                                            best_model['state'],
+                                                            cfg.meta.alpha)
 
         prev_node_states = update_node_states(model, datasets[0], (t, t + 1),
                                               prev_node_states)
