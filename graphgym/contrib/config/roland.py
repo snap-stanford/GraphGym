@@ -109,6 +109,8 @@ def set_cfg_roland(cfg):
     # are for validation and the last 10% snapshots are for testing.
     cfg.dataset.split_method = 'default'
 
+    # In the case of live-update, whether to predict all edges at time t+1.
+    cfg.dataset.link_pred_all_edges = False
     # ----------------------------------------------------------------------- #
     # Customized options: `transaction` for ROLAND dynamic graphs.
     # ----------------------------------------------------------------------- #
