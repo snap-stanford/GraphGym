@@ -32,34 +32,33 @@ mv ./soc-redditHyperlinks-body.tsv ./reddit-body.tsv
 mv ./soc-redditHyperlinks-title.tsv ./reddit-title.tsv
 ```
 ## Examples of ROLAND Use Cases
-See `./run/run_roland_single.sh` for experiments on all datasets.
+The ROLAND project focuses on link-predictions for homogenous dynamic graphs.
 To run link-prediction task on `CollegeMsg.txt` dataset:
 ```bash
 cd ./run
 python3 main_dynamic.py --cfg configs/ROLAND/roland_gru_ucimsg.yaml --repeat 1
 ```
+For other datasets:
+```bash
+python3 main_dynamic.py --cfg configs/ROLAND/roland_gru_btcalpha.yaml --repeat 1
+
+python3 main_dynamic.py --cfg configs/ROLAND/roland_gru_btcotc.yaml --repeat 1
+
+python3 main_dynamic.py --cfg configs/ROLAND/roland_gru_ucimsg.yaml --repeat 1
+
+python3 main_dynamic.py --cfg configs/ROLAND/roland_gru_reddittitle.yaml --repeat 1
+
+python3 main_dynamic.py --cfg configs/ROLAND/roland_gru_redditbody.yaml --repeat 1
+```
+
 To explore training result:
 ```bash
 cd ./run
 tensorboard --logdir=./runs_live_update --port=6006
 ```
 
-## Examples on Homogenous Graph Snapshots
-Prediction for BitCoin transactions.
-
-```bash
-TODO: add yaml file.
-```
-
 ## Examples on Heterogenous Graph Snapshots
-TODO.
+`Under development`
 
 ## How to Load Your Own Dataset
 Please refer to `./graphgym/contrib/loader/roland_template.py` and `./graphgym/contrib/loader/roland_template_hetero.py` for examples of building loaders.
-
-## Data Structures for Snapshot-Based Dynamic Graphs
-
-
-## Grid Search
-`./run/grids/ROLAND/`
-`./`
