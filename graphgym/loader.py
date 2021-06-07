@@ -166,12 +166,23 @@ def transform_before_split(dataset):
     return dataset
 
 
-def transform_after_split(datasets):
+def transform_after_split(datasets, dataset):
     '''
     Dataset transformation after train/val/test split
     :param dataset: A list of DeepSNAP dataset objects
     :return: A list of transformed DeepSNAP dataset objects
     '''
+    if cfg.dataset.link_pred_all_edges:
+        for t in range(len(datasets[2])):
+            g = datasets[2].graphs[t]
+            neg = g.negative_sampling(dataset[t].edge_index,
+                                      dataset[t].num_nodes,
+                                      dataset[t].edge_index.shape[1])
+            pos = dataset[t].edge_index
+            g.edge_label_index = torch.cat((neg, pos), dim=1)
+            g.edge_label = torch.cat((torch.zeros(neg.shape[1]),
+                                      torch.ones(pos.shape[1])))
+
     if cfg.dataset.transform == 'ego':
         for split_dataset in datasets:
             split_dataset.apply_transform(ego_nets,
@@ -190,18 +201,18 @@ def transform_after_split(datasets):
 
 
 def create_dataset():
-    ## Load dataset
+    # Load dataset
     time1 = time.time()
     if cfg.dataset.format == 'OGB':
         graphs, splits = load_dataset()
     else:
         graphs = load_dataset()
 
-    ## Filter graphs
+    # Filter graphs
     time2 = time.time()
     min_node = filter_graphs()
 
-    ## Create whole dataset
+    # Create whole dataset
     dataset = GraphDataset(
         graphs,
         task=cfg.dataset.task,
@@ -211,10 +222,10 @@ def create_dataset():
         resample_disjoint=cfg.dataset.resample_disjoint,
         minimum_node_per_graph=min_node)
 
-    ## Transform the whole dataset
+    # Transform the whole dataset
     dataset = transform_before_split(dataset)
 
-    ## Split dataset
+    # Split dataset
     time3 = time.time()
     # Use custom data splits
     if cfg.dataset.format == 'OGB':
@@ -232,14 +243,14 @@ def create_dataset():
     for i in range(1, len(datasets)):
         dataset.edge_negative_sampling_ratio = 1
 
-    ## Transform each split dataset
+    # Transform each split dataset
     time4 = time.time()
-    datasets = transform_after_split(datasets)
+    datasets = transform_after_split(datasets, dataset)
 
     time5 = time.time()
     logging.info('Load: {:.4}s, Before split: {:.4}s, '
                  'Split: {:.4}s, After split: {:.4}s'.format(
-        time2 - time1, time3 - time2, time4 - time3, time5 - time4))
+                     time2 - time1, time3 - time2, time4 - time3, time5 - time4))
 
     return datasets
 
