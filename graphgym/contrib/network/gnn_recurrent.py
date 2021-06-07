@@ -4,21 +4,20 @@ import torch.nn.functional as F
 from graphgym.config import cfg
 from graphgym.contrib.stage import *
 from graphgym.init import init_weights
-from graphgym.models.act import act_dict
 from graphgym.models.feature_augment import Preprocess
 from graphgym.models.feature_encoder import (edge_encoder_dict,
                                              node_encoder_dict)
 from graphgym.models.head import head_dict
 from graphgym.models.layer import (BatchNorm1dEdge, BatchNorm1dNode,
                                    GeneralMultiLayer, layer_dict)
-from graphgym.models.layer_recurrent import RecurrentGraphLayer
+from graphgym.models.layer_recurrent import GeneralRecurrentLayer
 from graphgym.register import register_network
 
 
-def GNNLayer(dim_in: int, dim_out: int, has_act: bool=True, layer_id: int=0):
+def GNNLayer(dim_in: int, dim_out: int, has_act: bool = True, layer_id: int = 0):
     # General constructor for GNN layer.
-    return RecurrentGraphLayer(cfg.gnn.layer_type, dim_in, dim_out,
-                               has_act, layer_id=layer_id)
+    return GeneralRecurrentLayer(cfg.gnn.layer_type, dim_in, dim_out,
+                                 has_act, layer_id=layer_id)
 
 
 def GNNPreMP(dim_in, dim_out):
