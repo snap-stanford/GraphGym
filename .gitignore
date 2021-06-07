@@ -1,5 +1,7 @@
 **/data_dir/
 run/datasets/data/
+run/results/
+run/runs_*/
 **/__pycache__/
 **/.ipynb_checkpoints
 .idea/
