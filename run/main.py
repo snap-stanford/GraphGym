@@ -42,7 +42,7 @@ if __name__ == '__main__':
         # Set learning environment
         datasets = create_dataset()
         loaders = create_loader(datasets)
-        meters = create_logger(datasets, loaders)
+        meters = create_logger(datasets)
         model = create_model(datasets)
         optimizer = create_optimizer(model.parameters())
         scheduler = create_scheduler(optimizer)

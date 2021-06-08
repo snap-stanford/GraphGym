@@ -11,6 +11,7 @@ from sklearn.metrics import *
 from tensorboardX import SummaryWriter
 from graphgym.utils.device import get_current_gpu_usage
 
+
 def setup_printing():
     logging.root.handlers = []
     logging_cfg = {'level': logging.INFO, 'format': '%(message)s'}
@@ -28,23 +29,12 @@ def setup_printing():
 
 
 class Logger(object):
-    def __init__(self, iter_total, num_labels, name='train', task_type=None):
-        self._iter_total = iter_total
-        self._num_labels = num_labels
+    def __init__(self, name='train', task_type=None):
+        self.name = name
+        self.task_type = task_type
+
         self._epoch_total = cfg.optim.max_epoch
         self._time_total = 0  # won't be reset
-        self.name = name
-
-        if task_type == None:
-            if cfg.dataset.task_type == 'classification':
-                if self._num_labels <= 2:
-                    self.task_type = 'classification_binary'
-                else:
-                    self.task_type = 'classification_multi'
-            else:
-                self.task_type = cfg.dataset.task_type
-        else:
-            self.task_type = task_type
 
         self.out_dir = '{}/{}'.format(cfg.out_dir, name)
         os.makedirs(self.out_dir, exist_ok=True)
@@ -68,6 +58,7 @@ class Logger(object):
         self._time_used = 0
         self._true = []
         self._pred = []
+        self._custom_stats = {}
 
     # basic properties
     def basic(self):
@@ -77,6 +68,15 @@ class Logger(object):
                 'time_iter': round(self.time_iter(), cfg.round),
                 'gpu_memory': get_current_gpu_usage()
                 }
+
+    # customized input properties
+    def custom(self):
+        if len(self._custom_stats) == 0:
+            return {}
+        out = {}
+        for key, val in self._custom_stats.items():
+            out[key] = val / self._size_current
+        return out
 
     def _get_pred_int(self, pred_score):
         if len(pred_score.shape) == 1 or pred_score.shape[1] == 1:
@@ -111,22 +111,12 @@ class Logger(object):
     def time_iter(self):
         return self._time_used / self._iter
 
-    # deprecated
-    def eta_epoch(self):
-        return self.time_iter() * self._iter_total - self._time_used
-
-    # deprecated
-    def eta_total(self, epoch_current):
-        time_epoch = self.time_iter() * self._iter_total
-        return time_epoch - self._time_used + \
-               time_epoch * (self._epoch_total - epoch_current)
-
     def eta(self, epoch_current):
         epoch_current += 1  # since counter starts from 0
         time_per_epoch = self._time_total / epoch_current
         return time_per_epoch * (self._epoch_total - epoch_current)
 
-    def update_stats(self, true, pred, loss, lr, time_used, params):
+    def update_stats(self, true, pred, loss, lr, time_used, params, **kwargs):
         assert true.shape[0] == pred.shape[0]
         self._iter += 1
         self._true.append(true)
@@ -138,6 +128,11 @@ class Logger(object):
         self._params = params
         self._time_used += time_used
         self._time_total += time_used
+        for key, val in kwargs.items():
+            if key not in self._custom_stats:
+                self._custom_stats[key] = val * batch_size
+            else:
+                self._custom_stats[key] += val * batch_size
 
     def write_iter(self):
         raise NotImplementedError
@@ -156,11 +151,13 @@ class Logger(object):
 
         epoch_stats = {'epoch': cur_epoch}
         eta_stats = {'eta': round(self.eta(cur_epoch), cfg.round)}
+        custom_stats = self.custom()
 
         if self.name == 'train':
-            stats = {**epoch_stats, **eta_stats, **basic_stats, **task_stats}
+            stats = {**epoch_stats, **eta_stats, **basic_stats, **task_stats,
+                     **custom_stats}
         else:
-            stats = {**epoch_stats, **basic_stats, **task_stats}
+            stats = {**epoch_stats, **basic_stats, **task_stats, **custom_stats}
 
         # print
         logging.info('{}: {}'.format(self.name, stats))
@@ -175,12 +172,20 @@ class Logger(object):
         if cfg.tensorboard_each_run:
             self.tb_writer.close()
 
+def infer_task(datasets):
+    num_label = datasets[0].num_labels
+    if cfg.dataset.task_type == 'classification':
+        if num_label <= 2:
+            task_type = 'classification_binary'
+        else:
+            task_type = 'classification_multi'
+    else:
+        task_type = cfg.dataset.task_type
+    return task_type
 
-def create_logger(datasets, loaders):
+def create_logger(datasets):
     loggers = []
     names = ['train', 'val', 'test']
     for i, dataset in enumerate(datasets):
-        iter_total = len(loaders[i])
-        num_label = datasets[0].num_labels
-        loggers.append(Logger(iter_total, num_label, name=names[i]))
+        loggers.append(Logger(name=names[i], task_type=infer_task(datasets)))
     return loggers
