@@ -1,5 +1,8 @@
 # GraphGym
 GraphGym is a platform for designing and evaluating Graph Neural Networks (GNN).
+GraphGym is proposed in *[Design Space for Graph Neural Networks](https://arxiv.org/abs/2011.08843)*, Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
+
+
 ### Highlights
 **1. Highly modularized pipeline for GNN**
 - **Data:** Data loading, data splitting
@@ -81,28 +84,35 @@ source activate graphgym
 
 **2. Pytorch:**
 Install [PyTorch](https://pytorch.org/). 
-We have verified under PyTorch 1.4.0 and torchvision 0.5.0. For example:
+We have verified GraphGym under PyTorch 1.8.0, and GraphGym should work with PyTorch 1.4.0+. For example:
 ```bash
-pip install torch==1.4.0 torchvision==0.5.0
+# CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
+pip install torch==1.8.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
 **3. Pytorch Geometric:**
 Install [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html), 
 follow their instructions. For example:
 ```bash
-# CUDA versions: cpu, cu92, cu101, cu102, cu110
+# CUDA versions: cpu, cu92, cu101, cu102, cu101, cu111
 # TORCH versions: 1.4.0, 1.5.0, 1.6.0, 1.7.0
 CUDA=cu101
-TORCH=1.4.0
-pip install torch-scatter==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-${TORCH}.html
-pip install torch-sparse==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-${TORCH}.html
-pip install torch-cluster==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-${TORCH}.html
-pip install torch-spline-conv==latest+${CUDA} -f https://pytorch-geometric.com/whl/torch-${TORCH}.html
+TORCH=1.8.0
+pip install torch-scatter -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html
+pip install torch-sparse -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html
+pip install torch-cluster -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html
+pip install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-${TORCH}+${CUDA}.html
 pip install torch-geometric
 ```
 
-**4. Install the latest DeepSNAP package:**
+**4. DeepSNAP:**
 
+From pip:
+```bash
+pip install deepsnap
+````
+
+Or from the latest version
 ```bash
 git clone https://github.com/snap-stanford/DeepSNAP
 cd DeepSNAP
@@ -128,6 +138,20 @@ The experiment is about node classification on Cora dataset (random 80/20 train/
 cd run
 bash run_single.sh
 ```
+
+
+Run a batch of GNN experiments using GraphGym, specified in [`run/configs/example.yaml`](run/configs/example.yaml) (controls the basic architecture) 
+and [`run/grids/example.yaml`](run/grids/example.txt) (controls how to do grid search). 
+The experiment examines 96 models in the recommended GNN design space, on 2 graph classification datasets.
+Each experiment is repeated 3 times, and we set that 8 jobs can be concurrently run.
+Depending on your infrastructure, finishing all the experiments may take a long time, and you can quit the experiment by `Ctrl-C` (GraphGym will properly kill all the processes).
+```bash
+cd run
+bash run_batch.sh
+```
+
+
+
 
 ## GraphGym Usage
 
