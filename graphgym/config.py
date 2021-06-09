@@ -65,6 +65,9 @@ def set_cfg(cfg):
     # If visualize embedding.
     cfg.view_emb = False
 
+    # If get GPU usage
+    cfg.gpu_mem = False
+
     # ------------------------------------------------------------------------ #
     # Dataset options
     # ------------------------------------------------------------------------ #
