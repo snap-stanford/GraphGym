@@ -26,7 +26,7 @@ def set_cfg(cfg):
     # Basic options
     # ------------------------------------------------------------------------ #
 
-    # Set print destination: stdout / file
+    # Set print destination: stdout / file / both
     cfg.print = 'both'
 
     # Select device: 'cpu', 'cuda:0', 'auto'
