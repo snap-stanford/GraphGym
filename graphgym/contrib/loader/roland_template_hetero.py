@@ -46,8 +46,8 @@ def load_single_hetero_dataset(dataset_dir: str) -> Graph:
     num_node_types = 5
     node_type_int = torch.randint(0, num_node_types - 1, (num_nodes,)).float()
 
-    graph.node_type = node_type_int.reshape(-1,)
-    graph.edge_type = edge_type_int.reshape(-1,)
+    graph.node_type = node_type_int.reshape(-1,).long()
+    graph.edge_type = edge_type_int.reshape(-1,).long()
 
     # add a list of unique types for reference.
     graph.list_n_type = node_type_int.unique().long()

@@ -131,7 +131,7 @@ NODE_FEATURE_LIST: List[str] = ['Bank', 'Country', 'Region', 'SkdL1', 'SkisL1']
 # Required for heterogeneous graphs only.
 # Node and edge features used to define node and edge type in hete GNN.
 NODE_TYPE_DEFN: List[str] = ['Country']
-EDGE_TYPE_DEFN: List[str] = ['# System']
+EDGE_TYPE_DEFN: List[str] = ['# System', 'AmountLevel']
 
 
 # Required for graphs with node features only.
@@ -303,8 +303,8 @@ def load_bsi_dataset(dataset_dir: str, is_hetero: bool = False) -> Graph:
             df_trans['EdgeType'].values.reshape(-1, 1))
         edge_type_int = torch.FloatTensor(edge_type_int)
 
-        graph.node_type = node_type_int.reshape(-1,)
-        graph.edge_type = edge_type_int.reshape(-1,)
+        graph.node_type = node_type_int.reshape(-1,).long()
+        graph.edge_type = edge_type_int.reshape(-1,).long()
 
         # add a list of unique types for reference.
         graph.list_n_type = node_type_int.unique().long()
