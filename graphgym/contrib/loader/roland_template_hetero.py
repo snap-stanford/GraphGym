@@ -16,7 +16,7 @@ from graphgym.config import cfg
 from graphgym.register import register_loader
 
 
-def load_single_hetero_dataset(dataset_dir: str, type_info_loc: str) -> Graph:
+def load_single_hetero_dataset(dataset_dir: str) -> Graph:
     # TODO: Load your data from dataset_dir here.
     # Example:
     num_nodes = 500
@@ -46,16 +46,8 @@ def load_single_hetero_dataset(dataset_dir: str, type_info_loc: str) -> Graph:
     num_node_types = 5
     node_type_int = torch.randint(0, num_node_types - 1, (num_nodes,)).float()
 
-    if type_info_loc == 'append':
-        graph.edge_feature = torch.cat((graph.edge_feature, edge_type_int),
-                                       dim=1)
-        graph.node_feature = torch.cat((graph.node_feature, node_type_int),
-                                       dim=1)
-    elif type_info_loc == 'graph_attribute':
-        graph.node_type = node_type_int.reshape(-1, )
-        graph.edge_type = edge_type_int.reshape(-1, )
-    else:
-        raise ValueError(f'Unsupported type info loc: {type_info_loc}')
+    graph.node_type = node_type_int.reshape(-1,)
+    graph.edge_type = edge_type_int.reshape(-1,)
 
     # add a list of unique types for reference.
     graph.list_n_type = node_type_int.unique().long()
@@ -81,9 +73,7 @@ def load_generic_dataset(format: str, name: str, dataset_dir: str
     if format == 'YOUR_HETERO_FORMAT_NAME_HERE':
         assert cfg.dataset.is_hetero
         dataset_dir = os.path.join(dataset_dir, name)
-        g_all = load_single_hetero_dataset(
-            dataset_dir,
-            type_info_loc=cfg.dataset.type_info_loc)
+        g_all = load_single_hetero_dataset(dataset_dir)
         snapshot_list = utils.make_graph_snapshot(
             g_all,
             snapshot_freq=cfg.transaction.snapshot_freq,

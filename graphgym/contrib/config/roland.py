@@ -93,11 +93,6 @@ def set_cfg_roland(cfg):
     # Options: {True, False}.
     cfg.dataset.is_hetero = False
 
-    # Where to put type information.
-    # Options: {'append', 'graph_attribute'}.
-    # Only effective if cfg.dataset.is_hetero == True.
-    cfg.dataset.type_info_loc = 'append'
-
     # whether to look for and load cached graph. By default (load_cache=False)
     # the loader loads the raw tsv file from disk and
     cfg.dataset.load_cache = False

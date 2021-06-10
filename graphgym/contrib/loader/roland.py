@@ -188,16 +188,13 @@ def construct_additional_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def load_bsi_dataset(dataset_dir: str, is_hetero: bool = False,
-                     type_info_loc: str = 'append'
-                     ) -> Graph:
+def load_bsi_dataset(dataset_dir: str, is_hetero: bool = False) -> Graph:
     """
     Loads a single graph object from tsv file.
 
     Args:
         dataset_dir: the path of tsv file to be loaded.
         is_hetero: whether to load heterogeneous graph.
-        type_info_loc: 'append' or 'graph_attribute'.
 
     Returns:
         graph: a (homogenous) deepsnap graph object.
@@ -306,16 +303,8 @@ def load_bsi_dataset(dataset_dir: str, is_hetero: bool = False,
             df_trans['EdgeType'].values.reshape(-1, 1))
         edge_type_int = torch.FloatTensor(edge_type_int)
 
-        if type_info_loc == 'append':
-            graph.edge_feature = torch.cat((graph.edge_feature, edge_type_int),
-                                           dim=1)
-            graph.node_feature = torch.cat((graph.node_feature, node_type_int),
-                                           dim=1)
-        elif type_info_loc == 'graph_attribute':
-            graph.node_type = node_type_int.reshape(-1, )
-            graph.edge_type = edge_type_int.reshape(-1, )
-        else:
-            raise ValueError(f'Unsupported type info loc: {type_info_loc}')
+        graph.node_type = node_type_int.reshape(-1,)
+        graph.edge_type = edge_type_int.reshape(-1,)
 
         # add a list of unique types for reference.
         graph.list_n_type = node_type_int.unique().long()
@@ -514,8 +503,7 @@ def load_roland_dataset(format: str, name: str, dataset_dir: str
         elif name in ['bsi_svt_2008.tsv']:
             # NOTE: only BSI dataset supports hetero graph.
             g_all = load_bsi_dataset(os.path.join(dataset_dir, name),
-                                     is_hetero=cfg.dataset.is_hetero,
-                                     type_info_loc=cfg.dataset.type_info_loc)
+                                     is_hetero=cfg.dataset.is_hetero)
         elif name in ['bitcoinotc.csv', 'bitcoinalpha.csv']:
             g_all = load_bitcoin_dataset(os.path.join(dataset_dir, name))
         elif name in ['reddit-body.tsv', 'reddit-title.tsv']:
