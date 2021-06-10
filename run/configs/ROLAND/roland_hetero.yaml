@@ -1,0 +1,70 @@
+remark: live_update
+out_dir: results
+device: auto
+metric:
+  mrr_method: max
+  mrr_num_negative_edges: 1000
+dataset:
+  format: roland
+  name: bsi_svt_2008.tsv
+  is_hetero: True
+  dir: /home/tianyudu/Data/all_datasets
+  task: link_pred  # edge, node.
+  task_type: classification
+  transductive: True
+  split: [0.8, 0.1, 0.1]
+  augment_feature: []
+  augment_feature_dims: [0]
+  edge_encoder: True
+  edge_encoder_name: roland_general
+  edge_dim: 1
+  node_encoder: False
+  link_pred_all_edges: False
+transaction:
+  keep_ratio: linear
+  snapshot: True
+  snapshot_freq: W
+  check_snapshot: False
+  history: rolling
+  horizon: 1
+  pred_mode: at
+  loss: supervised
+  feature_int_dim: 16
+  feature_edge_int_num: []
+  feature_node_int_num: []
+  feature_amount_dim: 16 # *
+  feature_time_dim: 16 # *
+train:
+  batch_size: 32
+  eval_period: 20
+  ckpt_period: 400
+  mode: live_update
+  internal_validation_tolerance: 5 # *
+meta:
+  is_meta: True
+  alpha: 0.5 # *
+model:
+  type: gnn_recurrent
+  loss_fun: cross_entropy
+  edge_decoding: concat
+gnn:
+  embed_update_method: gru  # *
+  layers_pre_mp: 2 # *
+  layers_mp: 8 # *
+  layers_post_mp: 2 # *
+  dim_inner: 64 # *
+  mlp_update_layers: 2 # *
+  layer_type: residual_edge_conv # *
+  skip_connection: affine # *
+  stage_type: stack
+  batchnorm: True # *
+  act: prelu
+  dropout: 0.0
+  agg: add # *
+  att_heads: 1
+  normalize_adj: False
+  msg_direction: both # *
+optim:
+  optimizer: adam
+  base_lr: 0.01 # *
+  max_epoch: 100
