@@ -51,11 +51,11 @@ GraphGym also recommends a "go-to" GNN design space, after investigating 10 mill
 <br>
 
 
-**Scenario 3:** You are a GNN researcher, who want to innovate GNN models / propose new GNN tasks.
+**Scenario 3:** You are a GNN researcher, who wants to innovate GNN models / propose new GNN tasks.
 
 Say you have proposed a new GNN layer `ExampleConv`.
 GraphGym can help you convincingly argue that `ExampleConv` is better than say `GCNConv`:
-when randomly sample from 10 millions possible model-task combinations, how often `ExampleConv` will outperform `GCNConv`, when everything else is fixed (including the computational cost). 
+when randomly sample from 10 million possible model-task combinations, how often `ExampleConv` will outperform `GCNConv`, when everything else is fixed (including the computational cost). 
 Moreover, GraphGym can help you easily do hyper-parameter search, and *visualize* what design choices are better.
 In sum, GraphGym can greatly facilitate your GNN research.
 
@@ -274,7 +274,7 @@ or [DeepSNAP](https://github.com/snap-stanford/deepsnap) graphs as the input;
 the following attributes in the graphs will be auto_loaded and parsed `node_feature`, `node_label`, `edge_feature`, `edge_label`, 
 `graph_feature`, `graph_label`.
 Additionally, we have provided examples on how to transform [PyG](https://pytorch-geometric.readthedocs.io/en/latest/) datasets into the accepted format.
-Further details on the data representation is described in [DeepSNAP documentation](https://snap.stanford.edu/deepsnap/notes/introduction.html#graph-in-deepsnap).
+Further details on the data representation are described in [DeepSNAP documentation](https://snap.stanford.edu/deepsnap/notes/introduction.html#graph-in-deepsnap).
 
 
 
@@ -327,7 +327,7 @@ bash run_idgnn_graph.sh   # Reproduce ID-GNN graph-level results
 Jonathan Gomes Selman enables GraphGym to have OGB support.
 
 GraphGym is inspired by the framework of [pycls](https://github.com/facebookresearch/pycls). 
-GraphGym adopt [DeepSNAP](https://github.com/snap-stanford/deepsnap) as the data representation, which is a Python library that assists efficient deep learning on graphs.
+GraphGym adopts [DeepSNAP](https://github.com/snap-stanford/deepsnap) as the data representation, which is a Python library that assists efficient deep learning on graphs.
 Part of GraphGym relies on [Pytorch Geometric](https://github.com/rusty1s/pytorch_geometric) functionalities.
 
 ## Contributing
