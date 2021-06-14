@@ -173,7 +173,14 @@ class Logger(object):
             self.tb_writer.close()
 
 def infer_task(datasets):
-    num_label = datasets[0].num_labels
+    try:
+        num_label = datasets[0].num_labels # deepsnap format
+    except:
+        try:
+            num_label = datasets[0].num_classes # pyg format
+        except:
+            num_label = 2
+
     if cfg.dataset.task_type == 'classification':
         if num_label <= 2:
             task_type = 'classification_binary'

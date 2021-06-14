@@ -3,7 +3,6 @@ import random
 import numpy as np
 import torch
 import logging
-import pdb
 
 from graphgym.cmd_args import parse_args
 from graphgym.config import (cfg, assert_cfg, dump_cfg,

@@ -177,6 +177,9 @@ def set_cfg(cfg):
     # Simplify TU dataset for synthetic tasks
     cfg.dataset.tu_simple = True
 
+    # Convert to undirected graph (save 2*E edges)
+    cfg.dataset.to_undirected = False
+
     # ------------------------------------------------------------------------ #
     # Training options
     # ------------------------------------------------------------------------ #

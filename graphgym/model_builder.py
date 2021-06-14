@@ -2,12 +2,14 @@ import torch
 
 from graphgym.config import cfg
 from graphgym.models.gnn import GNN
+from graphgym.models.gnn_pyg import GNN_pyg
 
 from graphgym.contrib.network import *
 import graphgym.register as register
 
 network_dict = {
     'gnn': GNN,
+    'gnn_pyg': GNN_pyg,
 }
 network_dict = {**register.network_dict, **network_dict}
 
