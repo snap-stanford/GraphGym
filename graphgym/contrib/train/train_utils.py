@@ -268,66 +268,6 @@ def fast_batch_mrr(edge_label_index: torch.Tensor,
     mrr = float(torch.mean(1 / rank_by_user))
     return mrr
 
-# TODO: get recall at k back.
-
-# @torch.no_grad()
-# def report_rank_based_eval(eval_batch, model, method: str,
-#                            num_neg_per_node: int=1000):
-#     if num_neg_per_node == -1:
-#         # Do not report rank-based metrics, used in debug mode.
-#         return 0, 0, 0, 0
-#     # Get positive edge indices.
-#     edge_index = eval_batch.edge_label_index[:, eval_batch.edge_label == 1]
-#     edge_index = edge_index.to('cpu')
-
-#     neg_edge_index = gen_negative_edges(edge_index, num_neg_per_node,
-#                                         num_nodes=eval_batch.num_nodes)
-
-#     new_edge_label_index = torch.cat((edge_index, neg_edge_index),
-#                                      dim=1).long()
-#     new_edge_label = torch.cat((torch.ones(edge_index.shape[1]),
-#                                 torch.zeros(neg_edge_index.shape[1])
-#                                 ), dim=0).long()
-
-#     # Construct evaluation samples.
-#     eval_batch.edge_label_index = new_edge_label_index
-#     eval_batch.edge_label = new_edge_label
-
-#     eval_batch.to(torch.device(cfg.device))
-#     # move state to gpu
-#     for layer in range(len(eval_batch.node_states)):
-#         if torch.is_tensor(eval_batch.node_states[layer]):
-#             eval_batch.node_states[layer] = eval_batch.node_states[layer].to(
-#                 torch.device(cfg.device))
-#     pred, true = model(eval_batch)
-#     loss, pred_score = compute_loss(pred, true)
-
-#     mrr, recall_at = fast_batch_mrr_and_recall(eval_batch.edge_label_index,
-#                                                eval_batch.edge_label,
-#                                                pred_score,
-#                                                num_neg_per_node,
-#                                                eval_batch.num_nodes,
-#                                                method)
-
-#     # return mrr, 0, 0, 0
-#     #
-#     # mrr_old, recall_at_old = compute_src_mrr_and_recall(
-#     #     eval_batch.edge_label_index,
-#     #     eval_batch.edge_label,
-#     #     pred_score,
-#     #     recall_k_lst=[1, 3, 10],
-#     #     mrr_top_k=1)
-#     #
-#     # print(f'Old MRR: {mrr_old: 0.6f}, new MRR {mrr: 0.6f}')
-#     # print(
-#     #     f'Old Recall@1: {recall_at_old[1]: 0.6f}, new Recall@1 {recall_at[1]: 0.6f}')
-#     # print(
-#     #     f'Old Recall@3: {recall_at_old[3]: 0.6f}, new Recall@3 {recall_at[3]: 0.6f}')
-#     # print(
-#     #     f'Old Recall@10: {recall_at_old[10]: 0.6f}, new Recall@10 {recall_at[10]: 0.6f}')
-
-#     return mrr, recall_at[1], recall_at[3], recall_at[10]
-
 
 def get_row_MRR(probs, true_classes):
     existing_mask = true_classes == 1
