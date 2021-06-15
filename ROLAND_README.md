@@ -5,7 +5,7 @@ public datasets.
 After understanding how to run and analyze experiments, you can read through the *development topics* to run our 
 
 
-## TODO: add figures to illustrate the ROLAND framework.
+<!-- ## TODO: add figures to illustrate the ROLAND framework. -->
 
 ## How to Download Datasets
 Most of datasets are used in our paper can be found at `https://snap.stanford.edu/data/index.html`.
@@ -70,10 +70,10 @@ tensorboard --logdir=./runs_live_update --port=6006
 ```
 **WARNING** The x-axis of plots in tensorboard is **not** epochs, they are snapshot IDs (e.g., the $i^{th}$ day or the $i^{th}$ week) instead.
 
-## Examples on Heterogenous Graph Snapshots
+<!-- ## Examples on Heterogenous Graph Snapshots
 ```bash
 Under development.
-```
+``` -->
 
 ## How to Run Grid Search / Batch Experiments
 To run grid search / batch experiments, one needs a `main.py` file, a `base_config.yaml`, and a `grid.txt` file. The main and config files are the same as in the single experiment setup above.
