@@ -145,7 +145,7 @@ class GCNConv(nn.Module):
 class SAGEConv(nn.Module):
     def __init__(self, dim_in, dim_out, bias=False, **kwargs):
         super(SAGEConv, self).__init__()
-        self.model = pyg.nn.SAGEConv(dim_in, dim_out, bias=bias, concat=True)
+        self.model = pyg.nn.SAGEConv(dim_in, dim_out, bias=bias)
 
     def forward(self, batch):
         batch.node_feature = self.model(batch.node_feature, batch.edge_index)

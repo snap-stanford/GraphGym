@@ -69,6 +69,23 @@ def set_cfg(cfg):
     cfg.gpu_mem = False
 
     # ------------------------------------------------------------------------ #
+    # Globally shared variables:
+    # These variables will be set dynamically based on the input dataset
+    # Do not directly set them here or in .yaml files
+    # ------------------------------------------------------------------------ #
+
+    cfg.share = CN()
+
+    # Size of input dimension
+    cfg.share.dim_in = 1
+
+    # Size of out dimension, i.e., number of labels to be predicted
+    cfg.share.dim_out = 1
+
+    # Number of dataset splits: train/val/test
+    cfg.share.num_splits = 1
+
+    # ------------------------------------------------------------------------ #
     # Dataset options
     # ------------------------------------------------------------------------ #
     cfg.dataset = CN()
@@ -142,6 +159,9 @@ def set_cfg(cfg):
     # Whether resample disjoint when dataset.edge_train_mode is 'disjoint'
     cfg.dataset.resample_disjoint = False
 
+    # Whether resample negative edges at training time (link prediction only)
+    cfg.dataset.resample_negative = False
+
     # ==============
 
     # feature augmentation
@@ -188,6 +208,9 @@ def set_cfg(cfg):
     # Total graph mini-batch size
     cfg.train.batch_size = 16
 
+    # Sampling strategy for a train loader
+    cfg.train.sampler = 'full_batch'
+
     # Minibatch node
     cfg.train.sample_node = False
 
@@ -212,6 +235,17 @@ def set_cfg(cfg):
     # Clean checkpoint: only keep the last ckpt
     cfg.train.ckpt_clean = True
 
+    # Number of iterations per epoch (for sampling based loaders only)
+    cfg.train.iter_per_epoch = 32
+
+    # GraphSAINTRandomWalkSampler: random walk length
+    cfg.train.walk_length = 4
+
+    # NeighborSampler: number of sampled nodes per layer
+    cfg.train.neighbor_sizes = [20, 15, 10, 5]
+
+
+
     # ------------------------------------------------------------------------ #
     # Validation options
     # ------------------------------------------------------------------------ #
@@ -219,6 +253,9 @@ def set_cfg(cfg):
 
     # Minibatch node
     cfg.val.sample_node = False
+
+    # Sampling strategy for a val/test loader
+    cfg.val.sampler = 'full_batch'
 
     # Num of sampled node per graph
     cfg.val.node_per_graph = 32
