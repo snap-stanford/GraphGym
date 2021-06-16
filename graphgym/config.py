@@ -348,7 +348,7 @@ def set_cfg(cfg):
     cfg.gnn.msg_direction = 'single'
 
     # Whether add message from node itself: none, add, cat
-    cfg.gnn.self_msg = 'none'
+    cfg.gnn.self_msg = 'concat'
 
     # Number of attention heads
     cfg.gnn.att_heads = 1
