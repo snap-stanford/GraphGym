@@ -133,7 +133,6 @@ class GNN(nn.Module):
         GNNStage = stage_dict[cfg.gnn.stage_type]
         GNNHead = head_dict[cfg.dataset.task]
 
-        # Currently only for OGB datasets
         if cfg.dataset.node_encoder:
             # Encode integer node features via nn.Embeddings
             NodeEncoder = node_encoder_dict[cfg.dataset.node_encoder_name]

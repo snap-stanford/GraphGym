@@ -1,5 +1,6 @@
 import networkx as nx
 import torch
+from torch_geometric.utils import negative_sampling
 
 
 def remove_node_feature(graph):
@@ -75,8 +76,8 @@ def path_len(graph):
     edge_label = []
     index_keep = []
     for i in range(num_label):
-        start, end = \
-            edge_label_index[0, i].item(), edge_label_index[1, i].item()
+        start, end = edge_label_index[0, i].item(), edge_label_index[
+            1, i].item()
         try:
             dist = path_dict[start][end]
         except:
@@ -85,5 +86,25 @@ def path_len(graph):
         index_keep.append(i)
 
     edge_label = torch.tensor(edge_label, device=edge_label_index.device)
-    graph.edge_label_index, graph.edge_label = \
-        edge_label_index[:, index_keep], edge_label
+    graph.edge_label_index, graph.edge_label = edge_label_index[:,
+                                               index_keep], edge_label
+
+
+def get_link_label(pos_edge_index, neg_edge_index):
+    num_links = pos_edge_index.size(1) + neg_edge_index.size(1)
+    link_labels = torch.zeros(num_links, dtype=torch.float,
+                              device=pos_edge_index.device)
+    link_labels[:pos_edge_index.size(1)] = 1.
+    return link_labels
+
+
+def neg_sampling_transform(data):
+    train_neg_edge_index = negative_sampling(
+        edge_index=data.train_pos_edge_index, num_nodes=data.num_nodes,
+        num_neg_samples=data.train_pos_edge_index.size(1))
+    data.train_edge_index = torch.cat(
+        [data.train_pos_edge_index, train_neg_edge_index], dim=-1)
+    data.train_edge_label = get_link_label(data.train_pos_edge_index,
+                                           train_neg_edge_index)
+
+    return data

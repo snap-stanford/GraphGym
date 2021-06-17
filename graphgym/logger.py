@@ -62,12 +62,15 @@ class Logger(object):
 
     # basic properties
     def basic(self):
-        return {'loss': round(self._loss / self._size_current, cfg.round),
-                'lr': round(self._lr, cfg.round),
-                'params': self._params,
-                'time_iter': round(self.time_iter(), cfg.round),
-                'gpu_memory': get_current_gpu_usage()
-                }
+        stats = {'loss': round(self._loss / self._size_current, cfg.round),
+                 'lr': round(self._lr, cfg.round),
+                 'params': self._params,
+                 'time_iter': round(self.time_iter(), cfg.round),
+                 }
+        gpu_memory = get_current_gpu_usage()
+        if gpu_memory > 0:
+            stats['gpu_memory'] = gpu_memory
+        return stats
 
     # customized input properties
     def custom(self):
@@ -172,6 +175,7 @@ class Logger(object):
         if cfg.tensorboard_each_run:
             self.tb_writer.close()
 
+
 def infer_task(datasets):
     try:
         num_label = datasets[0].num_labels # deepsnap format
@@ -189,6 +193,7 @@ def infer_task(datasets):
     else:
         task_type = cfg.dataset.task_type
     return task_type
+
 
 def create_logger(datasets):
     loggers = []
