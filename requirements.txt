@@ -4,11 +4,15 @@ torch
 torch-scatter
 torch-geometric
 deepsnap
+dask_ml
+dask[complete]
 ogb
 numpy
-pandas
+pandas>=1.0
 scipy
 scikit-learn
 matplotlib
 seaborn
 notebook
+tensorboard
+tqdm

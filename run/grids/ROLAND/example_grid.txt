@@ -1,0 +1,7 @@
+meta.is_meta is_meta [True]
+meta.alpha alpha [0.2,0.4,0.6,0.8,1.0]
+gnn.skip_connection skip ['affine','identity','none']
+gnn.embed_update_method update ['gru']
+gnn.layers_mp mp [2,3]
+gnn.batchnorm bn [True]
+optim.base_lr lr [0.003,0.01,0.03]
