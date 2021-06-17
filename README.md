@@ -286,7 +286,7 @@ You may refer to the [paper](https://arxiv.org/abs/2011.08843) or [project webpa
 ```bash
 # NOTE: We include the raw results with GraphGym
 # If you run the following code, the results will be overridden.
-cd run
+cd run/scripts/design/
 bash run_design_round1.sh   # first round experiments, on a design space of 315K GNN designs
 bash run_design_round2.sh   # second round experiments, on a design space of 96 GNN designs
 cd ../analysis
@@ -309,7 +309,7 @@ You may refer to the [paper](https://arxiv.org/abs/2101.10320) or [project webpa
 
 ```bash
 # NOTE: We include the raw results for ID-GNN in analysis/idgnn.csv
-cd run
+cd run/scripts/IDGNN/
 bash run_idgnn_node.sh   # Reproduce ID-GNN node-level results
 bash run_idgnn_edge.sh   # Reproduce ID-GNN edge-level results
 bash run_idgnn_graph.sh   # Reproduce ID-GNN graph-level results

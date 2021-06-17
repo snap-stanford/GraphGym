@@ -181,7 +181,6 @@ def transform_after_split(datasets):
     elif cfg.dataset.transform == 'edge':
         for split_dataset in datasets:
             split_dataset.apply_transform(edge_nets,
-                                          radius=cfg.gnn.layers_mp,
                                           update_tensor=True,
                                           update_graph=False)
             split_dataset.task = 'node'

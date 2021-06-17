@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd ../..
+
 DIR=IDGNN
 CONFIG=edge
 GRID=link

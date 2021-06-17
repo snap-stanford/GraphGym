@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
+cd ../..
+
+# OGB results
 DIR=design
-CONFIG=design_v2
-GRID=round2
+CONFIG=design_v2ogb
+GRID=round2ogb
 REPEAT=3
 MAX_JOBS=8
 SLEEP=1

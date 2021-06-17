@@ -95,7 +95,7 @@ class GeneralAddAttConvLayer(MessagePassing):
         x_j = x_j.view(-1, self.heads, self.head_channels)
         alpha = (torch.cat([x_i, x_j], dim=-1) * self.att).sum(dim=-1)
         alpha = F.leaky_relu(alpha, self.negative_slope)
-        alpha = softmax(alpha, edge_index_i, size_i)
+        alpha = softmax(alpha, edge_index_i, num_nodes=size_i)
         alpha = alpha.view(-1, self.heads, 1)
         return norm.view(-1,
                          1) * x_j * alpha if norm is not None else x_j * alpha
@@ -199,7 +199,7 @@ class GeneralMulAttConvLayer(MessagePassing):
         x_j = x_j.view(-1, self.heads, self.head_channels)
         alpha = (x_i * x_j + self.bias_att).sum(dim=-1) / self.scaler
         # alpha = F.leaky_relu(alpha, self.negative_slope)
-        alpha = softmax(alpha, edge_index_i, size_i)
+        alpha = softmax(alpha, edge_index_i, num_nodes=size_i)
         alpha = alpha.view(-1, self.heads, 1)
         return norm.view(-1,
                          1) * x_j * alpha if norm is not None else x_j * alpha
@@ -354,7 +354,7 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
         else:
             alpha = (x_j * self.att_msg).sum(-1)
         alpha = F.leaky_relu(alpha, self.negative_slope)
-        alpha = softmax(alpha, edge_index_i, size_i)
+        alpha = softmax(alpha, edge_index_i, num_nodes=size_i)
         alpha = alpha.view(-1, self.heads, 1)
         return norm.view(-1,
                          1) * x_j * alpha if norm is not None else x_j * alpha
@@ -496,7 +496,7 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
         else:
             alpha = (x_j * self.att_msg).sum(-1)
         alpha = F.leaky_relu(alpha, self.negative_slope)
-        alpha = softmax(alpha, edge_index_i, size_i)
+        alpha = softmax(alpha, edge_index_i, num_nodes=size_i)
         alpha = alpha.view(-1, self.heads, 1)
         return norm.view(-1,
                          1) * x_j * alpha if norm is not None else x_j * alpha

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+cd ../..
+
 DIR=design
 CONFIG=design_v1
 GRID=round1
