@@ -21,6 +21,11 @@ GraphGym is proposed in *[Design Space for Graph Neural Networks](https://arxiv.
 
 ### News
 - GraphGym 0.2 has been released. Now GraphGym supports Pytorch Geometric backend, in addition to the original DeepSNAP backend. You may try it out in `run_single_pyg.sh`.
+```bash
+cd run
+bash run_single_pyg.sh 
+```
+
 
 ## Why GraphGym?
 **TL;DR:** GraphGym is great for GNN beginners, domain experts and GNN researchers.
@@ -138,7 +143,7 @@ pip install -e .
 The experiment is about node classification on Cora dataset (random 80/20 train/val split).
 ```bash
 cd run
-bash run_single.sh
+bash run_single.sh # run a single experiment
 ```
 
 **Run a batch of experiments.**
@@ -149,7 +154,15 @@ Each experiment is repeated 3 times, and we set that 8 jobs can be concurrently 
 Depending on your infrastructure, finishing all the experiments may take a long time, and you can quit the experiment by `Ctrl-C` (GraphGym will properly kill all the processes).
 ```bash
 cd run
-bash run_batch.sh
+bash run_batch.sh # run a batch of experiments 
+```
+
+**(Optional) Run GraphGym with CPU backend.**
+GraphGym supports cpu backend as well -- you only need to add one line `device: cpu` to the `.yaml` file. Here we provide an example. 
+
+```bash
+cd run
+bash run_single_cpu.sh # run a single experiment using CPU backend
 ```
 
 **(Optional) Run GraphGym with PyG backend.**
@@ -158,9 +171,11 @@ The PyG backend follows the native implementation of PyG, and is slightly more e
 Currently the PyG backend only supports user-provided dataset splits, such as PyG native datasets or OGB datasets.
 ```bash
 cd run
-bash run_single_pyg.sh # run a single experiment
-bash run_batch_pyg.sh # run a batch of experiments 
+bash run_single_pyg.sh # run a single experiment using PyG backend
+bash run_batch_pyg.sh # run a batch of experiments using PyG backend 
 ```
+
+
 
 
 
