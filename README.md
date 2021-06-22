@@ -2,7 +2,6 @@
 GraphGym is a platform for designing and evaluating Graph Neural Networks (GNN).
 GraphGym is proposed in *[Design Space for Graph Neural Networks](https://arxiv.org/abs/2011.08843)*, Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
 
-
 ### Highlights
 **1. Highly modularized pipeline for GNN**
 - **Data:** Data loading, data splitting
@@ -19,6 +18,9 @@ GraphGym is proposed in *[Design Space for Graph Neural Networks](https://arxiv.
 
 **4. Flexible user customization**
 - Easily *register your own modules* in [`graphgym/contrib/`](graphgym/contrib), such as data loaders, GNN layers, loss functions, etc. 
+
+### News
+- GraphGym 0.2 has been released. Now GraphGym supports Pytorch Geometric backend, in addition to the original DeepSNAP backend. You may try it out in `run_single_pyg.sh`.
 
 ## Why GraphGym?
 **TL;DR:** GraphGym is great for GNN beginners, domain experts and GNN researchers.
@@ -132,14 +134,14 @@ pip install -e .
 
 **6. Test the installation**
 
-Run a test GNN experiment using GraphGym, specified in [`run/configs/example.yaml`](run/configs/example.yaml). 
+**Run a single experiment.** Run a test GNN experiment using GraphGym, specified in [`run/configs/example.yaml`](run/configs/example.yaml). 
 The experiment is about node classification on Cora dataset (random 80/20 train/val split).
 ```bash
 cd run
 bash run_single.sh
 ```
 
-
+**Run a batch of experiments.**
 Run a batch of GNN experiments using GraphGym, specified in [`run/configs/example.yaml`](run/configs/example.yaml) (controls the basic architecture) 
 and [`run/grids/example.yaml`](run/grids/example.txt) (controls how to do grid search). 
 The experiment examines 96 models in the recommended GNN design space, on 2 graph classification datasets.
@@ -148,6 +150,16 @@ Depending on your infrastructure, finishing all the experiments may take a long 
 ```bash
 cd run
 bash run_batch.sh
+```
+
+**(Optional) Run GraphGym with PyG backend.**
+Run GraphGym with Pytorch Geometric (PyG) backend, instead of the default DeepSNAP backend.
+The PyG backend follows the native implementation of PyG, and is slightly more efficient than the DeepSNAP backend.
+Currently the PyG backend only supports user-provided dataset splits, such as PyG native datasets or OGB datasets.
+```bash
+cd run
+bash run_single_pyg.sh # run a single experiment
+bash run_batch_pyg.sh # run a batch of experiments 
 ```
 
 
