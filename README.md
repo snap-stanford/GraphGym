@@ -51,7 +51,7 @@ GraphGym provides a *simple interface to try out thousands of GNNs in parallel* 
 GraphGym also recommends a "go-to" GNN design space, after investigating 10 million GNN model-task combinations.
 
 <div align="center">
-  <img align="center" src="docs/rank.png" width="1000px" />
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/rank.png" width="1000px" />
   <figcaption><b><br>Figure 2: A guideline for desirable GNN design choices. <br>(Sampling from 10 million GNN model-task combinations.) </b></figcaption>
 </div>
 
@@ -67,7 +67,7 @@ Moreover, GraphGym can help you easily do hyper-parameter search, and *visualize
 In sum, GraphGym can greatly facilitate your GNN research.
 
 <div align="center">
-  <img align="center" src="docs/evaluation.png" width="1000px" />
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/evaluation.png" width="1000px" />
   <figcaption><b><br>Figure 3: Evaluation of a given GNN design dimension (BatchNorm here).</b></figcaption>
 </div>
 
@@ -322,7 +322,7 @@ design_space.ipynb   # reproducing all the analyses in the paper
 ```
 
 <div align="center">
-  <img align="center" src="docs/overview.png" width="900px" />
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/overview.png" width="900px" />
   <figcaption><b><br>Figure 4: Overview of the proposed GNN design space and task space.</b></figcaption>
 </div>
 
@@ -343,7 +343,7 @@ bash run_idgnn_graph.sh   # Reproduce ID-GNN graph-level results
 ```
 
 <div align="center">
-  <img align="center" src="docs/IDGNN.png" width="900px" />
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/IDGNN.png" width="900px" />
   <figcaption><b><br>Figure 5: Overview of Identity-aware Graph Neural Networks (ID-GNN).</b></figcaption>
 </div>
 
