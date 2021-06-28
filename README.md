@@ -37,7 +37,7 @@ Using existing packages for GNN, you still have to code up the essential pipelin
 GraphGym is a perfect place for your to start learning *standardized GNN implementation and evaluation*.
 
 <div align="center">
-  <img align="center" src="docs/design_space.png" width="400px" />
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/design_space.png" width="400px" />
   <figcaption><b><br>Figure 1: Modularized GNN implementation.</b></figcaption>
 </div>
 
