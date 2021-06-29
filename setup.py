@@ -6,8 +6,8 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="graphgym",
     version="0.2.0",
-    author="Jiaxuan You, Rex Ying",
-    author_email="jiaxuan@cs.stanford.edu, rexy@cs.stanford.edu",
+    author="Jiaxuan You",
+    author_email="jiaxuan@cs.stanford.edu",
     description="GraphGym package",
     long_description=long_description,
     long_description_content_type="text/markdown",
