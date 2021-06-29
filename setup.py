@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="graphgym",
-    version="0.3.0",
+    version="0.3.1",
     author="Jiaxuan You",
     author_email="jiaxuan@cs.stanford.edu",
     description="GraphGym: platform for designing and evaluating Graph Neural Networks (GNN)",
