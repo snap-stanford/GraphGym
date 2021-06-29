@@ -1,7 +1,6 @@
 yacs
 tensorboardx
 torch
-torch-scatter
 torch-geometric
 deepsnap
 ogb

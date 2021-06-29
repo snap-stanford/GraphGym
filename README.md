@@ -23,7 +23,8 @@ Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
   such as data loaders, GNN layers, loss functions, etc. 
 
 ### News
-- GraphGym 0.2 has been released. Now GraphGym supports Pytorch Geometric backend, in addition to the default DeepSNAP backend. 
+- GraphGym 0.3.0 has been released. Now you may install stable version of GraphGym via `pip install graphgym`.
+- GraphGym 0.2.0 has been released. Now GraphGym supports Pytorch Geometric backend, in addition to the default DeepSNAP backend. 
   You may try it out in [`run_single_pyg.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_single_pyg.sh).
 ```bash
 cd run
