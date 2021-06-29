@@ -37,8 +37,8 @@ Using existing packages for GNN, you still have to code up the essential pipelin
 GraphGym is a perfect place for your to start learning *standardized GNN implementation and evaluation*.
 
 <div align="center">
-  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/design_space.png" width="400px" />
-  <figcaption><b><br>Figure 1: Modularized GNN implementation.</b></figcaption>
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/raw/master/docs/design_space.png" width="400px" />
+  <b><br>Figure 1: Modularized GNN implementation.</b>
 </div>
 
 <br>
@@ -51,9 +51,10 @@ GraphGym provides a *simple interface to try out thousands of GNNs in parallel* 
 GraphGym also recommends a "go-to" GNN design space, after investigating 10 million GNN model-task combinations.
 
 <div align="center">
-  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/rank.png" width="1000px" />
-  <figcaption><b><br>Figure 2: A guideline for desirable GNN design choices. <br>(Sampling from 10 million GNN model-task combinations.) </b></figcaption>
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/raw/master/docs/rank.png" width="1000px" />
+  <b><br>Figure 2: A guideline for desirable GNN design choices.</b> <br>(Sampling from 10 million GNN model-task combinations.)
 </div>
+
 
 <br>
 
@@ -67,9 +68,10 @@ Moreover, GraphGym can help you easily do hyper-parameter search, and *visualize
 In sum, GraphGym can greatly facilitate your GNN research.
 
 <div align="center">
-  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/evaluation.png" width="1000px" />
-  <figcaption><b><br>Figure 3: Evaluation of a given GNN design dimension (BatchNorm here).</b></figcaption>
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/raw/master/docs/evaluation.png" width="1000px" />
+  <b><br>Figure 3: Evaluation of a given GNN design dimension</b> (BatchNorm here).
 </div>
+
 
 <br>
 
@@ -228,7 +230,7 @@ For example, the base file could specify an experiment of 3-layer GCN for Cora n
 Then, the grid file specifies how to perturb the experiment along different dimension, such as number of layers,
 model architecture, dataset, level of task, etc.
 
- 
+
 **2.4 Generate config files for the batch of experiments,** based on the information specified above.
 For example, in [`run/run_batch.sh`](run/run_batch.sh):
 ```bash
@@ -322,8 +324,8 @@ design_space.ipynb   # reproducing all the analyses in the paper
 ```
 
 <div align="center">
-  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/overview.png" width="900px" />
-  <figcaption><b><br>Figure 4: Overview of the proposed GNN design space and task space.</b></figcaption>
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/raw/master/docs/overview.png" width="900px" />
+  <b><br>Figure 4: Overview of the proposed GNN design space and task space.</b>
 </div>
 
 
@@ -343,8 +345,8 @@ bash run_idgnn_graph.sh   # Reproduce ID-GNN graph-level results
 ```
 
 <div align="center">
-  <img align="center" src="https://github.com/snap-stanford/GraphGym/blob/master/docs/IDGNN.png" width="900px" />
-  <figcaption><b><br>Figure 5: Overview of Identity-aware Graph Neural Networks (ID-GNN).</b></figcaption>
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/raw/master/docs/IDGNN.png" width="900px" />
+  <b><br>Figure 5: Overview of Identity-aware Graph Neural Networks (ID-GNN).</b>
 </div>
 
 
