@@ -19,13 +19,13 @@ Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
 
 **4. Flexible user customization**
 - Easily *register your own modules* 
-  in [`graphgym/contrib/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib), 
+  in [`graphgym/contrib/`](graphgym/contrib), 
   such as data loaders, GNN layers, loss functions, etc. 
 
 ### News
 - GraphGym 0.3.0 has been released. Now you may install stable version of GraphGym via `pip install graphgym`.
 - GraphGym 0.2.0 has been released. Now GraphGym supports Pytorch Geometric backend, in addition to the default DeepSNAP backend. 
-  You may try it out in [`run_single_pyg.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_single_pyg.sh).
+  You may try it out in [`run_single_pyg.sh`](run/run_single_pyg.sh).
 ```bash
 cd run
 bash run_single_pyg.sh 
@@ -135,8 +135,8 @@ pip install graphgym # (Optional) From pypi stable version
 **5. Test the installation**
 
 **Run a single experiment.** 
-Run a test GNN experiment using GraphGym [`run_single.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_single.sh). 
-Configurations are specified in [`example.yaml`](https://github.com/snap-stanford/GraphGym/blob/master/run/configs/example.yaml). 
+Run a test GNN experiment using GraphGym [`run_single.sh`](run/run_single.sh). 
+Configurations are specified in [`example.yaml`](run/configs/example.yaml). 
 The experiment is about node classification on Cora dataset (random 80/20 train/val split).
 ```bash
 cd run
@@ -144,10 +144,10 @@ bash run_single.sh # run a single experiment
 ```
 
 **Run a batch of experiments.**
-Run a batch of GNN experiments using GraphGym [`run_batch.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_batch.sh). 
+Run a batch of GNN experiments using GraphGym [`run_batch.sh`](run/run_batch.sh). 
 Configurations are specified specified in 
-[`example.yaml`](https://github.com/snap-stanford/GraphGym/blob/master/run/configs/example.yaml) (controls the basic architecture) 
-and [`example.txt`](https://github.com/snap-stanford/GraphGym/blob/master/run/grids/example.txt) (controls how to do grid search). 
+[`example.yaml`](run/configs/example.yaml) (controls the basic architecture) 
+and [`example.txt`](run/grids/example.txt) (controls how to do grid search). 
 The experiment examines 96 models in the recommended GNN design space, on 2 graph classification datasets.
 Each experiment is repeated 3 times, and we set that 8 jobs can be concurrently run.
 Depending on your infrastructure, finishing all the experiments may take a long time;
@@ -167,8 +167,8 @@ bash run_single_cpu.sh # run a single experiment using CPU backend
 
 **(Optional) Run GraphGym with PyG backend.**
 Run GraphGym with Pytorch Geometric (PyG) backend
-[`run_single_pyg.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_single_pyg.sh) and 
-[`run_batch_pyg.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_batch_pyg.sh),
+[`run_single_pyg.sh`](run/run_single_pyg.sh) and 
+[`run_batch_pyg.sh`](run/run_batch_pyg.sh),
 instead of the default DeepSNAP backend.
 The PyG backend follows the native PyG implementation, and is slightly more efficient than the DeepSNAP backend.
 Currently the PyG backend only supports user-provided dataset splits, such as PyG native datasets or OGB datasets.
@@ -186,19 +186,19 @@ bash run_batch_pyg.sh # run a batch of experiments using PyG backend
 ## GraphGym In-depth Usage
 
 ### 1 Run a single GNN experiment
-A full example is specified in [`run/run_single.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_single.sh).
+A full example is specified in [`run/run_single.sh`](run/run_single.sh).
 
 **1.1 Specify a configuration file.**
 In GraphGym, an experiment is fully specified by a `.yaml` file.
 Unspecified configurations in the `.yaml` file will be populated by the default values in 
-[`graphgym/config.py`](https://github.com/snap-stanford/GraphGym/blob/master/graphgym/config.py).
-For example, in [`run/configs/example.yaml`](https://github.com/snap-stanford/GraphGym/blob/master/run/configs/example.yaml), 
+[`graphgym/config.py`](graphgym/config.py).
+For example, in [`run/configs/example.yaml`](run/configs/example.yaml), 
 there are configurations on dataset, training, model, GNN, etc.
 Concrete description for each configuration is described in 
-[`graphgym/config.py`](https://github.com/snap-stanford/GraphGym/blob/master/graphgym/config.py).
+[`graphgym/config.py`](graphgym/config.py).
 
 **1.2 Launch an experiment.**
-For example, in [`run/run_single.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_single.sh):
+For example, in [`run/run_single.sh`](run/run_single.sh):
 ```bash
 python main.py --cfg configs/example.yaml --repeat 3
 ```
@@ -215,7 +215,7 @@ Train/val/test results are further saved into subdirectories, such as `run/resul
 `best.json` stores the results at *the epoch with the highest validation accuracy*.
 
 ### 2 Run a batch of GNN experiments
-A full example is specified in [`run/run_batch.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_batch.sh).
+A full example is specified in [`run/run_batch.sh`](run/run_batch.sh).
 
 **2.1 Specify a base file.**
 GraphGym supports running a batch of experiments.
@@ -236,7 +236,7 @@ model architecture, dataset, level of task, etc.
 
 
 **2.4 Generate config files for the batch of experiments,** based on the information specified above.
-For example, in [`run/run_batch.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_batch.sh):
+For example, in [`run/run_batch.sh`](run/run_batch.sh):
 ```bash
 python configs_gen.py --config configs/${DIR}/${CONFIG}.yaml \
   --config_budget configs/${DIR}/${CONFIG}.yaml \
@@ -245,7 +245,7 @@ python configs_gen.py --config configs/${DIR}/${CONFIG}.yaml \
 ```
 
 **2.5 Launch the batch of experiments.**
-For example, in [`run/run_batch.sh`](https://github.com/snap-stanford/GraphGym/blob/master/run/run_batch.sh):
+For example, in [`run/run_batch.sh`](run/run_batch.sh):
 ```bash
 bash parallel.sh configs/${CONFIG}_grid_${GRID} $REPEAT $MAX_JOBS $SLEEP
 ```
@@ -271,7 +271,7 @@ When test set split is provided, `test.csv` represents test accuracy for each mo
 
 ### 3 Analyze the results
 We provides a handy tool to automatically provide an overview of a batch of experiments in
-[`analysis/example.ipynb`](https://github.com/snap-stanford/GraphGym/blob/master/analysis/example.ipynb).
+[`analysis/example.ipynb`](analysis/example.ipynb).
 ```bash
 cd analysis
 jupyter notebook
@@ -283,31 +283,31 @@ example.ipynb   # automatically provide an overview of a batch of experiments
 ### 4 User customization
 A highlight of GraphGym is that it allows users to easily register their customized modules.
 The supported customized modules are provided in directory 
-[`graphgym/contrib/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib), including:
-- Activation [`graphgym/contrib/act/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/act), 
-- Customized configurations [`graphgym/contrib/config/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/config), 
-- Feature augmentation [`graphgym/contrib/feature_augment/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/feature_augment), 
-- Feature encoder [`graphgym/contrib/feature_encoder/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/feature_encoder),
-- GNN head [`graphgym/contrib/head/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/head), 
-- GNN layer [`graphgym/contrib/layer/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/layer), 
-- Data loader [`graphgym/contrib/loader/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/loader),
-- Loss function [`graphgym/contrib/loss/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/loss), 
-- GNN network architecture [`graphgym/contrib/network/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/network), 
-- Optimizer [`graphgym/contrib/optimizer/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/optimizer),
+[`graphgym/contrib/`](graphgym/contrib), including:
+- Activation [`graphgym/contrib/act/`](graphgym/contrib/act), 
+- Customized configurations [`graphgym/contrib/config/`](graphgym/contrib/config), 
+- Feature augmentation [`graphgym/contrib/feature_augment/`](graphgym/contrib/feature_augment), 
+- Feature encoder [`graphgym/contrib/feature_encoder/`](graphgym/contrib/feature_encoder),
+- GNN head [`graphgym/contrib/head/`](graphgym/contrib/head), 
+- GNN layer [`graphgym/contrib/layer/`](graphgym/contrib/layer), 
+- Data loader [`graphgym/contrib/loader/`](graphgym/contrib/loader),
+- Loss function [`graphgym/contrib/loss/`](graphgym/contrib/loss), 
+- GNN network architecture [`graphgym/contrib/network/`](graphgym/contrib/network), 
+- Optimizer [`graphgym/contrib/optimizer/`](graphgym/contrib/optimizer),
 - GNN global pooling (graph classification only) 
-  [`graphgym/contrib/pooling/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/pooling), 
-- GNN stage [`graphgym/contrib/stage/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/stage),
-- GNN training pipeline [`graphgym/contrib/train/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/train), 
-- Data transformations [`graphgym/contrib/transform/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/transform).
+  [`graphgym/contrib/pooling/`](graphgym/contrib/pooling), 
+- GNN stage [`graphgym/contrib/stage/`](graphgym/contrib/stage),
+- GNN training pipeline [`graphgym/contrib/train/`](graphgym/contrib/train), 
+- Data transformations [`graphgym/contrib/transform/`](graphgym/contrib/transform).
 
 Within each directory, (at least) an example is provided, showing how to register user customized modules.
 Note that new user customized modules may result in new configurations; in these cases, new configuration fields
-can be registered at [`graphgym/contrib/config/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib/config).
+can be registered at [`graphgym/contrib/config/`](graphgym/contrib/config).
 
 **Note: Applying to your own datasets.**
 A common use case will be applying GraphGym to your favorite datasets.
 To do so, you may follow our example in 
-[`graphgym/contrib/loader/example.py`](https://github.com/snap-stanford/GraphGym/blob/master/graphgym/contrib/loader/example.py).
+[`graphgym/contrib/loader/example.py`](graphgym/contrib/loader/example.py).
 GraphGym currently accepts a list of [NetworkX](https://networkx.org/documentation/stable/index.html) graphs 
 or [PyG](https://pytorch-geometric.readthedocs.io/en/latest/) datasets.
 
@@ -367,7 +367,7 @@ Part of GraphGym relies on [Pytorch Geometric](https://github.com/rusty1s/pytorc
 
 We warmly welcome the community to contribute to GraphGym.
 GraphGym is particularly designed to enable contribution / customization in a simple way. 
-For example, you may contribute your modules to [`graphgym/contrib/`](https://github.com/snap-stanford/GraphGym/tree/master/graphgym/contrib) by creating pull requests.
+For example, you may contribute your modules to [`graphgym/contrib/`](graphgym/contrib) by creating pull requests.
 
 ## Citing GraphGym
 If you find GraphGym or our paper useful, please cite our paper:
