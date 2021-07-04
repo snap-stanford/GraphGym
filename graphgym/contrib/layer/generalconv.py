@@ -66,7 +66,7 @@ class GeneralConvLayer(MessagePassing):
                 deg = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes)
             deg_inv_sqrt = deg.pow(-1.0)
             deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-            norm = deg_inv_sqrt * edge_weight
+            norm = (deg_inv_sqrt[row] if cfg.gnn.flow == 'source_to_target' else deg_inv_sqrt[col]) * edge_weight
 
         return edge_index, norm
 
