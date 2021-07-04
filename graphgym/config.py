@@ -344,6 +344,9 @@ def set_cfg(cfg):
     # e.g., when cfg.gnn.layer_type = 'generalconv'
     cfg.gnn.agg = 'add'
 
+    # Message passing flow: source_to_target or target_to_source
+    cfg.gnn.flow = 'source_to_target'
+
     # Normalize adj
     cfg.gnn.normalize_adj = False
 
