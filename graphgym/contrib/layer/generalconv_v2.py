@@ -3,19 +3,19 @@ import torch.nn as nn
 from torch.nn import Parameter
 from torch_scatter import scatter_add
 from torch_geometric.nn.conv import MessagePassing
-from torch_geometric.utils import add_remaining_self_loops
+from torch_geometric.utils import add_remaining_self_loops, is_undirected
 
 from torch_geometric.nn.inits import glorot, zeros
 from graphgym.config import cfg
 
 
-class GeneralConvLayer(MessagePassing):
+class GeneralConvLayerV2(MessagePassing):
     r"""General GNN layer
     """
 
     def __init__(self, in_channels, out_channels, improved=False, cached=False,
                  bias=True, **kwargs):
-        super(GeneralConvLayer, self).__init__(aggr=cfg.gnn.agg, **kwargs)
+        super(GeneralConvLayerV2, self).__init__(aggr=cfg.gnn.agg, flow=cfg.gnn.flow, **kwargs)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -54,11 +54,21 @@ class GeneralConvLayer(MessagePassing):
             edge_index, edge_weight, fill_value, num_nodes)
 
         row, col = edge_index
-        deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-        deg_inv_sqrt = deg.pow(-0.5)
-        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+        if is_undirected(edge_index, num_nodes=num_nodes):
+            deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+            deg_inv_sqrt = deg.pow(-0.5)
+            deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+            norm = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+        else:
+            if cfg.gnn.flow == 'source_to_target':
+                deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+            else:
+                deg = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes)
+            deg_inv_sqrt = deg.pow(-1.0)
+            deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+            norm = (deg_inv_sqrt[row] if cfg.gnn.flow == 'source_to_target' else deg_inv_sqrt[col]) * edge_weight
 
-        return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+        return edge_index, norm
 
     def forward(self, x, edge_index, edge_weight=None, edge_feature=None):
         """"""
@@ -81,6 +91,10 @@ class GeneralConvLayer(MessagePassing):
                                              edge_weight, self.improved,
                                              x.dtype)
             else:
+                if cfg.gnn.self_msg == 'none':
+                    # add self-loop to ensure the final output has considered h_{v}^{l-1}
+                    edge_index, edge_weight = add_remaining_self_loops(
+                        edge_index, edge_weight, 2 if self.improved else 1, x.size(self.node_dim))
                 norm = edge_weight
             self.cached_result = edge_index, norm
 
@@ -114,13 +128,13 @@ class GeneralConvLayer(MessagePassing):
                                    self.out_channels)
 
 
-class GeneralEdgeConvLayer(MessagePassing):
+class GeneralEdgeConvLayerV2(MessagePassing):
     r"""General GNN layer, with edge features
     """
 
     def __init__(self, in_channels, out_channels, improved=False, cached=False,
                  bias=True, **kwargs):
-        super(GeneralEdgeConvLayer, self).__init__(aggr=cfg.gnn.agg, **kwargs)
+        super(GeneralEdgeConvLayerV2, self).__init__(aggr=cfg.gnn.agg, flow=cfg.gnn.flow, **kwargs)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -162,11 +176,21 @@ class GeneralEdgeConvLayer(MessagePassing):
             edge_index, edge_weight, fill_value, num_nodes)
 
         row, col = edge_index
-        deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
-        deg_inv_sqrt = deg.pow(-0.5)
-        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+        if is_undirected(edge_index, num_nodes=num_nodes):
+            deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+            deg_inv_sqrt = deg.pow(-0.5)
+            deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+            norm = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+        else:
+            if cfg.gnn.flow == 'source_to_target':
+                deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
+            else:
+                deg = scatter_add(edge_weight, col, dim=0, dim_size=num_nodes)
+            deg_inv_sqrt = deg.pow(-1.0)
+            deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+            norm = (deg_inv_sqrt[row] if cfg.gnn.flow == 'source_to_target' else deg_inv_sqrt[col]) * edge_weight
 
-        return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+        return edge_index, norm
 
     def forward(self, x, edge_index, edge_weight=None, edge_feature=None):
         if self.cached and self.cached_result is not None:
