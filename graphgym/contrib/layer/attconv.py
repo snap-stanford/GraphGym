@@ -54,7 +54,7 @@ class GeneralAddAttConvLayer(MessagePassing):
             edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
                                      device=edge_index.device)
 
-        fill_value = 1 if not improved else 2
+        fill_value = 1.0 if not improved else 2.0
         edge_index, edge_weight = add_remaining_self_loops(
             edge_index, edge_weight, fill_value, num_nodes)
 
@@ -157,7 +157,7 @@ class GeneralMulAttConvLayer(MessagePassing):
             edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
                                      device=edge_index.device)
 
-        fill_value = 1 if not improved else 2
+        fill_value = 1.0 if not improved else 2.0
         edge_index, edge_weight = add_remaining_self_loops(
             edge_index, edge_weight, fill_value, num_nodes)
 
@@ -303,7 +303,7 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
             edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
                                      device=edge_index.device)
 
-        fill_value = 1 if not improved else 2
+        fill_value = 1.0 if not improved else 2.0
         edge_index, edge_weight = add_remaining_self_loops(
             edge_index, edge_weight, fill_value, num_nodes)
 
@@ -442,7 +442,7 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
             edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
                                      device=edge_index.device)
 
-        fill_value = 1 if not improved else 2
+        fill_value = 1.0 if not improved else 2.0
         edge_index, edge_weight = add_remaining_self_loops(
             edge_index, edge_weight, fill_value, num_nodes)
 
