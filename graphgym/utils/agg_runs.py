@@ -1,26 +1,24 @@
-import os
-import json
-import numpy as np
-import shutil
-import ast
-import pandas as pd
 import logging
+import os
+
+import numpy as np
 
 from graphgym.config import cfg
-from graphgym.utils.io import dict_list_to_json, dict_list_to_tb, \
-     json_to_dict_list, makedirs_rm_exist, string_to_python, dict_to_json
-from tensorboardX import SummaryWriter
+from graphgym.utils.io import (dict_list_to_json, dict_list_to_tb,
+                               dict_to_json, json_to_dict_list,
+                               makedirs_rm_exist, string_to_python)
 
-import pdb
-
-
+try:
+    from tensorboardX import SummaryWriter
+except ImportError:
+    SummaryWriter = None
 
 
 def is_seed(s):
     try:
         int(s)
         return True
-    except:
+    except Exception:
         return False
 
 
@@ -40,7 +38,12 @@ def join_list(l1, l2):
 
 
 def agg_dict_list(dict_list):
-    '''default agg: mean + std'''
+    """
+    Aggregate a list of dictionaries: mean + std
+    Args:
+        dict_list: list of dictionaries
+
+    """
     dict_agg = {'epoch': dict_list[0]['epoch']}
     for key in dict_list[0]:
         if key != 'epoch':
@@ -49,25 +52,35 @@ def agg_dict_list(dict_list):
             dict_agg['{}_std'.format(key)] = np.std(value).round(cfg.round)
     return dict_agg
 
+
 def name_to_dict(run):
     cols = run.split('-')[1:]
     keys, vals = [], []
     for col in cols:
         try:
             key, val = col.split('=')
-        except:
+        except Exception:
             print(col)
         keys.append(key)
         vals.append(string_to_python(val))
     return dict(zip(keys, vals))
+
 
 def rm_keys(dict, keys):
     for key in keys:
         dict.pop(key, None)
 
 
-# single experiments
 def agg_runs(dir, metric_best='auto'):
+    r'''
+    Aggregate over different random seeds of a single experiment
+
+    Args:
+        dir (str): Directory of the results, containing 1 experiment
+        metric_best (str, optional): The metric for selecting the best
+        validation performance. Options: auto, accuracy, auc.
+
+    '''
     results = {'train': None, 'val': None, 'test': None}
     results_best = {'train': None, 'val': None, 'test': None}
     for seed in os.listdir(dir):
@@ -83,8 +96,12 @@ def agg_runs(dir, metric_best='auto'):
                     metric = 'auc' if 'auc' in stats_list[0] else 'accuracy'
                 else:
                     metric = metric_best
-                performance_np = np.array([stats[metric] for stats in stats_list])
-                best_epoch = stats_list[eval("performance_np.{}()".format(cfg.metric_agg))]['epoch']
+                performance_np = np.array(  # noqa
+                    [stats[metric] for stats in stats_list])
+                best_epoch = \
+                    stats_list[
+                        eval("performance_np.{}()".format(cfg.metric_agg))][
+                        'epoch']
                 print(best_epoch)
 
             for split in os.listdir(dir_seed):
@@ -92,7 +109,10 @@ def agg_runs(dir, metric_best='auto'):
                     dir_split = os.path.join(dir_seed, split)
                     fname_stats = os.path.join(dir_split, 'stats.json')
                     stats_list = json_to_dict_list(fname_stats)
-                    stats_best = [stats for stats in stats_list if stats['epoch'] == best_epoch][0]
+                    stats_best = [
+                        stats for stats in stats_list
+                        if stats['epoch'] == best_epoch
+                    ][0]
                     print(stats_best)
                     stats_list = [[stats] for stats in stats_list]
                     if results[split] is None:
@@ -103,8 +123,10 @@ def agg_runs(dir, metric_best='auto'):
                         results_best[split] = [stats_best]
                     else:
                         results_best[split] += [stats_best]
-    results = {k: v for k, v in results.items() if v is not None} # rm None
-    results_best = {k: v for k, v in results_best.items() if v is not None} # rm None
+    results = {k: v for k, v in results.items() if v is not None}  # rm None
+    results_best = {k: v
+                    for k, v in results_best.items()
+                    if v is not None}  # rm None
     for key in results:
         for i in range(len(results[key])):
             results[key][i] = agg_dict_list(results[key][i])
@@ -118,6 +140,9 @@ def agg_runs(dir, metric_best='auto'):
         dict_list_to_json(value, fname)
 
         if cfg.tensorboard_agg:
+            if SummaryWriter is None:
+                raise ImportError(
+                    'Tensorboard support requires `tensorboardX`.')
             writer = SummaryWriter(dir_out)
             dict_list_to_tb(value, writer)
             writer.close()
@@ -128,8 +153,18 @@ def agg_runs(dir, metric_best='auto'):
     logging.info('Results aggregated across runs saved in {}'.format(
         os.path.join(dir, 'agg')))
 
-# agg across grid search
+
 def agg_batch(dir, metric_best='auto'):
+    r'''
+    Aggregate across results from multiple experiments via grid search
+
+    Args:
+        dir (str): Directory of the results, containing multiple experiments
+        metric_best (str, optional): The metric for selecting the best
+        validation performance. Options: auto, accuracy, auc.
+
+    '''
+    import pandas as pd
     results = {'train': [], 'val': [], 'test': []}
     for run in os.listdir(dir):
         if run != 'agg':
@@ -139,16 +174,18 @@ def agg_batch(dir, metric_best='auto'):
                 for split in os.listdir(dir_run):
                     dir_split = os.path.join(dir_run, split)
                     fname_stats = os.path.join(dir_split, 'best.json')
-                    dict_stats = json_to_dict_list(fname_stats)[-1]  # get best val epoch
-                    rm_keys(dict_stats, ['lr', 'lr_std', 'eta', 'eta_std','params_std'])
+                    dict_stats = json_to_dict_list(fname_stats)[
+                        -1]  # get best val epoch
+                    rm_keys(dict_stats,
+                            ['lr', 'lr_std', 'eta', 'eta_std', 'params_std'])
                     results[split].append({**dict_name, **dict_stats})
     dir_out = os.path.join(dir, 'agg')
     makedirs_rm_exist(dir_out)
     for key in results:
-        if len(results[key])>0:
+        if len(results[key]) > 0:
             results[key] = pd.DataFrame(results[key])
-            results[key] = results[key].sort_values(list(dict_name.keys()),
-                                     ascending=[True]*len(dict_name))
+            results[key] = results[key].sort_values(
+                list(dict_name.keys()), ascending=[True] * len(dict_name))
             fname = os.path.join(dir_out, '{}_best.csv'.format(key))
             results[key].to_csv(fname, index=False)
 
@@ -161,18 +198,19 @@ def agg_batch(dir, metric_best='auto'):
                 for split in os.listdir(dir_run):
                     dir_split = os.path.join(dir_run, split)
                     fname_stats = os.path.join(dir_split, 'stats.json')
-                    dict_stats = json_to_dict_list(fname_stats)[-1] # get last epoch
-                    rm_keys(dict_stats, ['lr', 'lr_std', 'eta', 'eta_std','params_std'])
+                    dict_stats = json_to_dict_list(fname_stats)[
+                        -1]  # get last epoch
+                    rm_keys(dict_stats,
+                            ['lr', 'lr_std', 'eta', 'eta_std', 'params_std'])
                     results[split].append({**dict_name, **dict_stats})
     dir_out = os.path.join(dir, 'agg')
     for key in results:
-        if len(results[key])>0:
+        if len(results[key]) > 0:
             results[key] = pd.DataFrame(results[key])
-            results[key] = results[key].sort_values(list(dict_name.keys()),
-                                     ascending=[True]*len(dict_name))
+            results[key] = results[key].sort_values(
+                list(dict_name.keys()), ascending=[True] * len(dict_name))
             fname = os.path.join(dir_out, '{}.csv'.format(key))
             results[key].to_csv(fname, index=False)
-
 
     results = {'train': [], 'val': [], 'test': []}
     for run in os.listdir(dir):
@@ -183,31 +221,27 @@ def agg_batch(dir, metric_best='auto'):
                 for split in os.listdir(dir_run):
                     dir_split = os.path.join(dir_run, split)
                     fname_stats = os.path.join(dir_split, 'stats.json')
-                    dict_stats = json_to_dict_list(fname_stats) # get best epoch
+                    dict_stats = json_to_dict_list(
+                        fname_stats)  # get best epoch
                     if metric_best == 'auto':
-                        metric = 'auc' if 'auc' in dict_stats[0] else 'accuracy'
+                        metric = 'auc' if 'auc' in dict_stats[0] \
+                            else 'accuracy'
                     else:
                         metric = metric_best
-                    performance_np = np.array([stats[metric] for stats in dict_stats])
-                    dict_stats = dict_stats[eval("performance_np.{}()".format(cfg.metric_agg))]
-                    rm_keys(dict_stats, ['lr', 'lr_std', 'eta', 'eta_std','params_std'])
+                    performance_np = np.array(  # noqa
+                        [stats[metric] for stats in dict_stats])
+                    dict_stats = dict_stats[eval("performance_np.{}()".format(
+                        cfg.metric_agg))]
+                    rm_keys(dict_stats,
+                            ['lr', 'lr_std', 'eta', 'eta_std', 'params_std'])
                     results[split].append({**dict_name, **dict_stats})
     dir_out = os.path.join(dir, 'agg')
     for key in results:
-        if len(results[key])>0:
+        if len(results[key]) > 0:
             results[key] = pd.DataFrame(results[key])
-            results[key] = results[key].sort_values(list(dict_name.keys()),
-                                     ascending=[True]*len(dict_name))
+            results[key] = results[key].sort_values(
+                list(dict_name.keys()), ascending=[True] * len(dict_name))
             fname = os.path.join(dir_out, '{}_bestepoch.csv'.format(key))
             results[key].to_csv(fname, index=False)
 
-
     print('Results aggregated across models saved in {}'.format(dir_out))
-
-
-## test
-# dir = 'results/nc_example'
-# agg_runs(dir)
-
-
-

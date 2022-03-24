@@ -1,20 +1,24 @@
 import torch
 import torch.nn as nn
 from torch.nn import Parameter
-from torch_scatter import scatter_add
 from torch_geometric.nn.conv import MessagePassing
-from torch_geometric.utils import add_remaining_self_loops
-
 from torch_geometric.nn.inits import glorot, zeros
+from torch_geometric.utils import add_remaining_self_loops
+from torch_scatter import scatter_add
+
 from graphgym.config import cfg
 
 
 class GeneralConvLayer(MessagePassing):
     r"""General GNN layer
     """
-
-    def __init__(self, in_channels, out_channels, improved=False, cached=False,
-                 bias=True, **kwargs):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 improved=False,
+                 cached=False,
+                 bias=True,
+                 **kwargs):
         super(GeneralConvLayer, self).__init__(aggr=cfg.gnn.agg, **kwargs)
 
         self.in_channels = in_channels
@@ -25,7 +29,8 @@ class GeneralConvLayer(MessagePassing):
 
         self.weight = Parameter(torch.Tensor(in_channels, out_channels))
         if cfg.gnn.self_msg == 'concat':
-            self.weight_self = Parameter(torch.Tensor(in_channels, out_channels))
+            self.weight_self = Parameter(
+                torch.Tensor(in_channels, out_channels))
 
         if bias:
             self.bias = Parameter(torch.Tensor(out_channels))
@@ -43,10 +48,14 @@ class GeneralConvLayer(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index,
+             num_nodes,
+             edge_weight=None,
+             improved=False,
              dtype=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+            edge_weight = torch.ones((edge_index.size(1), ),
+                                     dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1.0 if not improved else 2.0
@@ -85,8 +94,10 @@ class GeneralConvLayer(MessagePassing):
             self.cached_result = edge_index, norm
 
         edge_index, norm = self.cached_result
-        x_msg = self.propagate(edge_index, x=x, norm=norm,
-                              edge_feature=edge_feature)
+        x_msg = self.propagate(edge_index,
+                               x=x,
+                               norm=norm,
+                               edge_feature=edge_feature)
         if cfg.gnn.self_msg == 'none':
             return x_msg
         elif cfg.gnn.self_msg == 'add':
@@ -94,15 +105,16 @@ class GeneralConvLayer(MessagePassing):
         elif cfg.gnn.self_msg == 'concat':
             return x_msg + x_self
         else:
-            raise ValueError('self_msg {} not defined'.format(cfg.gnn.self_msg))
+            raise ValueError('self_msg {} not defined'.format(
+                cfg.gnn.self_msg))
 
     def message(self, x_j, norm, edge_feature):
         if edge_feature is None:
             return norm.view(-1, 1) * x_j if norm is not None else x_j
         else:
             return norm.view(-1, 1) * (
-                    x_j + edge_feature) if norm is not None else (
-                    x_j + edge_feature)
+                x_j + edge_feature) if norm is not None else (x_j +
+                                                              edge_feature)
 
     def update(self, aggr_out):
         if self.bias is not None:
@@ -117,9 +129,13 @@ class GeneralConvLayer(MessagePassing):
 class GeneralEdgeConvLayer(MessagePassing):
     r"""General GNN layer, with edge features
     """
-
-    def __init__(self, in_channels, out_channels, improved=False, cached=False,
-                 bias=True, **kwargs):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 improved=False,
+                 cached=False,
+                 bias=True,
+                 **kwargs):
         super(GeneralEdgeConvLayer, self).__init__(aggr=cfg.gnn.agg, **kwargs)
 
         self.in_channels = in_channels
@@ -131,10 +147,12 @@ class GeneralEdgeConvLayer(MessagePassing):
 
         if self.msg_direction == 'single':
             self.linear_msg = nn.Linear(in_channels + cfg.dataset.edge_dim,
-                                        out_channels, bias=False)
+                                        out_channels,
+                                        bias=False)
         else:
             self.linear_msg = nn.Linear(in_channels * 2 + cfg.dataset.edge_dim,
-                                        out_channels, bias=False)
+                                        out_channels,
+                                        bias=False)
         if cfg.gnn.self_msg == 'concat':
             self.linear_self = nn.Linear(in_channels, out_channels, bias=False)
 
@@ -151,10 +169,14 @@ class GeneralEdgeConvLayer(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index,
+             num_nodes,
+             edge_weight=None,
+             improved=False,
              dtype=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+            edge_weight = torch.ones((edge_index.size(1), ),
+                                     dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1.0 if not improved else 2.0
@@ -189,8 +211,10 @@ class GeneralEdgeConvLayer(MessagePassing):
 
         edge_index, norm = self.cached_result
 
-        x_msg = self.propagate(edge_index, x=x, norm=norm,
-                              edge_feature=edge_feature)
+        x_msg = self.propagate(edge_index,
+                               x=x,
+                               norm=norm,
+                               edge_feature=edge_feature)
 
         if cfg.gnn.self_msg == 'concat':
             x_self = self.linear_self(x)

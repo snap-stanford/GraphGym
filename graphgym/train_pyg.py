@@ -1,11 +1,12 @@
-import torch
-import time
 import logging
+import time
 
+import torch
+
+from graphgym.checkpoint import clean_ckpt, load_ckpt, save_ckpt
 from graphgym.config import cfg
 from graphgym.loss import compute_loss
-from graphgym.utils.epoch import is_eval_epoch, is_ckpt_epoch
-from graphgym.checkpoint import load_ckpt, save_ckpt, clean_ckpt
+from graphgym.utils.epoch import is_ckpt_epoch, is_eval_epoch
 
 
 def train_epoch(logger, loader, model, optimizer, scheduler):
@@ -48,6 +49,17 @@ def eval_epoch(logger, loader, model, split='val'):
 
 
 def train(loggers, loaders, model, optimizer, scheduler):
+    r"""
+    The core training pipeline
+
+    Args:
+        loggers: List of loggers
+        loaders: List of loaders
+        model: GNN model
+        optimizer: PyTorch optimizer
+        scheduler: PyTorch learning rate scheduler
+
+    """
     start_epoch = 0
     if cfg.train.auto_resume:
         start_epoch = load_ckpt(model, optimizer, scheduler)

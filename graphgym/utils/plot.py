@@ -1,16 +1,26 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
+import seaborn as sns
 from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
 
 from graphgym.utils.io import makedirs
-import pdb
+
+# from sklearn.manifold import TSNE
+
 
 sns.set_context('poster')
 
 
 def view_emb(emb, dir):
+    '''
+    Visualize a embedding matrix.
+
+    Args:
+        emb (torch.tensor): Embedding matrix with shape (N, D). D is the
+        feature dimension.
+        dir (str): Output directory for the embedding figure.
+
+    '''
     if emb.shape[1] > 2:
         pca = PCA(n_components=2)
         emb = pca.fit_transform(emb)

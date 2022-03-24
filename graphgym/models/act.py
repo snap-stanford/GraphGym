@@ -1,7 +1,7 @@
 import torch.nn as nn
-from graphgym.config import cfg
-from graphgym.contrib.act import *
+
 import graphgym.register as register
+from graphgym.config import cfg
 
 act_dict = {
     'relu': nn.ReLU(inplace=cfg.mem.inplace),

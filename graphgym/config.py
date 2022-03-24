@@ -1,10 +1,14 @@
+import functools
+import inspect
 import logging
 import os
+import shutil
+from collections.abc import Iterable
+from dataclasses import asdict
+from typing import Any
+
 from yacs.config import CfgNode as CN
 
-from graphgym.utils.io import makedirs_rm_exist
-
-from graphgym.contrib.config import *
 import graphgym.register as register
 
 # Global config object
@@ -21,10 +25,12 @@ def set_cfg(cfg):
 
     :return: configuration use by the experiment.
     '''
+    if cfg is None:
+        return cfg
 
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     # Basic options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
 
     # Set print destination: stdout / file / both
     cfg.print = 'both'
@@ -35,11 +41,14 @@ def set_cfg(cfg):
     # Output directory
     cfg.out_dir = 'results'
 
-    # Config destination (in OUT_DIR)
+    # Config name (in out_dir)
     cfg.cfg_dest = 'config.yaml'
 
+    # Names of registered custom metric funcs to be used (use defaults if none)
+    cfg.custom_metrics = []
+
     # Random seed
-    cfg.seed = 1
+    cfg.seed = 0
 
     # Print rounding
     cfg.round = 4
@@ -68,11 +77,11 @@ def set_cfg(cfg):
     # If get GPU usage
     cfg.gpu_mem = False
 
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     # Globally shared variables:
     # These variables will be set dynamically based on the input dataset
     # Do not directly set them here or in .yaml files
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
 
     cfg.share = CN()
 
@@ -85,9 +94,9 @@ def set_cfg(cfg):
     # Number of dataset splits: train/val/test
     cfg.share.num_splits = 1
 
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     # Dataset options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     cfg.dataset = CN()
 
     # Name of the dataset
@@ -117,6 +126,18 @@ def set_cfg(cfg):
 
     # Whether to shuffle the graphs for splitting
     cfg.dataset.shuffle_split = True
+
+    # Whether random split or use custom split: random / custom
+    cfg.dataset.split_mode = 'random'
+
+    # Whether to use an encoder for general attribute features
+    cfg.dataset.encoder = True
+
+    # Name of general encoder
+    cfg.dataset.encoder_name = 'db'
+
+    # If add batchnorm after general encoder
+    cfg.dataset.encoder_bn = True
 
     # Whether to use an encoder for the node features
     cfg.dataset.node_encoder = False
@@ -175,7 +196,7 @@ def set_cfg(cfg):
     cfg.dataset.augment_feature_repr = 'original'
 
     # If non-empty, this replaces the label with structural features
-    # For example, setting label = 'node_degree' causes the model to 
+    # For example, setting label = 'node_degree' causes the model to
     # replace the node labels with node degrees (overwriting previous node
     # labels)
     # Note: currently only support 1 label
@@ -200,9 +221,18 @@ def set_cfg(cfg):
     # Convert to undirected graph (save 2*E edges)
     cfg.dataset.to_undirected = False
 
-    # ------------------------------------------------------------------------ #
+    # dataset location: local, snowflake
+    cfg.dataset.location = 'local'
+
+    # Define label: Table name
+    cfg.dataset.label_table = 'none'
+
+    # Define label: Column name
+    cfg.dataset.label_column = 'none'
+
+    # ----------------------------------------------------------------------- #
     # Training options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     cfg.train = CN()
 
     # Training (and validation) pipeline mode
@@ -226,8 +256,14 @@ def set_cfg(cfg):
     # Evaluate model on test data every eval period epochs
     cfg.train.eval_period = 10
 
+    # Option to skip training epoch evaluation
+    cfg.train.skip_train_eval = False
+
     # Save model checkpoint every checkpoint period epochs
     cfg.train.ckpt_period = 100
+
+    # Enabling checkpoint, set False to disable and save I/O
+    cfg.train.enable_ckpt = True
 
     # Resume training from the latest checkpoint in the output directory
     cfg.train.auto_resume = False
@@ -247,11 +283,9 @@ def set_cfg(cfg):
     # NeighborSampler: number of sampled nodes per layer
     cfg.train.neighbor_sizes = [20, 15, 10, 5]
 
-
-
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     # Validation options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     cfg.val = CN()
 
     # Minibatch node
@@ -266,9 +300,9 @@ def set_cfg(cfg):
     # Radius: same, extend. same: same as cfg.gnn.layers_mp, extend: layers+1
     cfg.val.radius = 'extend'
 
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     # Model options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     cfg.model = CN()
 
     # Model type to use
@@ -304,10 +338,13 @@ def set_cfg(cfg):
     cfg.model.graph_pooling = 'add'
     # ===================================
 
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     # GNN options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     cfg.gnn = CN()
+
+    # Prediction head. Use cfg.dataset.task by default
+    cfg.gnn.head = 'default'
 
     # Number of layers before message passing
     cfg.gnn.layers_pre_mp = 0
@@ -371,9 +408,12 @@ def set_cfg(cfg):
     # randomly use fewer edges for message passing
     cfg.gnn.keep_edge = 0.5
 
-    # ------------------------------------------------------------------------ #
+    # clear cached feature_new
+    cfg.gnn.clear_feature = True
+
+    # ----------------------------------------------------------------------- #
     # Optimizer options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     cfg.optim = CN()
 
     # optimizer: sgd, adam
@@ -400,9 +440,9 @@ def set_cfg(cfg):
     # Maximal number of epochs
     cfg.optim.max_epoch = 200
 
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     # Batch norm options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     cfg.bn = CN()
 
     # BN epsilon
@@ -411,25 +451,24 @@ def set_cfg(cfg):
     # BN momentum (BN momentum in PyTorch = 1 - BN momentum in Caffe2)
     cfg.bn.mom = 0.1
 
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     # Memory options
-    # ------------------------------------------------------------------------ #
+    # ----------------------------------------------------------------------- #
     cfg.mem = CN()
 
     # Perform ReLU inplace
     cfg.mem.inplace = False
 
-    #### Set user customized cfgs
+    # Set user customized cfgs
     for func in register.config_dict.values():
         func(cfg)
 
 
 def assert_cfg(cfg):
-    """Checks config values invariants."""
+    r"""Checks config values, do necessary post processing to the configs"""
     if cfg.dataset.task not in ['node', 'edge', 'graph', 'link_pred']:
-        raise ValueError('Task {} not supported, must be one of'
-                         'node, edge, graph, link_pred'.format(
-            cfg.dataset.task))
+        raise ValueError('Task {} not supported, must be one of node, '
+                         'edge, graph, link_pred'.format(cfg.dataset.task))
     if 'classification' in cfg.dataset.task_type and cfg.model.loss_fun == \
             'mse':
         cfg.model.loss_fun = 'cross_entropy'
@@ -441,37 +480,123 @@ def assert_cfg(cfg):
         logging.warning('model.loss_fun changed to mse for regression.')
     if cfg.dataset.task == 'graph' and cfg.dataset.transductive:
         cfg.dataset.transductive = False
-        logging.warning('dataset.transductive changed to False for graph task.')
+        logging.warning('dataset.transductive changed '
+                        'to False for graph task.')
     if cfg.gnn.layers_post_mp < 1:
         cfg.gnn.layers_post_mp = 1
         logging.warning('Layers after message passing should be >=1')
+    if cfg.gnn.head == 'default':
+        cfg.gnn.head = cfg.dataset.task
+    cfg.run_dir = cfg.out_dir
 
 
 def dump_cfg(cfg):
-    """Dumps the config to the output directory."""
+    r"""
+    Dumps the config to the output directory specified in
+    :obj:`cfg.out_dir`
+
+    Args:
+        cfg (CfgNode): Configuration node
+
+    """
+    os.makedirs(cfg.out_dir, exist_ok=True)
     cfg_file = os.path.join(cfg.out_dir, cfg.cfg_dest)
     with open(cfg_file, 'w') as f:
         cfg.dump(stream=f)
 
 
-def update_out_dir(out_dir, fname):
-    fname = fname.split('/')[-1][:-5]
-    cfg.out_dir = os.path.join(out_dir, fname, str(cfg.seed))
+def load_cfg(cfg, args):
+    r"""
+    Load configurations from file system and command line
+
+    Args:
+        cfg (CfgNode): Configuration node
+        args (ArgumentParser): Command argument parser
+
+    """
+    cfg.merge_from_file(args.cfg_file)
+    cfg.merge_from_list(args.opts)
+    assert_cfg(cfg)
+
+
+def makedirs_rm_exist(dir):
+    if os.path.isdir(dir):
+        shutil.rmtree(dir)
+    os.makedirs(dir, exist_ok=True)
+
+
+def get_fname(fname):
+    r"""
+    Extract filename from file name path
+
+    Args:
+        fname (string): Filename for the yaml format configuration file
+    """
+    fname = fname.split('/')[-1]
+    if fname.endswith('.yaml'):
+        fname = fname[:-5]
+    elif fname.endswith('.yml'):
+        fname = fname[:-4]
+    return fname
+
+
+def set_run_dir(out_dir, fname):
+    r"""
+    Create the directory for each random seed experiment run
+
+    Args:
+        out_dir (string): Directory for output, specified in :obj:`cfg.out_dir`
+        fname (string): Filename for the yaml format configuration file
+
+    """
+    fname = get_fname(fname)
+    cfg.run_dir = os.path.join(out_dir, fname, str(cfg.seed))
     # Make output directory
     if cfg.train.auto_resume:
-        os.makedirs(cfg.out_dir, exist_ok=True)
+        os.makedirs(cfg.run_dir, exist_ok=True)
     else:
-        makedirs_rm_exist(cfg.out_dir)
+        makedirs_rm_exist(cfg.run_dir)
 
 
-def get_parent_dir(out_dir, fname):
-    fname = fname.split('/')[-1][:-5]
+def set_agg_dir(out_dir, fname):
+    r"""
+    Create the directory for aggregated results over
+    all the random seeds
+
+    Args:
+        out_dir (string): Directory for output, specified in :obj:`cfg.out_dir`
+        fname (string): Filename for the yaml format configuration file
+
+    """
+    fname = get_fname(fname)
     return os.path.join(out_dir, fname)
 
 
-def rm_parent_dir(out_dir, fname):
-    fname = fname.split('/')[-1][:-5]
-    makedirs_rm_exist(os.path.join(out_dir, fname))
-
-
 set_cfg(cfg)
+
+
+def from_config(func):
+    if inspect.isclass(func):
+        params = list(inspect.signature(func.__init__).parameters.values())[1:]
+    else:
+        params = list(inspect.signature(func).parameters.values())
+
+    arg_names = [p.name for p in params]
+    has_defaults = [p.default != inspect.Parameter.empty for p in params]
+
+    @functools.wraps(func)
+    def wrapper(*args, cfg: Any = None, **kwargs):
+        if cfg is not None:
+            cfg = dict(cfg) if isinstance(cfg, Iterable) else asdict(cfg)
+
+            iterator = zip(arg_names[len(args):], has_defaults[len(args):])
+            for arg_name, has_default in iterator:
+                if arg_name in kwargs:
+                    continue
+                elif arg_name in cfg:
+                    kwargs[arg_name] = cfg[arg_name]
+                elif not has_default:
+                    raise ValueError(f"'cfg.{arg_name}' undefined")
+        return func(*args, **kwargs)
+
+    return wrapper

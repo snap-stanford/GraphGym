@@ -3,6 +3,8 @@ GraphGym is a platform for designing and evaluating Graph Neural Networks (GNN).
 GraphGym is proposed in *[Design Space for Graph Neural Networks](https://arxiv.org/abs/2011.08843)*, 
 Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
 
+Please refer to [PyG](https://www.pyg.org) for a tightly integrated version of GraphGym and PyG.
+
 ### Highlights
 **1. Highly modularized pipeline for GNN**
 - **Data:** Data loading, data splitting

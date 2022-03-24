@@ -1,18 +1,17 @@
-import numpy as np
 import torch
-import torch.nn as nn
 from torch_geometric.utils import add_remaining_self_loops
 from torch_scatter import scatter_add
 
-def norm(edge_index, num_nodes, edge_weight=None, improved=False,
-         dtype=None):
+
+def norm(edge_index, num_nodes, edge_weight=None, improved=False, dtype=None):
     if edge_weight is None:
-        edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+        edge_weight = torch.ones((edge_index.size(1), ),
+                                 dtype=dtype,
                                  device=edge_index.device)
 
     fill_value = 1.0 if not improved else 2.0
-    edge_index, edge_weight = add_remaining_self_loops(
-        edge_index, edge_weight, fill_value, num_nodes)
+    edge_index, edge_weight = add_remaining_self_loops(edge_index, edge_weight,
+                                                       fill_value, num_nodes)
 
     row, col = edge_index
     deg = scatter_add(edge_weight, row, dim=0, dim_size=num_nodes)
@@ -20,6 +19,7 @@ def norm(edge_index, num_nodes, edge_weight=None, improved=False,
     deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
 
     return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
+
 
 # cpu version
 def compute_identity(edge_index, n, k):

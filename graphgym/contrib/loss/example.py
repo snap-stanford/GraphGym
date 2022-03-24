@@ -1,8 +1,7 @@
 import torch.nn as nn
 
-from graphgym.register import register_loss
-
 from graphgym.config import cfg
+from graphgym.register import register_loss
 
 
 def loss_example(pred, true):

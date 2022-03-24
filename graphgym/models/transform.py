@@ -70,41 +70,63 @@ def path_len(graph):
     n = graph.num_nodes
     # shortest path label
     num_label = 1000
-    edge_label_index = torch.randint(n, size=(2, num_label),
+    edge_label_index = torch.randint(n,
+                                     size=(2, num_label),
                                      device=graph.edge_index.device)
     path_dict = dict(nx.all_pairs_shortest_path_length(graph.G))
     edge_label = []
     index_keep = []
     for i in range(num_label):
-        start, end = edge_label_index[0, i].item(), edge_label_index[
-            1, i].item()
+        start = edge_label_index[0, i].item()
+        end = edge_label_index[1, i].item()
         try:
             dist = path_dict[start][end]
-        except:
+        except Exception:
             continue
         edge_label.append(min(dist, 4))
         index_keep.append(i)
 
     edge_label = torch.tensor(edge_label, device=edge_label_index.device)
-    graph.edge_label_index, graph.edge_label = edge_label_index[:,
-                                               index_keep], edge_label
+    graph.edge_label_index = edge_label_index[:, index_keep]
+    graph.edge_label = edge_label
 
 
-def get_link_label(pos_edge_index, neg_edge_index):
+def create_link_label(pos_edge_index, neg_edge_index):
+    """
+    Create labels for link prediction, based on positive and negative edges
+
+    Args:
+        pos_edge_index (torch.tensor): Positive edge index [2, num_edges]
+        neg_edge_index (torch.tensor): Negative edge index [2, num_edges]
+
+    Returns: Link label tensor, [num_positive_edges + num_negative_edges]
+
+    """
     num_links = pos_edge_index.size(1) + neg_edge_index.size(1)
-    link_labels = torch.zeros(num_links, dtype=torch.float,
+    link_labels = torch.zeros(num_links,
+                              dtype=torch.float,
                               device=pos_edge_index.device)
     link_labels[:pos_edge_index.size(1)] = 1.
     return link_labels
 
 
 def neg_sampling_transform(data):
+    """
+    Do negative sampling for link prediction tasks
+
+    Args:
+        data (torch_geometric.data): Input data object
+
+    Returns: Transformed data object with negative edges + link pred labels
+
+    """
     train_neg_edge_index = negative_sampling(
-        edge_index=data.train_pos_edge_index, num_nodes=data.num_nodes,
+        edge_index=data.train_pos_edge_index,
+        num_nodes=data.num_nodes,
         num_neg_samples=data.train_pos_edge_index.size(1))
     data.train_edge_index = torch.cat(
         [data.train_pos_edge_index, train_neg_edge_index], dim=-1)
-    data.train_edge_label = get_link_label(data.train_pos_edge_index,
-                                           train_neg_edge_index)
+    data.train_edge_label = create_link_label(data.train_pos_edge_index,
+                                              train_neg_edge_index)
 
     return data

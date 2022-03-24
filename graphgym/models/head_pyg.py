@@ -6,28 +6,25 @@ They are constructed in the init function of the gnn.GNN.
 import torch
 import torch.nn as nn
 
+import graphgym.register as register
 from graphgym.config import cfg
 from graphgym.models.layer_pyg import MLP
 from graphgym.models.pooling import pooling_dict
 
-from graphgym.contrib.head import *
-import graphgym.register as register
 
-
-########### Head ############
-
+# Head
 class GNNNodeHead(nn.Module):
     '''Head of GNN, node prediction'''
-
     def __init__(self, dim_in, dim_out):
         super(GNNNodeHead, self).__init__()
-        self.layer_post_mp = MLP(dim_in, dim_out,
-                                 num_layers=cfg.gnn.layers_post_mp, bias=True)
+        self.layer_post_mp = MLP(dim_in,
+                                 dim_out,
+                                 num_layers=cfg.gnn.layers_post_mp,
+                                 bias=True)
 
     def _apply_index(self, batch):
         mask = '{}_mask'.format(batch.split)
-        return batch.x[batch[mask]], \
-               batch.y[batch[mask]]
+        return batch.x[batch[mask]], batch.y[batch[mask]]
 
     def forward(self, batch):
         batch = self.layer_post_mp(batch)
@@ -37,7 +34,6 @@ class GNNNodeHead(nn.Module):
 
 class GNNEdgeHead(nn.Module):
     '''Head of GNN, edge prediction'''
-
     def __init__(self, dim_in, dim_out):
         ''' Head of Edge and link prediction models.
 
@@ -52,7 +48,8 @@ class GNNEdgeHead(nn.Module):
         # module to decode edges from node embeddings
 
         if cfg.model.edge_decoding == 'concat':
-            self.layer_post_mp = MLP(dim_in * 2, dim_out,
+            self.layer_post_mp = MLP(dim_in * 2,
+                                     dim_out,
                                      num_layers=cfg.gnn.layers_post_mp,
                                      bias=True)
             # requires parameter
@@ -63,7 +60,8 @@ class GNNEdgeHead(nn.Module):
                 raise ValueError(
                     'Binary edge decoding ({})is used for multi-class '
                     'edge/link prediction.'.format(cfg.model.edge_decoding))
-            self.layer_post_mp = MLP(dim_in, dim_in,
+            self.layer_post_mp = MLP(dim_in,
+                                     dim_in,
                                      num_layers=cfg.gnn.layers_post_mp,
                                      bias=True)
             if cfg.model.edge_decoding == 'dot':
@@ -77,8 +75,7 @@ class GNNEdgeHead(nn.Module):
     def _apply_index(self, batch):
         index = '{}_edge_index'.format(batch.split)
         label = '{}_edge_label'.format(batch.split)
-        return batch.x[batch[index]], \
-               batch[label]
+        return batch.x[batch[index]], batch[label]
 
     def forward(self, batch):
         if cfg.model.edge_decoding != 'concat':
@@ -96,12 +93,13 @@ class GNNGraphHead(nn.Module):
     The optional post_mp layer (specified by cfg.gnn.post_mp) is used
     to transform the pooled embedding using an MLP.
     '''
-
     def __init__(self, dim_in, dim_out):
         super(GNNGraphHead, self).__init__()
         # todo: PostMP before or after global pooling
-        self.layer_post_mp = MLP(dim_in, dim_out,
-                                 num_layers=cfg.gnn.layers_post_mp, bias=True)
+        self.layer_post_mp = MLP(dim_in,
+                                 dim_out,
+                                 num_layers=cfg.gnn.layers_post_mp,
+                                 bias=True)
         self.pooling_fun = pooling_dict[cfg.model.graph_pooling]
 
     def _apply_index(self, batch):

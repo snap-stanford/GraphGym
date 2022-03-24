@@ -2,34 +2,53 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import graphgym.register as register
 from graphgym.config import cfg
-from graphgym.models.head import head_dict
-from graphgym.models.layer import (GeneralLayer, GeneralMultiLayer,
-                                   BatchNorm1dNode, BatchNorm1dEdge)
+from graphgym.init import init_weights
 from graphgym.models.act import act_dict
 from graphgym.models.feature_augment import Preprocess
-from graphgym.init import init_weights
-from graphgym.models.feature_encoder import node_encoder_dict, edge_encoder_dict
+from graphgym.models.feature_encoder import (edge_encoder_dict,
+                                             node_encoder_dict)
+from graphgym.models.head import head_dict
+from graphgym.models.layer import (BatchNorm1dEdge, BatchNorm1dNode,
+                                   GeneralLayer, GeneralMultiLayer)
 
-from graphgym.contrib.stage import *
-import graphgym.register as register
 
-
-########### Layer ############
+# Layer
 def GNNLayer(dim_in, dim_out, has_act=True):
+    """
+    Wrapper for a GNN layer
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension
+        has_act (bool): Whether has activation function after the layer
+
+    """
     return GeneralLayer(cfg.gnn.layer_type, dim_in, dim_out, has_act)
 
 
 def GNNPreMP(dim_in, dim_out):
-    return GeneralMultiLayer('linear', cfg.gnn.layers_pre_mp,
-                             dim_in, dim_out, dim_inner=dim_out, final_act=True)
+    """
+    Wrapper for NN layer before GNN message passing
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension
+        num_layers (int): Number of layers
+
+    """
+    return GeneralMultiLayer('linear',
+                             cfg.gnn.layers_pre_mp,
+                             dim_in,
+                             dim_out,
+                             dim_inner=dim_out,
+                             final_act=True)
 
 
-########### Block: multiple layers ############
-
+# Block: multiple layers
 class GNNSkipBlock(nn.Module):
     '''Skip block for GNN'''
-
     def __init__(self, dim_in, dim_out, num_layers):
         super(GNNSkipBlock, self).__init__()
         if num_layers == 1:
@@ -55,16 +74,15 @@ class GNNSkipBlock(nn.Module):
             batch.node_feature = \
                 torch.cat((node_feature, self.f(batch).node_feature), 1)
         else:
-            raise ValueError('cfg.gnn.stage_type must in [skipsum, skipconcat]')
+            raise ValueError(
+                'cfg.gnn.stage_type must in [skipsum, skipconcat]')
         batch.node_feature = self.act(batch.node_feature)
         return batch
 
 
-########### Stage: NN except start and head ############
-
+# Stage: NN except start and head
 class GNNStackStage(nn.Module):
     '''Simple Stage that stack GNN layers'''
-
     def __init__(self, dim_in, dim_out, num_layers):
         super(GNNStackStage, self).__init__()
         for i in range(num_layers):
@@ -83,7 +101,6 @@ class GNNStackStage(nn.Module):
 
 class GNNSkipStage(nn.Module):
     ''' Stage with skip connections'''
-
     def __init__(self, dim_in, dim_out, num_layers):
         super(GNNSkipStage, self).__init__()
         assert num_layers % cfg.gnn.skip_every == 0, \
@@ -118,11 +135,9 @@ stage_dict = {
 stage_dict = {**register.stage_dict, **stage_dict}
 
 
-########### Model: start + stage + head ############
-
+# Model: start + stage + head
 class GNN(nn.Module):
     '''General GNN model'''
-
     def __init__(self, dim_in, dim_out, **kwargs):
         """
             Parameters:

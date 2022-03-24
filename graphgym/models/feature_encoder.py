@@ -1,7 +1,6 @@
 import torch
 from ogb.utils.features import get_atom_feature_dims, get_bond_feature_dims
 
-from graphgym.contrib.feature_encoder import *
 import graphgym.register as register
 
 # Used for the OGB Encoders
@@ -9,15 +8,15 @@ full_atom_feature_dims = get_atom_feature_dims()
 full_bond_feature_dims = get_bond_feature_dims()
 
 
-######## Feature Encoders #########
 class IntegerFeatureEncoder(torch.nn.Module):
     """
-        Provides an encoder for integer node features
+    Provides an encoder for integer node features.
 
-        Parameters:
-        num_classes - the number of classes for the embedding mapping to learn
+    Args:
+        emb_dim (int): Output embedding dimension
+        num_classes (int): the number of classes for the
+        embedding mapping to learn from
     """
-
     def __init__(self, emb_dim, num_classes=None):
         super(IntegerFeatureEncoder, self).__init__()
 
@@ -33,13 +32,12 @@ class IntegerFeatureEncoder(torch.nn.Module):
 
 class SingleAtomEncoder(torch.nn.Module):
     """
-        Only encode the first dimension of atom integer features.
-        This feature encodes just the atom type
-
-        Parameters:
-        num_classes: Not used!
+    Only encode the first dimension of atom integer features.
+    This feature encodes just the atom type
+    Args:
+        emb_dim (int): Output embedding dimension
+        num_classes: None
     """
-
     def __init__(self, emb_dim, num_classes=None):
         super(SingleAtomEncoder, self).__init__()
 
@@ -55,12 +53,12 @@ class SingleAtomEncoder(torch.nn.Module):
 
 class AtomEncoder(torch.nn.Module):
     """
-        The complete Atom Encoder used in OGB dataset
+    The atom Encoder used in OGB molecule dataset.
 
-        Parameters:
-        num_classes: Not used!
+    Args:
+        emb_dim (int): Output embedding dimension
+        num_classes: None
     """
-
     def __init__(self, emb_dim, num_classes=None):
         super(AtomEncoder, self).__init__()
 
@@ -76,13 +74,17 @@ class AtomEncoder(torch.nn.Module):
         for i in range(batch.node_feature.shape[1]):
             encoded_features += self.atom_embedding_list[i](
                 batch.node_feature[:, i])
-
         batch.node_feature = encoded_features
         return batch
 
 
 class BondEncoder(torch.nn.Module):
+    """
+    The bond Encoder used in OGB molecule dataset.
 
+    Args:
+        emb_dim (int): Output edge embedding dimension
+    """
     def __init__(self, emb_dim):
         super(BondEncoder, self).__init__()
 
@@ -111,8 +113,6 @@ node_encoder_dict = {
 
 node_encoder_dict = {**register.node_encoder_dict, **node_encoder_dict}
 
-edge_encoder_dict = {
-    'Bond': BondEncoder
-}
+edge_encoder_dict = {'Bond': BondEncoder}
 
 edge_encoder_dict = {**register.edge_encoder_dict, **edge_encoder_dict}

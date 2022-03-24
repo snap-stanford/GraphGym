@@ -1,16 +1,14 @@
 import torch
 import torch.nn as nn
-from torch.nn import Parameter
-from torch_scatter import scatter_add
-from torch_geometric.nn.conv import MessagePassing
-from torch_geometric.utils import add_remaining_self_loops
-
-from torch_geometric.nn.inits import glorot, zeros
-from graphgym.config import cfg
-
-from graphgym.register import register_layer
-
 from ogb.utils.features import get_bond_feature_dims
+from torch.nn import Parameter
+from torch_geometric.nn.conv import MessagePassing
+from torch_geometric.nn.inits import glorot, zeros
+from torch_geometric.utils import add_remaining_self_loops
+from torch_scatter import scatter_add
+
+from graphgym.config import cfg
+from graphgym.register import register_layer
 
 full_bond_feature_dims = get_bond_feature_dims()
 

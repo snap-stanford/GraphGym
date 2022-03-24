@@ -1,7 +1,6 @@
 import torch
 from ogb.utils.features import get_atom_feature_dims, get_bond_feature_dims
 
-from graphgym.contrib.feature_encoder import *
 import graphgym.register as register
 
 # Used for the OGB Encoders
@@ -9,7 +8,7 @@ full_atom_feature_dims = get_atom_feature_dims()
 full_bond_feature_dims = get_bond_feature_dims()
 
 
-######## Feature Encoders #########
+# Feature Encoders
 class IntegerFeatureEncoder(torch.nn.Module):
     """
         Provides an encoder for integer node features
