@@ -1,5 +1,3 @@
-from graphgym.config import cfg
-
 import glob
 import os
 import os.path as osp
@@ -7,6 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import torch
 
+from graphgym.config import cfg
 
 MODEL_STATE = 'model_state'
 OPTIMIZER_STATE = 'optimizer_state'

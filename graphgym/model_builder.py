@@ -1,9 +1,8 @@
 import torch
 
+import graphgym.register as register
 from graphgym.config import cfg
 from graphgym.models.gnn import GNN
-import graphgym.register as register
-from graphgym.register import network_dict
 
 network_dict = {
     'gnn': GNN,

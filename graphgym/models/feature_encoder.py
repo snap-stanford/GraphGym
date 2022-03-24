@@ -8,7 +8,6 @@ full_atom_feature_dims = get_atom_feature_dims()
 full_bond_feature_dims = get_bond_feature_dims()
 
 
-######## Feature Encoders #########
 class IntegerFeatureEncoder(torch.nn.Module):
     """
     Provides an encoder for integer node features.
@@ -47,8 +46,7 @@ class SingleAtomEncoder(torch.nn.Module):
         torch.nn.init.xavier_uniform_(self.atom_type_embedding.weight.data)
 
     def forward(self, batch):
-        batch.node_feature = self.atom_type_embedding(
-                batch.node_feature[:, 0])
+        batch.node_feature = self.atom_type_embedding(batch.node_feature[:, 0])
 
         return batch
 

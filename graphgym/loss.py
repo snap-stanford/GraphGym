@@ -46,4 +46,3 @@ def compute_loss(pred, true):
     else:
         raise ValueError('Loss func {} not supported'.format(
             cfg.model.loss_fun))
-

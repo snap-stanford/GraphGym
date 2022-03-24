@@ -1,23 +1,23 @@
-import networkx as nx
-import time
 import logging
 import pickle
+import time
 
-from deepsnap.dataset import GraphDataset
+import networkx as nx
 import torch
-from torch.utils.data import DataLoader
-
-from torch_geometric.datasets import *
 import torch_geometric.transforms as T
-
-from graphgym.config import cfg
-import graphgym.models.feature_augment as preprocess
-from graphgym.models.transform import (ego_nets, remove_node_feature,
-                                       edge_nets, path_len)
-import graphgym.register as register
-
-from ogb.graphproppred import PygGraphPropPredDataset
 from deepsnap.batch import Batch
+from deepsnap.dataset import GraphDataset
+from ogb.graphproppred import PygGraphPropPredDataset
+from torch.utils.data import DataLoader
+from torch_geometric.datasets import (PPI, Amazon, Coauthor, KarateClub,
+                                      MNISTSuperpixels, Planetoid, QM7b,
+                                      TUDataset)
+
+import graphgym.models.feature_augment as preprocess
+import graphgym.register as register
+from graphgym.config import cfg
+from graphgym.models.transform import (edge_nets, ego_nets, path_len,
+                                       remove_node_feature)
 
 
 def load_pyg(name, dataset_dir):
@@ -83,7 +83,7 @@ def load_nx(name, dataset_dir):
     try:
         with open('{}/{}.pkl'.format(dataset_dir, name), 'rb') as file:
             graphs = pickle.load(file)
-    except:
+    except Exception:
         graphs = nx.read_gpickle('{}/{}.gpickle'.format(dataset_dir, name))
         if not isinstance(graphs, list):
             graphs = [graphs]
@@ -215,18 +215,18 @@ def set_dataset_info(datasets):
 
 
 def create_dataset():
-    ## Load dataset
+    # Load dataset
     time1 = time.time()
     if cfg.dataset.format == 'OGB':
         graphs, splits = load_dataset()
     else:
         graphs = load_dataset()
 
-    ## Filter graphs
+    # Filter graphs
     time2 = time.time()
     min_node = filter_graphs()
 
-    ## Create whole dataset
+    # Create whole dataset
     dataset = GraphDataset(
         graphs,
         task=cfg.dataset.task,
@@ -236,10 +236,10 @@ def create_dataset():
         resample_disjoint=cfg.dataset.resample_disjoint,
         minimum_node_per_graph=min_node)
 
-    ## Transform the whole dataset
+    # Transform the whole dataset
     dataset = transform_before_split(dataset)
 
-    ## Split dataset
+    # Split dataset
     time3 = time.time()
     # Use custom data splits
     if cfg.dataset.format == 'OGB':
@@ -256,7 +256,7 @@ def create_dataset():
     for i in range(1, len(datasets)):
         dataset.edge_negative_sampling_ratio = 1
 
-    ## Transform each split dataset
+    # Transform each split dataset
     time4 = time.time()
     datasets = transform_after_split(datasets)
     set_dataset_info(datasets)

@@ -2,20 +2,24 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Parameter
-from torch_scatter import scatter_add
 from torch_geometric.nn.conv import MessagePassing
-from torch_geometric.utils import add_remaining_self_loops
-from torch_geometric.utils import remove_self_loops, add_self_loops, softmax
-
-from torch_geometric.nn.inits import glorot, zeros, reset
+from torch_geometric.nn.inits import glorot, reset, zeros
+from torch_geometric.utils import (add_remaining_self_loops, add_self_loops,
+                                   remove_self_loops, softmax)
+from torch_scatter import scatter_add
 
 from graphgym.config import cfg
 from graphgym.register import register_layer
 
 
 class GeneralIDConvLayer(MessagePassing):
-    def __init__(self, in_channels, out_channels, improved=False, cached=False,
-                 bias=True, **kwargs):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 improved=False,
+                 cached=False,
+                 bias=True,
+                 **kwargs):
         super(GeneralIDConvLayer, self).__init__(aggr=cfg.gnn.agg, **kwargs)
 
         self.in_channels = in_channels
@@ -42,10 +46,14 @@ class GeneralIDConvLayer(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index,
+             num_nodes,
+             edge_weight=None,
+             improved=False,
              dtype=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+            edge_weight = torch.ones((edge_index.size(1), ),
+                                     dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1.0 if not improved else 2.0
@@ -102,8 +110,14 @@ class GeneralIDConvLayer(MessagePassing):
 
 
 class GCNIDConvLayer(MessagePassing):
-    def __init__(self, in_channels, out_channels, improved=False, cached=False,
-                 bias=True, normalize=True, **kwargs):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 improved=False,
+                 cached=False,
+                 bias=True,
+                 normalize=True,
+                 **kwargs):
         super(GCNIDConvLayer, self).__init__(aggr='add', **kwargs)
 
         self.in_channels = in_channels
@@ -130,10 +144,14 @@ class GCNIDConvLayer(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index,
+             num_nodes,
+             edge_weight=None,
+             improved=False,
              dtype=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+            edge_weight = torch.ones((edge_index.size(1), ),
+                                     dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1.0 if not improved else 2.0
@@ -190,8 +208,13 @@ class GCNIDConvLayer(MessagePassing):
 
 
 class SAGEIDConvLayer(MessagePassing):
-    def __init__(self, in_channels, out_channels, normalize=False,
-                 concat=False, bias=True, **kwargs):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 normalize=False,
+                 concat=False,
+                 bias=True,
+                 **kwargs):
         super(SAGEIDConvLayer, self).__init__(aggr='mean', **kwargs)
 
         self.in_channels = in_channels
@@ -218,7 +241,12 @@ class SAGEIDConvLayer(MessagePassing):
         glorot(self.weight_id)
         zeros(self.bias)
 
-    def forward(self, x, edge_index, id, edge_weight=None, size=None,
+    def forward(self,
+                x,
+                edge_index,
+                id,
+                edge_weight=None,
+                size=None,
                 res_n_id=None):
         """
         Args:
@@ -232,8 +260,12 @@ class SAGEIDConvLayer(MessagePassing):
             edge_index, edge_weight = add_remaining_self_loops(
                 edge_index, edge_weight, 1, x.size(self.node_dim))
 
-        return self.propagate(edge_index, size=size, x=x,
-                              edge_weight=edge_weight, res_n_id=res_n_id, id=id)
+        return self.propagate(edge_index,
+                              size=size,
+                              x=x,
+                              edge_weight=edge_weight,
+                              res_n_id=res_n_id,
+                              id=id)
 
     def message(self, x_j, edge_weight):
         return x_j if edge_weight is None else edge_weight.view(-1, 1) * x_j
@@ -264,8 +296,15 @@ class SAGEIDConvLayer(MessagePassing):
 
 
 class GATIDConvLayer(MessagePassing):
-    def __init__(self, in_channels, out_channels, heads=1, concat=True,
-                 negative_slope=0.2, dropout=0, bias=True, **kwargs):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 heads=1,
+                 concat=True,
+                 negative_slope=0.2,
+                 dropout=0,
+                 bias=True,
+                 **kwargs):
         super(GATIDConvLayer, self).__init__(aggr='add', **kwargs)
 
         self.in_channels = in_channels
@@ -277,8 +316,8 @@ class GATIDConvLayer(MessagePassing):
 
         self.weight = Parameter(torch.Tensor(in_channels,
                                              heads * out_channels))
-        self.weight_id = Parameter(torch.Tensor(in_channels,
-                                                heads * out_channels))
+        self.weight_id = Parameter(
+            torch.Tensor(in_channels, heads * out_channels))
         self.att = Parameter(torch.Tensor(1, heads, 2 * out_channels))
 
         if bias and concat:

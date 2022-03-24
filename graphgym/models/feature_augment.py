@@ -1,15 +1,14 @@
 import logging
+
 import networkx as nx
 import numpy as np
 import torch
 import torch.nn as nn
-
 from deepsnap.graph import Graph
 
+import graphgym.register as register
 from graphgym.config import cfg
 from graphgym.contrib.transform.identity import compute_identity
-
-import graphgym.register as register
 
 
 def _key(key, as_label=False):
@@ -41,7 +40,6 @@ def _replace_label(graph):
 
 
 # feature preprocessing
-
 class FeatureAugment(nn.Module):
     def __init__(self):
         super(FeatureAugment, self).__init__()
@@ -57,14 +55,18 @@ class FeatureAugment(nn.Module):
             return [centrality[x] for x in graph.G.nodes]
 
         def path_len_fun(graph, **kwargs):
-            return [np.mean(
-                list(nx.shortest_path_length(graph.G, source=x).values()))
-                for x in graph.G.nodes]
+            return [
+                np.mean(
+                    list(nx.shortest_path_length(graph.G, source=x).values()))
+                for x in graph.G.nodes
+            ]
 
         def edge_path_len_fun(graph, **kwargs):
-            return [np.mean(
-                list(nx.shortest_path_length(graph.G, source=x).values()))
-                for x in graph.G.nodes]
+            return [
+                np.mean(
+                    list(nx.shortest_path_length(graph.G, source=x).values()))
+                for x in graph.G.nodes
+            ]
 
         def pagerank_fun(graph, **kwargs):
             # TODO multiple feature dimensions
@@ -72,10 +74,10 @@ class FeatureAugment(nn.Module):
             return [pagerank[x] for x in graph.G.nodes]
 
         def identity_fun(graph, **kwargs):
-            if not 'feature_dim' in kwargs:
+            if 'feature_dim' not in kwargs:
                 raise ValueError('Argument feature_dim not supplied')
-            return compute_identity(
-                graph.edge_index, graph.num_nodes, kwargs['feature_dim'])
+            return compute_identity(graph.edge_index, graph.num_nodes,
+                                    kwargs['feature_dim'])
 
         def clustering_coefficient_fun(graph, **kwargs):
             return list(nx.clustering(graph.G).values())
@@ -120,8 +122,10 @@ class FeatureAugment(nn.Module):
             'graph_clustering_coefficient': graph_clustering_fun
         }
 
-        self.feature_dict = {**register.feature_augment_dict,
-                             **self.feature_dict}
+        self.feature_dict = {
+            **register.feature_augment_dict,
+            **self.feature_dict
+        }
 
         for key, fun in self.feature_dict.items():
             self.feature_dict[key] = create_augment_fun(
@@ -174,7 +178,10 @@ class FeatureAugment(nn.Module):
             graph[key] = graph[key].unsqueeze(-1)
 
     @staticmethod
-    def _position_features(graph, key, feature_dim=4, scale=1,
+    def _position_features(graph,
+                           key,
+                           feature_dim=4,
+                           scale=1,
                            wavelength=10000):
         # pos = torch.tensor(graph[key]).float()
         if isinstance(graph[key], torch.Tensor):
@@ -188,12 +195,12 @@ class FeatureAugment(nn.Module):
         pos = pos.view(-1)
         pos *= scale
 
-        cycle_range = torch.arange(0, feature_dim // 2).float() / (
-                feature_dim // 2)
+        cycle_range = torch.arange(
+            0, feature_dim // 2).float() / (feature_dim // 2)
         sins = torch.sin(
-            pos.unsqueeze(-1) / wavelength ** cycle_range.unsqueeze(0))
+            pos.unsqueeze(-1) / wavelength**cycle_range.unsqueeze(0))
         coss = torch.cos(
-            pos.unsqueeze(-1) / wavelength ** cycle_range.unsqueeze(0))
+            pos.unsqueeze(-1) / wavelength**cycle_range.unsqueeze(0))
         # dim-by-2
         m = torch.cat((coss, sins), dim=-1)
         graph[key] = m.view(batch_size, -1)
@@ -215,12 +222,14 @@ class FeatureAugment(nn.Module):
         """
         list_scalars = np.concatenate([g[feature_key] for g in dataset])
         if bin_method == 'balanced':
-            # bin by ensuring that the labels are roughly balanced (except ties)
+            # bin by ensuring that the labels are roughly
+            # balanced (except ties)
             arr = np.array(list_scalars)
             sorted_arr = np.sort(list_scalars)
-            bin_indices = np.linspace(0, len(list_scalars),
-                                      num=feature_dim, endpoint=False).astype(
-                int)
+            bin_indices = np.linspace(0,
+                                      len(list_scalars),
+                                      num=feature_dim,
+                                      endpoint=False).astype(int)
             bins = sorted_arr[bin_indices]
             unique_bins = np.unique(bins)
             if len(unique_bins) < len(bins):
@@ -243,10 +252,14 @@ class FeatureAugment(nn.Module):
             raise ValueError('Bin method {} not supported'.format(bin_method))
         return bins
 
-    def _augment_feature(self, dataset, features, feature_dims, as_label=False):
+    def _augment_feature(self,
+                         dataset,
+                         features,
+                         feature_dims,
+                         as_label=False):
         # The feature dims actually used might differ from user specified
         # feature_dims.
-        # This could be due to balanced binning on integers where 
+        # This could be due to balanced binning on integers where
         # different bin edges have the same value
         if as_label:
             repr_method = 'balanced' if 'classification' in \
@@ -259,25 +272,28 @@ class FeatureAugment(nn.Module):
             key = key + '_label' if as_label else key
             if key not in dataset[0]:
                 # compute (raw) features
-                dataset.apply_transform(
-                    feat_fun,
-                    update_graph=False, update_tensor=False,
-                    as_label=as_label, feature_dim=dim)
-                feat = dataset[0][key]
+                dataset.apply_transform(feat_fun,
+                                        update_graph=False,
+                                        update_tensor=False,
+                                        as_label=as_label,
+                                        feature_dim=dim)
+                # feat = dataset[0][key]
                 if repr_method == 'original':
                     # use the original feature as is
                     # this ignores the specified config feature_dims
                     dataset.apply_transform(FeatureAugment._orig_features,
                                             update_graph=True,
-                                            update_tensor=False, key=key)
+                                            update_tensor=False,
+                                            key=key)
                 elif repr_method == 'position':
                     # positional encoding similar to that of transformer
-                    scale = dim / 2 / FeatureAugment._get_max_value(dataset,
-                                                                    key)
+                    scale = dim / 2 / FeatureAugment._get_max_value(
+                        dataset, key)
                     dataset.apply_transform(FeatureAugment._position_features,
                                             update_graph=True,
                                             update_tensor=False,
-                                            key=key, feature_dim=dim,
+                                            key=key,
+                                            feature_dim=dim,
                                             scale=scale)
                 else:
                     # Bin edges for one-hot (repr_method = balanced, bounded,
@@ -286,13 +302,15 @@ class FeatureAugment(nn.Module):
                     bin_edges = self._get_bin_edges(dataset, key, dim,
                                                     repr_method)
                     # apply binning
-                    dataset.apply_transform(
-                        FeatureAugment._bin_features,
-                        update_graph=True, update_tensor=False,
-                        key=key, bin_edges=bin_edges,
-                        feature_dim=len(bin_edges), as_label=as_label)
-            actual_feat_dims.append(
-                dataset[0].get_num_dims(key, as_label=as_label))
+                    dataset.apply_transform(FeatureAugment._bin_features,
+                                            update_graph=True,
+                                            update_tensor=False,
+                                            key=key,
+                                            bin_edges=bin_edges,
+                                            feature_dim=len(bin_edges),
+                                            as_label=as_label)
+            actual_feat_dims.append(dataset[0].get_num_dims(key,
+                                                            as_label=as_label))
         return actual_feat_dims
 
     def augment(self, dataset):
@@ -303,30 +321,32 @@ class FeatureAugment(nn.Module):
             # Currently only support 1 label
             actual_label_dim = self._augment_feature(
                 dataset, [cfg.dataset.augment_label],
-                [cfg.dataset.augment_label_dims], as_label=True)[0]
+                [cfg.dataset.augment_label_dims],
+                as_label=True)[0]
         else:
             actual_label_dim = None
         return actual_feat_dims, actual_label_dim
 
 
-## V3
 class Preprocess(nn.Module):
     def __init__(self, dim_in):
         super(Preprocess, self).__init__()
-        self.dim_dict = {name: dim
-                         for name, dim in zip(cfg.dataset.augment_feature,
-                                              cfg.dataset.augment_feature_dims)}
+        self.dim_dict = {
+            name: dim
+            for name, dim in zip(cfg.dataset.augment_feature,
+                                 cfg.dataset.augment_feature_dims)
+        }
         self.dim_dict['node_feature'] = dim_in
         self.dim_out = sum(self.dim_dict.values())
 
     def extra_repr(self):
-        repr_str = '\n'.join(['{}: dim_out={}'.format(name, dim)
-                              for name, dim in self.dim_dict.items()] + \
-                             ['Total: dim_out={}'.format(self.dim_out)])
+        repr_str = '\n'.join([
+            '{}: dim_out={}'.format(name, dim)
+            for name, dim in self.dim_dict.items()
+        ] + ['Total: dim_out={}'.format(self.dim_out)])
         return repr_str
 
     def forward(self, batch):
         batch.node_feature = torch.cat(
-            [batch[name].float() for name in self.dim_dict],
-            dim=1)
+            [batch[name].float() for name in self.dim_dict], dim=1)
         return batch

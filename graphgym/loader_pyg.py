@@ -1,38 +1,22 @@
 from typing import Callable
 
 import torch
+import torch_geometric.transforms as T
+from torch_geometric.datasets import (PPI, Amazon, Coauthor, KarateClub,
+                                      MNISTSuperpixels, Planetoid, QM7b,
+                                      TUDataset)
+from torch_geometric.loader import (ClusterLoader, DataLoader,
+                                    GraphSAINTEdgeSampler,
+                                    GraphSAINTNodeSampler,
+                                    GraphSAINTRandomWalkSampler,
+                                    NeighborSampler, RandomNodeSampler)
+from torch_geometric.utils import (index_to_mask, negative_sampling,
+                                   to_undirected)
 
 import graphgym.register as register
-import torch_geometric.transforms as T
-from torch_geometric.datasets import (
-    PPI,
-    Amazon,
-    Coauthor,
-    KarateClub,
-    MNISTSuperpixels,
-    Planetoid,
-    QM7b,
-    TUDataset,
-)
 from graphgym.config import cfg
-from graphgym.models.transform import (
-    create_link_label,
-    neg_sampling_transform,
-)
-from torch_geometric.loader import (
-    ClusterLoader,
-    DataLoader,
-    GraphSAINTEdgeSampler,
-    GraphSAINTNodeSampler,
-    GraphSAINTRandomWalkSampler,
-    NeighborSampler,
-    RandomNodeSampler,
-)
-from torch_geometric.utils import (
-    index_to_mask,
-    negative_sampling,
-    to_undirected,
-)
+from graphgym.models.transform import create_link_label, neg_sampling_transform
+
 
 def planetoid_dataset(name: str) -> Callable:
     return lambda root: Planetoid(root, name)
@@ -244,14 +228,19 @@ def create_dataset():
 
 def get_loader(dataset, sampler, batch_size, shuffle=True):
     if sampler == "full_batch" or len(dataset) > 1:
-        loader_train = DataLoader(dataset, batch_size=batch_size,
-                                  shuffle=shuffle, num_workers=cfg.num_workers,
+        loader_train = DataLoader(dataset,
+                                  batch_size=batch_size,
+                                  shuffle=shuffle,
+                                  num_workers=cfg.num_workers,
                                   pin_memory=True)
     elif sampler == "neighbor":
         loader_train = NeighborSampler(
-            dataset[0], sizes=cfg.train.neighbor_sizes[:cfg.gnn.layers_mp],
-            batch_size=batch_size, shuffle=shuffle,
-            num_workers=cfg.num_workers, pin_memory=True)
+            dataset[0],
+            sizes=cfg.train.neighbor_sizes[:cfg.gnn.layers_mp],
+            batch_size=batch_size,
+            shuffle=shuffle,
+            num_workers=cfg.num_workers,
+            pin_memory=True)
     elif sampler == "random_node":
         loader_train = RandomNodeSampler(dataset[0],
                                          num_parts=cfg.train.train_parts,
@@ -310,13 +299,17 @@ def create_loader():
     if cfg.dataset.task == 'graph':
         id = dataset.data['train_graph_index']
         loaders = [
-            get_loader(dataset[id], cfg.train.sampler, cfg.train.batch_size,
+            get_loader(dataset[id],
+                       cfg.train.sampler,
+                       cfg.train.batch_size,
                        shuffle=True)
         ]
         delattr(dataset.data, 'train_graph_index')
     else:
         loaders = [
-            get_loader(dataset, cfg.train.sampler, cfg.train.batch_size,
+            get_loader(dataset,
+                       cfg.train.sampler,
+                       cfg.train.batch_size,
                        shuffle=True)
         ]
 
@@ -326,12 +319,16 @@ def create_loader():
             split_names = ['val_graph_index', 'test_graph_index']
             id = dataset.data[split_names[i]]
             loaders.append(
-                get_loader(dataset[id], cfg.val.sampler, cfg.train.batch_size,
+                get_loader(dataset[id],
+                           cfg.val.sampler,
+                           cfg.train.batch_size,
                            shuffle=False))
             delattr(dataset.data, split_names[i])
         else:
             loaders.append(
-                get_loader(dataset, cfg.val.sampler, cfg.train.batch_size,
+                get_loader(dataset,
+                           cfg.val.sampler,
+                           cfg.train.batch_size,
                            shuffle=False))
 
     return loaders

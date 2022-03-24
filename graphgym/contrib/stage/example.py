@@ -1,8 +1,9 @@
 import torch.nn as nn
 import torch.nn.functional as F
+from torch_geometric.nn import GCNConv
+
 from graphgym.config import cfg
 from graphgym.register import register_stage
-from torch_geometric.nn import GCNConv
 
 
 class GNNStackStage(nn.Module):

@@ -1,4 +1,5 @@
 from torch_scatter import scatter
+
 from graphgym.register import register_pooling
 
 

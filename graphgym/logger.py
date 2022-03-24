@@ -4,11 +4,10 @@ import sys
 
 import torch
 
-from graphgym.utils.io import makedirs
 import graphgym.register as register
 from graphgym.config import cfg
 from graphgym.utils.device import get_current_gpu_usage
-from graphgym.utils.io import dict_to_json, dict_to_tb
+from graphgym.utils.io import dict_to_json, dict_to_tb, makedirs
 
 
 def setup_printing():
@@ -95,13 +94,8 @@ class Logger(object):
 
     # task properties
     def classification_binary(self):
-        from sklearn.metrics import (
-            accuracy_score,
-            f1_score,
-            precision_score,
-            recall_score,
-            roc_auc_score,
-        )
+        from sklearn.metrics import (accuracy_score, f1_score, precision_score,
+                                     recall_score, roc_auc_score)
 
         true, pred_score = torch.cat(self._true), torch.cat(self._pred)
         pred_int = self._get_pred_int(pred_score)

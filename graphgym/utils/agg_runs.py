@@ -4,14 +4,9 @@ import os
 import numpy as np
 
 from graphgym.config import cfg
-from graphgym.utils.io import (
-    dict_list_to_json,
-    dict_list_to_tb,
-    dict_to_json,
-    json_to_dict_list,
-    makedirs_rm_exist,
-    string_to_python,
-)
+from graphgym.utils.io import (dict_list_to_json, dict_list_to_tb,
+                               dict_to_json, json_to_dict_list,
+                               makedirs_rm_exist, string_to_python)
 
 try:
     from tensorboardX import SummaryWriter

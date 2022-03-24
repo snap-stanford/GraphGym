@@ -1,5 +1,5 @@
 from deepsnap.dataset import GraphDataset
-from torch_geometric.datasets import *
+from torch_geometric.datasets import QM7b
 
 from graphgym.register import register_loader
 

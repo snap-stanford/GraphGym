@@ -1,5 +1,5 @@
-from typing import Any, Callable, Dict, Union
 import warnings
+from typing import Any, Callable, Dict, Union
 
 act_dict: Dict[str, Any] = {}
 node_encoder_dict: Dict[str, Any] = {}
@@ -124,6 +124,7 @@ def register_train(key: str, module: Any = None):
 def register_metric(key: str, module: Any = None):
     r"""Register a metric function in GraphGym."""
     return register_base(metric_dict, key, module)
+
 
 def register_feature_augment(key, module):
     return register_base(feature_augment_dict, key, module)

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch_geometric.nn as pyg_nn
+from torch_geometric.graphgym.models import MLP
 
 from graphgym.config import cfg
 from graphgym.register import register_network
@@ -36,7 +37,7 @@ class ExampleGNN(torch.nn.Module):
         self.convs = nn.ModuleList()
         self.convs.append(conv_model(dim_in, dim_in))
 
-        for l in range(num_layers - 1):
+        for _ in range(num_layers - 1):
             self.convs.append(conv_model(dim_in, dim_in))
 
         self.post_mp = GNNNodeHead(dim_in=dim_in, dim_out=dim_out)

@@ -1,22 +1,20 @@
-import os
-import random
-import numpy as np
-import torch
 import logging
+import os
+
+import torch
+from torch_geometric import seed_everything
 
 from graphgym.cmd_args import parse_args
-from graphgym.config import (cfg, load_cfg, dump_cfg, set_agg_dir, set_run_dir)
+from graphgym.config import cfg, dump_cfg, load_cfg, set_agg_dir, set_run_dir
 from graphgym.loader import create_dataset, create_loader
-from graphgym.logger import setup_printing, create_logger
-from graphgym.optimizer import create_optimizer, create_scheduler
+from graphgym.logger import create_logger, setup_printing
 from graphgym.model_builder import create_model
+from graphgym.optimizer import create_optimizer, create_scheduler
+from graphgym.register import train_dict
 from graphgym.train import train
 from graphgym.utils.agg_runs import agg_runs
 from graphgym.utils.comp_budget import params_count
 from graphgym.utils.device import auto_select_device
-from graphgym.register import train_dict
-
-from torch_geometric import seed_everything
 
 if __name__ == '__main__':
     # Load cmd line args

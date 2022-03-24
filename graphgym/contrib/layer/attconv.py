@@ -1,22 +1,27 @@
 import torch
 import torch.nn as nn
-from torch.nn import Parameter
 import torch.nn.functional as F
-from torch_scatter import scatter_add
+from torch.nn import Parameter
 from torch_geometric.nn.conv import MessagePassing
-from torch_geometric.utils import add_remaining_self_loops, softmax
-
 from torch_geometric.nn.inits import glorot, zeros
+from torch_geometric.utils import add_remaining_self_loops, softmax
+from torch_scatter import scatter_add
+
 from graphgym.config import cfg
 from graphgym.register import register_layer
 
 
 class GeneralAddAttConvLayer(MessagePassing):
     r"""General GNN layer, with add attention"""
-
-    def __init__(self, in_channels, out_channels,
-                 improved=False, cached=False, bias=True, **kwargs):
-        super(GeneralAddAttConvLayer, self).__init__(aggr=cfg.gnn.agg, **kwargs)
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 improved=False,
+                 cached=False,
+                 bias=True,
+                 **kwargs):
+        super(GeneralAddAttConvLayer, self).__init__(aggr=cfg.gnn.agg,
+                                                     **kwargs)
 
         self.heads = cfg.gnn.att_heads
         self.in_channels = int(in_channels // self.heads * self.heads)
@@ -27,7 +32,7 @@ class GeneralAddAttConvLayer(MessagePassing):
         self.negative_slope = 0.2
 
         self.head_channels = out_channels // self.heads
-        self.scaling = self.head_channels ** -0.5
+        self.scaling = self.head_channels**-0.5
 
         self.linear_msg = nn.Linear(in_channels, out_channels, bias=False)
 
@@ -48,10 +53,14 @@ class GeneralAddAttConvLayer(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index,
+             num_nodes,
+             edge_weight=None,
+             improved=False,
              dtype=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+            edge_weight = torch.ones((edge_index.size(1), ),
+                                     dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1.0 if not improved else 2.0
@@ -108,16 +117,21 @@ class GeneralAddAttConvLayer(MessagePassing):
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
-                                       self.in_channels,
-                                       self.out_channels, self.heads)
+                                       self.in_channels, self.out_channels,
+                                       self.heads)
 
 
 class GeneralMulAttConvLayer(MessagePassing):
     r"""General GNN layer, with mul attention"""
-
-    def __init__(self, in_channels, out_channels,
-                 improved=False, cached=False, bias=True, **kwargs):
-        super(GeneralMulAttConvLayer, self).__init__(aggr=cfg.gnn.agg, **kwargs)
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 improved=False,
+                 cached=False,
+                 bias=True,
+                 **kwargs):
+        super(GeneralMulAttConvLayer, self).__init__(aggr=cfg.gnn.agg,
+                                                     **kwargs)
 
         self.heads = cfg.gnn.att_heads
         self.in_channels = int(in_channels // self.heads * self.heads)
@@ -128,7 +142,7 @@ class GeneralMulAttConvLayer(MessagePassing):
         self.negative_slope = 0.2
 
         self.head_channels = out_channels // self.heads
-        self.scaling = self.head_channels ** -0.5
+        self.scaling = self.head_channels**-0.5
 
         self.linear_msg = nn.Linear(in_channels, out_channels, bias=False)
 
@@ -151,10 +165,14 @@ class GeneralMulAttConvLayer(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index,
+             num_nodes,
+             edge_weight=None,
+             improved=False,
              dtype=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+            edge_weight = torch.ones((edge_index.size(1), ),
+                                     dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1.0 if not improved else 2.0
@@ -212,8 +230,8 @@ class GeneralMulAttConvLayer(MessagePassing):
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
-                                       self.in_channels,
-                                       self.out_channels, self.heads)
+                                       self.in_channels, self.out_channels,
+                                       self.heads)
 
 
 class GeneralAddAttConv(nn.Module):
@@ -242,9 +260,14 @@ register_layer('gmulconv', GeneralMulAttConv)
 
 class GeneralEdgeAttConvv1Layer(MessagePassing):
     r"""Att conv with edge feature"""
-
-    def __init__(self, in_channels, out_channels, task_channels=None,
-                 improved=False, cached=False, bias=True, **kwargs):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 task_channels=None,
+                 improved=False,
+                 cached=False,
+                 bias=True,
+                 **kwargs):
         super(GeneralEdgeAttConvv1Layer, self).__init__(aggr=cfg.gnn.agg,
                                                         **kwargs)
 
@@ -259,14 +282,16 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
         self.negative_slope = 0.2
 
         self.head_channels = out_channels // self.heads
-        self.scaling = self.head_channels ** -0.5
+        self.scaling = self.head_channels**-0.5
 
         if self.msg_direction == 'single':
             self.linear_msg = nn.Linear(in_channels + cfg.dataset.edge_dim,
-                                        out_channels, bias=False)
+                                        out_channels,
+                                        bias=False)
         else:
             self.linear_msg = nn.Linear(in_channels * 2 + cfg.dataset.edge_dim,
-                                        out_channels, bias=False)
+                                        out_channels,
+                                        bias=False)
 
         self.att_msg = Parameter(
             torch.Tensor(1, self.heads, self.head_channels))
@@ -275,10 +300,12 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
                 torch.Tensor(1, self.heads, self.task_channels))
 
         if cfg.gnn.att_final_linear:
-            self.linear_final = nn.Linear(out_channels, out_channels,
+            self.linear_final = nn.Linear(out_channels,
+                                          out_channels,
                                           bias=False)
         if cfg.gnn.att_final_linear_bn:
-            self.linear_final_bn = nn.BatchNorm1d(out_channels, eps=cfg.bn.eps,
+            self.linear_final_bn = nn.BatchNorm1d(out_channels,
+                                                  eps=cfg.bn.eps,
                                                   momentum=cfg.bn.mom)
 
         if bias:
@@ -297,10 +324,14 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index,
+             num_nodes,
+             edge_weight=None,
+             improved=False,
              dtype=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+            edge_weight = torch.ones((edge_index.size(1), ),
+                                     dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1.0 if not improved else 2.0
@@ -314,7 +345,11 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
 
         return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-    def forward(self, x, edge_index, edge_weight=None, edge_feature=None,
+    def forward(self,
+                x,
+                edge_index,
+                edge_weight=None,
+                edge_feature=None,
                 task_emb=None):
         if self.cached and self.cached_result is not None:
             if edge_index.size(1) != self.cached_num_edges:
@@ -336,8 +371,11 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
 
         edge_index, norm = self.cached_result
 
-        return self.propagate(edge_index, x=x, norm=norm,
-                              edge_feature=edge_feature, task_emb=task_emb)
+        return self.propagate(edge_index,
+                              x=x,
+                              norm=norm,
+                              edge_feature=edge_feature,
+                              task_emb=task_emb)
 
     def message(self, edge_index_i, x_i, x_j, norm, size_i, edge_feature,
                 task_emb):
@@ -349,8 +387,8 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
         x_j = x_j.view(-1, self.heads, self.head_channels)
         if task_emb is not None:
             task_emb = task_emb.view(1, 1, self.task_channels)
-            alpha = (x_j * self.att_msg).sum(-1) + (
-                        task_emb * self.att_task).sum(-1)
+            alpha = (x_j * self.att_msg).sum(-1) + (task_emb *
+                                                    self.att_task).sum(-1)
         else:
             alpha = (x_j * self.att_msg).sum(-1)
         alpha = F.leaky_relu(alpha, self.negative_slope)
@@ -371,15 +409,20 @@ class GeneralEdgeAttConvv1Layer(MessagePassing):
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
-                                       self.in_channels,
-                                       self.out_channels, self.heads)
+                                       self.in_channels, self.out_channels,
+                                       self.heads)
 
 
 class GeneralEdgeAttConvv2Layer(MessagePassing):
     r"""Att conv with edge feature v2"""
-
-    def __init__(self, in_channels, out_channels, task_channels=None,
-                 improved=False, cached=False, bias=True, **kwargs):
+    def __init__(self,
+                 in_channels,
+                 out_channels,
+                 task_channels=None,
+                 improved=False,
+                 cached=False,
+                 bias=True,
+                 **kwargs):
         super(GeneralEdgeAttConvv2Layer, self).__init__(aggr=cfg.gnn.agg,
                                                         **kwargs)
 
@@ -394,18 +437,23 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
         self.negative_slope = 0.2
 
         self.head_channels = out_channels // self.heads
-        self.scaling = self.head_channels ** -0.5
+        self.scaling = self.head_channels**-0.5
 
         if self.msg_direction == 'single':
             self.linear_value = nn.Linear(in_channels + cfg.dataset.edge_dim,
-                                          out_channels, bias=bias)
+                                          out_channels,
+                                          bias=bias)
             self.linear_key = nn.Linear(in_channels + cfg.dataset.edge_dim,
-                                        out_channels, bias=bias)
+                                        out_channels,
+                                        bias=bias)
         else:
-            self.linear_value = nn.Linear(
-                in_channels * 2 + cfg.dataset.edge_dim, out_channels, bias=bias)
+            self.linear_value = nn.Linear(in_channels * 2 +
+                                          cfg.dataset.edge_dim,
+                                          out_channels,
+                                          bias=bias)
             self.linear_key = nn.Linear(in_channels * 2 + cfg.dataset.edge_dim,
-                                        out_channels, bias=bias)
+                                        out_channels,
+                                        bias=bias)
 
         self.att_msg = Parameter(
             torch.Tensor(1, self.heads, self.head_channels))
@@ -414,10 +462,12 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
                 torch.Tensor(1, self.heads, self.task_channels))
 
         if cfg.gnn.att_final_linear:
-            self.linear_final = nn.Linear(out_channels, out_channels,
+            self.linear_final = nn.Linear(out_channels,
+                                          out_channels,
                                           bias=False)
         if cfg.gnn.att_final_linear_bn:
-            self.linear_final_bn = nn.BatchNorm1d(out_channels, eps=cfg.bn.eps,
+            self.linear_final_bn = nn.BatchNorm1d(out_channels,
+                                                  eps=cfg.bn.eps,
                                                   momentum=cfg.bn.mom)
 
         if bias:
@@ -436,10 +486,14 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
         self.cached_num_edges = None
 
     @staticmethod
-    def norm(edge_index, num_nodes, edge_weight=None, improved=False,
+    def norm(edge_index,
+             num_nodes,
+             edge_weight=None,
+             improved=False,
              dtype=None):
         if edge_weight is None:
-            edge_weight = torch.ones((edge_index.size(1),), dtype=dtype,
+            edge_weight = torch.ones((edge_index.size(1), ),
+                                     dtype=dtype,
                                      device=edge_index.device)
 
         fill_value = 1.0 if not improved else 2.0
@@ -453,7 +507,11 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
 
         return edge_index, deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
 
-    def forward(self, x, edge_index, edge_weight=None, edge_feature=None,
+    def forward(self,
+                x,
+                edge_index,
+                edge_weight=None,
+                edge_feature=None,
                 task_emb=None):
         if self.cached and self.cached_result is not None:
             if edge_index.size(1) != self.cached_num_edges:
@@ -478,8 +536,11 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
         if self.msg_direction == 'both':
             x = (x, x)  # todo: check if expected
 
-        return self.propagate(edge_index, x=x, norm=norm,
-                              edge_feature=edge_feature, task_emb=task_emb)
+        return self.propagate(edge_index,
+                              x=x,
+                              norm=norm,
+                              edge_feature=edge_feature,
+                              task_emb=task_emb)
 
     def message(self, edge_index_i, x_i, x_j, norm, size_i, edge_feature,
                 task_emb):
@@ -491,8 +552,8 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
         x_j = x_j.view(-1, self.heads, self.head_channels)
         if task_emb is not None:
             task_emb = task_emb.view(1, 1, self.task_channels)
-            alpha = (x_j * self.att_msg).sum(-1) + (
-                        task_emb * self.att_task).sum(-1)
+            alpha = (x_j * self.att_msg).sum(-1) + (task_emb *
+                                                    self.att_task).sum(-1)
         else:
             alpha = (x_j * self.att_msg).sum(-1)
         alpha = F.leaky_relu(alpha, self.negative_slope)
@@ -513,8 +574,8 @@ class GeneralEdgeAttConvv2Layer(MessagePassing):
 
     def __repr__(self):
         return '{}({}, {}, {})'.format(self.__class__.__name__,
-                                       self.in_channels,
-                                       self.out_channels, self.heads)
+                                       self.in_channels, self.out_channels,
+                                       self.heads)
 
 
 class GeneralEdgeAttConvv1(nn.Module):
@@ -523,7 +584,8 @@ class GeneralEdgeAttConvv1(nn.Module):
         self.model = GeneralEdgeAttConvv1Layer(dim_in, dim_out, bias=bias)
 
     def forward(self, batch):
-        batch.node_feature = self.model(batch.node_feature, batch.edge_index,
+        batch.node_feature = self.model(batch.node_feature,
+                                        batch.edge_index,
                                         edge_feature=batch.edge_feature)
         return batch
 
@@ -534,7 +596,8 @@ class GeneralEdgeAttConvv2(nn.Module):
         self.model = GeneralEdgeAttConvv2Layer(dim_in, dim_out, bias=bias)
 
     def forward(self, batch):
-        batch.node_feature = self.model(batch.node_feature, batch.edge_index,
+        batch.node_feature = self.model(batch.node_feature,
+                                        batch.edge_index,
                                         edge_feature=batch.edge_feature)
         return batch
 

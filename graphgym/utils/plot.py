@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
+import seaborn as sns
 from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
 
 from graphgym.utils.io import makedirs
+
+# from sklearn.manifold import TSNE
+
 
 sns.set_context('poster')
 

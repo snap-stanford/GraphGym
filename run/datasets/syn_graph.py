@@ -1,11 +1,14 @@
+import collections
+import os
+import pickle
+
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import pickle
-import os
 import torch
-import collections
-import matplotlib.pyplot as plt
+
 dirname = os.path.dirname(__file__)
+
 
 def degree_dist(G):
     degree_sequence = sorted([d for n, d in G.degree()], reverse=True)
@@ -21,6 +24,7 @@ def degree_dist(G):
     ax.set_xticks([d + 0.4 for d in deg])
     ax.set_xticklabels(deg)
     plt.show()
+
 
 def save_syn():
     clustering_bins = np.linspace(0.3, 0.6, 7)
@@ -79,9 +83,11 @@ def save_syn():
     with open('smallworld.pkl', 'wb') as file:
         pickle.dump(graphs, file)
 
+
 def load_syn():
     with open('{}/smallworld.pkl'.format(dirname), 'rb') as file:
         graphs = pickle.load(file)
     for graph in graphs:
-        print(nx.average_clustering(graph), nx.average_shortest_path_length(graph))
+        print(nx.average_clustering(graph),
+              nx.average_shortest_path_length(graph))
         # degree_dist(graph)

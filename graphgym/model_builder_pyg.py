@@ -2,7 +2,7 @@ import torch
 
 from graphgym.config import cfg
 from graphgym.models.gnn_pyg import GNN
-from graphgym.register import register_network, network_dict
+from graphgym.register import network_dict, register_network
 
 register_network('gnn', GNN)
 

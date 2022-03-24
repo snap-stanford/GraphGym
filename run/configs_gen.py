@@ -7,12 +7,9 @@ import random
 import numpy as np
 import yaml
 
-import graphgym.contrib
+import graphgym.contrib  # noqa
 from graphgym.utils.comp_budget import match_baseline_cfg
-from graphgym.utils.io import (
-    makedirs_rm_exist,
-    string_to_python,
-)
+from graphgym.utils.io import makedirs_rm_exist, string_to_python
 
 random.seed(123)
 
@@ -20,25 +17,38 @@ random.seed(123)
 def parse_args():
     """Parses the arguments."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', dest='config',
+    parser.add_argument('--config',
+                        dest='config',
                         help='the base configuration file used for edit',
-                        default=None, type=str)
-    parser.add_argument('--grid', dest='grid',
+                        default=None,
+                        type=str)
+    parser.add_argument('--grid',
+                        dest='grid',
                         help='configuration file for grid search',
-                        required=True, type=str)
-    parser.add_argument('--sample_alias', dest='sample_alias',
+                        required=True,
+                        type=str)
+    parser.add_argument('--sample_alias',
+                        dest='sample_alias',
                         help='configuration file for sample alias',
-                        default=None, required=False, type=str)
-    parser.add_argument('--sample_num', dest='sample_num',
+                        default=None,
+                        required=False,
+                        type=str)
+    parser.add_argument('--sample_num',
+                        dest='sample_num',
                         help='Number of random samples in the space',
-                        default=10, type=int)
-    parser.add_argument('--out_dir', dest='out_dir',
+                        default=10,
+                        type=int)
+    parser.add_argument('--out_dir',
+                        dest='out_dir',
                         help='output directory for generated config files',
-                        default='configs', type=str)
+                        default='configs',
+                        type=str)
     parser.add_argument(
-        '--config_budget', dest='config_budget',
+        '--config_budget',
+        dest='config_budget',
         help='the base configuration file used for matching computation',
-        default=None, type=str)
+        default=None,
+        type=str)
     return parser.parse_args()
 
 
@@ -225,7 +235,8 @@ def gen_grid_sample(args, config, config_budget={}, compare_alias_list=[]):
                     var_repr = str(var).strip("[]").strip("''")
                     fname_out += f'-{vars_alias[id]}={var_repr}'
                 if len(config_budget) > 0:
-                    config_out = match_baseline_cfg(config_out, config_budget,
+                    config_out = match_baseline_cfg(config_out,
+                                                    config_budget,
                                                     verbose=False)
                 with open(f'{out_dir}/{fname_out}.yaml', "w") as f:
                     yaml.dump(config_out, f, default_flow_style=False)

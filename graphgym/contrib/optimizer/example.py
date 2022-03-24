@@ -1,8 +1,7 @@
 import torch.optim as optim
 
-from graphgym.register import register_optimizer, register_scheduler
-
 from graphgym.config import cfg
+from graphgym.register import register_optimizer, register_scheduler
 
 
 def optimizer_example(params):
