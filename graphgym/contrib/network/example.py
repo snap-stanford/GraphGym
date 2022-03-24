@@ -4,8 +4,29 @@ import torch.nn.functional as F
 import torch_geometric.nn as pyg_nn
 
 from graphgym.config import cfg
-from graphgym.models.head import head_dict
 from graphgym.register import register_network
+
+
+class GNNNodeHead(nn.Module):
+    '''Head of GNN, node prediction'''
+    def __init__(self, dim_in, dim_out):
+        super(GNNNodeHead, self).__init__()
+        self.layer_post_mp = MLP(dim_in,
+                                 dim_out,
+                                 num_layers=cfg.gnn.layers_post_mp,
+                                 bias=True)
+
+    def _apply_index(self, batch):
+        if batch.node_label_index.shape[0] == batch.node_label.shape[0]:
+            return batch.node_feature[batch.node_label_index], batch.node_label
+        else:
+            return batch.node_feature[batch.node_label_index], \
+                   batch.node_label[batch.node_label_index]
+
+    def forward(self, batch):
+        batch = self.layer_post_mp(batch)
+        pred, label = self._apply_index(batch)
+        return pred, label
 
 
 class ExampleGNN(torch.nn.Module):
@@ -18,8 +39,7 @@ class ExampleGNN(torch.nn.Module):
         for l in range(num_layers - 1):
             self.convs.append(conv_model(dim_in, dim_in))
 
-        GNNHead = head_dict[cfg.dataset.task]
-        self.post_mp = GNNHead(dim_in=dim_in, dim_out=dim_out)
+        self.post_mp = GNNNodeHead(dim_in=dim_in, dim_out=dim_out)
 
     def build_conv_model(self, model_type):
         if model_type == 'GCN':
@@ -29,8 +49,7 @@ class ExampleGNN(torch.nn.Module):
         elif model_type == "GraphSage":
             return pyg_nn.SAGEConv
         else:
-            raise ValueError(
-                "Model {} unavailable".format(model_type))
+            raise ValueError("Model {} unavailable".format(model_type))
 
     def forward(self, batch):
         x, edge_index, x_batch = \

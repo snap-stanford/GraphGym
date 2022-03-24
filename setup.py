@@ -5,9 +5,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="graphgym",
-    version="0.3.1",
-    author="Jiaxuan You, Rex Ying",
-    author_email="jiaxuan@cs.stanford.edu, rex@cs.stanford.edu",
+    version="0.4",
+    author="Jiaxuan You",
+    author_email="jiaxuan@cs.stanford.edu",
     description="GraphGym: platform for designing and evaluating Graph Neural Networks (GNN)",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -18,9 +18,10 @@ setuptools.setup(
         'tensorboardx',
         'torch',
         'torch-geometric',
-        'deepsnap',
         'networkx',
-        'numpy'
+        'numpy',
+        'deepsnap',
+        'ogb',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

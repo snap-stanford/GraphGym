@@ -6,21 +6,37 @@ from graphgym.config import cfg
 from graphgym.models.head_pyg import head_dict
 from graphgym.models.layer_pyg import (GeneralLayer, GeneralMultiLayer,
                                        BatchNorm1dNode, BatchNorm1dEdge)
-from graphgym.models.act import act_dict
 from graphgym.init import init_weights
 from graphgym.models.feature_encoder_pyg import node_encoder_dict, \
     edge_encoder_dict
 
-from graphgym.contrib.stage import *
 import graphgym.register as register
 
 
 ########### Layer ############
 def GNNLayer(dim_in, dim_out, has_act=True):
+    """
+    Wrapper for a GNN layer
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension
+        has_act (bool): Whether has activation function after the layer
+
+    """
     return GeneralLayer(cfg.gnn.layer_type, dim_in, dim_out, has_act)
 
 
 def GNNPreMP(dim_in, dim_out):
+    """
+    Wrapper for NN layer before GNN message passing
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension
+        num_layers (int): Number of layers
+
+    """
     return GeneralMultiLayer('linear', cfg.gnn.layers_pre_mp,
                              dim_in, dim_out, dim_inner=dim_out, final_act=True)
 
@@ -28,7 +44,14 @@ def GNNPreMP(dim_in, dim_out):
 ########### Stage: NN except start and head ############
 
 class GNNStackStage(nn.Module):
-    '''Simple Stage that stack GNN layers'''
+    """
+    Simple Stage that stack GNN layers
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension
+        num_layers (int): Number of GNN layers
+    """
 
     def __init__(self, dim_in, dim_out, num_layers):
         super(GNNStackStage, self).__init__()
@@ -67,7 +90,12 @@ stage_dict = {**register.stage_dict, **stage_dict}
 ########### Feature encoder ############
 
 class FeatureEncoder(nn.Module):
-    '''Encoding node/edge features'''
+    """
+    Encoding node and edge features
+
+    Args:
+        dim_in (int): Input feature dimension
+    """
 
     def __init__(self, dim_in):
         super(FeatureEncoder, self).__init__()
@@ -96,7 +124,14 @@ class FeatureEncoder(nn.Module):
 ########### Model: start + stage + head ############
 
 class GNN(nn.Module):
-    '''General GNN model'''
+    """
+    General GNN model: encoder + stage + head
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension
+        **kwargs (optional): Optional additional args
+    """
 
     def __init__(self, dim_in, dim_out, **kwargs):
         super(GNN, self).__init__()

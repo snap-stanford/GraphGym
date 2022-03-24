@@ -2,11 +2,11 @@ from graphgym.config import cfg
 
 import torch.optim as optim
 
-from graphgym.contrib.optimizer import *
 import graphgym.register as register
 
 
 def create_optimizer(params):
+    r"""Creates a config-driven optimizer."""
     params = filter(lambda p: p.requires_grad, params)
     # Try to load customized optimizer
     for func in register.optimizer_dict.values():
@@ -28,6 +28,7 @@ def create_optimizer(params):
 
 
 def create_scheduler(optimizer):
+    r"""Creates a config-driven learning rate scheduler."""
     # Try to load customized scheduler
     for func in register.scheduler_dict.values():
         scheduler = func(optimizer)

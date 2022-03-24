@@ -11,16 +11,33 @@ from graphgym.models.feature_augment import Preprocess
 from graphgym.init import init_weights
 from graphgym.models.feature_encoder import node_encoder_dict, edge_encoder_dict
 
-from graphgym.contrib.stage import *
 import graphgym.register as register
 
 
 ########### Layer ############
 def GNNLayer(dim_in, dim_out, has_act=True):
+    """
+    Wrapper for a GNN layer
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension
+        has_act (bool): Whether has activation function after the layer
+
+    """
     return GeneralLayer(cfg.gnn.layer_type, dim_in, dim_out, has_act)
 
 
 def GNNPreMP(dim_in, dim_out):
+    """
+    Wrapper for NN layer before GNN message passing
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension
+        num_layers (int): Number of layers
+
+    """
     return GeneralMultiLayer('linear', cfg.gnn.layers_pre_mp,
                              dim_in, dim_out, dim_inner=dim_out, final_act=True)
 

@@ -1,14 +1,17 @@
 import math
-from graphgym.loader import create_dataset
-from graphgym.model_builder import create_model
-from graphgym.config import cfg, set_cfg
-from yacs.config import CfgNode as CN
 
-import pdb
+from graphgym.config import cfg, set_cfg
+from graphgym.model_builder import create_model
 
 
 def params_count(model):
-    """Computes the number of parameters."""
+    '''
+    Computes the number of parameters.
+
+    Args:
+        model (nn.Module): PyTorch model
+
+    '''
     return sum([p.numel() for p in model.parameters()])
 
 
@@ -18,7 +21,7 @@ def get_stats():
 
 
 def match_computation(stats_baseline, key=['gnn', 'dim_inner'], mode='sqrt'):
-    '''Match computation budge by cfg.gnn.dim_inner'''
+    '''Match computation budget by modifying cfg.gnn.dim_inner'''
     stats = get_stats()
     if stats != stats_baseline:
         # Phase 1: fast approximation
@@ -27,7 +30,8 @@ def match_computation(stats_baseline, key=['gnn', 'dim_inner'], mode='sqrt'):
                 scale = math.sqrt(stats_baseline / stats)
             elif mode == 'linear':
                 scale = stats_baseline / stats
-            step = int(round(cfg[key[0]][key[1]] * scale)) - cfg[key[0]][key[1]]
+            step = int(round(cfg[key[0]][key[1]] * scale)) \
+                - cfg[key[0]][key[1]]
             cfg[key[0]][key[1]] += step
             stats = get_stats()
             if abs(step) <= 1:
@@ -42,7 +46,7 @@ def match_computation(stats_baseline, key=['gnn', 'dim_inner'], mode='sqrt'):
             if stats == stats_baseline:
                 return stats
             if flag != flag_init:
-                if cfg.model.match_upper == False:  # stats is SMALLER
+                if not cfg.model.match_upper:  # stats is SMALLER
                     if flag < 0:
                         cfg[key[0]][key[1]] -= flag_init * step
                     return get_stats()
@@ -54,6 +58,7 @@ def match_computation(stats_baseline, key=['gnn', 'dim_inner'], mode='sqrt'):
 
 
 def dict_to_stats(cfg_dict):
+    from yacs.config import CfgNode as CN
     set_cfg(cfg)
     cfg_new = CN(cfg_dict)
     cfg.merge_from_other_cfg(cfg_new)
@@ -62,7 +67,19 @@ def dict_to_stats(cfg_dict):
     return stats
 
 
-def dict_match_baseline(cfg_dict, cfg_dict_baseline, verbose=True):
+def match_baseline_cfg(cfg_dict, cfg_dict_baseline, verbose=True):
+    '''
+    Match the computational budget of a given baseline model. THe current
+    configuration dictionary will be modifed and returned.
+
+    Args:
+        cfg_dict (dict): Current experiment's configuration
+        cfg_dict_baseline (dict): Baseline configuration
+        verbose (str, optional): If printing matched paramter conunts
+
+
+    '''
+    from yacs.config import CfgNode as CN
     stats_baseline = dict_to_stats(cfg_dict_baseline)
     set_cfg(cfg)
     cfg_new = CN(cfg_dict)
@@ -77,7 +94,3 @@ def dict_match_baseline(cfg_dict, cfg_dict_baseline, verbose=True):
         print('Computational budget has matched: Baseline params {}, '
               'Current params {}'.format(stats_baseline, stats))
     return cfg_dict
-
-### test functionality
-# stats_baseline = get_stats()
-# match_computation(stats_baseline + 1000000)

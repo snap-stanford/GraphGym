@@ -10,7 +10,6 @@ from graphgym.config import cfg
 from graphgym.models.layer_pyg import MLP
 from graphgym.models.pooling import pooling_dict
 
-from graphgym.contrib.head import *
 import graphgym.register as register
 
 

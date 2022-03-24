@@ -1,40 +1,60 @@
-import networkx as nx
-import time
-import logging
-import pickle
-import copy
+from typing import Callable
 
 import torch
-from torch_geometric.data import DataLoader
 
-from torch_geometric.datasets import *
-import torch_geometric.transforms as T
-
-from graphgym.config import cfg
-from graphgym.contrib.loader import *
 import graphgym.register as register
-from graphgym.models.transform import get_link_label, neg_sampling_transform
+import torch_geometric.transforms as T
+from torch_geometric.datasets import (
+    PPI,
+    Amazon,
+    Coauthor,
+    KarateClub,
+    MNISTSuperpixels,
+    Planetoid,
+    QM7b,
+    TUDataset,
+)
+from graphgym.config import cfg
+from graphgym.models.transform import (
+    create_link_label,
+    neg_sampling_transform,
+)
+from torch_geometric.loader import (
+    ClusterLoader,
+    DataLoader,
+    GraphSAINTEdgeSampler,
+    GraphSAINTNodeSampler,
+    GraphSAINTRandomWalkSampler,
+    NeighborSampler,
+    RandomNodeSampler,
+)
+from torch_geometric.utils import (
+    index_to_mask,
+    negative_sampling,
+    to_undirected,
+)
 
-from ogb.nodeproppred import PygNodePropPredDataset
-from ogb.linkproppred import PygLinkPropPredDataset
-from ogb.graphproppred import PygGraphPropPredDataset
+def planetoid_dataset(name: str) -> Callable:
+    return lambda root: Planetoid(root, name)
 
-from torch_geometric.utils import to_undirected
-from torch_geometric.data.graph_saint import (GraphSAINTNodeSampler,
-                                              GraphSAINTEdgeSampler,
-                                              GraphSAINTRandomWalkSampler)
-from torch_geometric.data.cluster import ClusterLoader
-from torch_geometric.data.sampler import RandomNodeSampler, NeighborSampler
-from torch_geometric.utils import negative_sampling
+
+register.register_dataset('Cora', planetoid_dataset('Cora'))
+register.register_dataset('CiteSeer', planetoid_dataset('CiteSeer'))
+register.register_dataset('PubMed', planetoid_dataset('PubMed'))
+register.register_dataset('PPI', PPI)
 
 
 def load_pyg(name, dataset_dir):
-    '''
-    load pyg format dataset
-    :param name: dataset name
-    :param dataset_dir: data directory
-    :return: a list of networkx/deepsnap graphs
-    '''
+    """
+    Load PyG dataset objects. (More PyG datasets will be supported)
+
+    Args:
+        name (string): dataset name
+        dataset_dir (string): data directory
+
+    Returns: PyG dataset object
+
+    """
     dataset_dir = '{}/{}'.format(dataset_dir, name)
     if name in ['Cora', 'CiteSeer', 'PubMed']:
         dataset = Planetoid(dataset_dir, name)
@@ -69,34 +89,47 @@ def load_pyg(name, dataset_dir):
     return dataset
 
 
-def index2mask(index, size):
-    mask = torch.zeros(size, dtype=torch.bool)
-    mask[index] = 1
-    return mask
-
-
 def set_dataset_attr(dataset, name, value, size):
     dataset._data_list = None
     dataset.data[name] = value
-    dataset.slices[name] = torch.tensor([0, size], dtype=torch.long)
+    if dataset.slices is not None:
+        dataset.slices[name] = torch.tensor([0, size], dtype=torch.long)
 
 
 def load_ogb(name, dataset_dir):
+    r"""
+
+    Load OGB dataset objects.
+
+
+    Args:
+        name (string): dataset name
+        dataset_dir (string): data directory
+
+    Returns: PyG dataset object
+
+    """
+    from ogb.graphproppred import PygGraphPropPredDataset
+    from ogb.linkproppred import PygLinkPropPredDataset
+    from ogb.nodeproppred import PygNodePropPredDataset
+
     if name[:4] == 'ogbn':
         dataset = PygNodePropPredDataset(name=name, root=dataset_dir)
         splits = dataset.get_idx_split()
         split_names = ['train_mask', 'val_mask', 'test_mask']
         for i, key in enumerate(splits.keys()):
-            mask = index2mask(splits[key], size=dataset.data.y.shape[0])
+            mask = index_to_mask(splits[key], size=dataset.data.y.shape[0])
             set_dataset_attr(dataset, split_names[i], mask, len(mask))
         edge_index = to_undirected(dataset.data.edge_index)
-        set_dataset_attr(dataset, 'edge_index', edge_index, edge_index.shape[1])
+        set_dataset_attr(dataset, 'edge_index', edge_index,
+                         edge_index.shape[1])
 
     elif name[:4] == 'ogbg':
         dataset = PygGraphPropPredDataset(name=name, root=dataset_dir)
         splits = dataset.get_idx_split()
-        split_names = ['train_graph_index', 'val_graph_index',
-                       'test_graph_index']
+        split_names = [
+            'train_graph_index', 'val_graph_index', 'test_graph_index'
+        ]
         for i, key in enumerate(splits.keys()):
             id = splits[key]
             set_dataset_attr(dataset, split_names[i], id, len(id))
@@ -104,45 +137,45 @@ def load_ogb(name, dataset_dir):
     elif name[:4] == "ogbl":
         dataset = PygLinkPropPredDataset(name=name, root=dataset_dir)
         splits = dataset.get_edge_split()
-
         id = splits['train']['edge'].T
         if cfg.dataset.resample_negative:
             set_dataset_attr(dataset, 'train_pos_edge_index', id, id.shape[1])
-            # todo: applying transform for negative sampling is very slow
             dataset.transform = neg_sampling_transform
         else:
             id_neg = negative_sampling(edge_index=id,
-                                       num_nodes=dataset.data.num_nodes[0],
+                                       num_nodes=dataset.data.num_nodes,
                                        num_neg_samples=id.shape[1])
             id_all = torch.cat([id, id_neg], dim=-1)
-            label = get_link_label(id, id_neg)
+            label = create_link_label(id, id_neg)
             set_dataset_attr(dataset, 'train_edge_index', id_all,
                              id_all.shape[1])
             set_dataset_attr(dataset, 'train_edge_label', label, len(label))
 
         id, id_neg = splits['valid']['edge'].T, splits['valid']['edge_neg'].T
         id_all = torch.cat([id, id_neg], dim=-1)
-        label = get_link_label(id, id_neg)
+        label = create_link_label(id, id_neg)
         set_dataset_attr(dataset, 'val_edge_index', id_all, id_all.shape[1])
         set_dataset_attr(dataset, 'val_edge_label', label, len(label))
 
         id, id_neg = splits['test']['edge'].T, splits['test']['edge_neg'].T
         id_all = torch.cat([id, id_neg], dim=-1)
-        label = get_link_label(id, id_neg)
+        label = create_link_label(id, id_neg)
         set_dataset_attr(dataset, 'test_edge_index', id_all, id_all.shape[1])
         set_dataset_attr(dataset, 'test_edge_label', label, len(label))
 
     else:
         raise ValueError('OGB dataset: {} non-exist')
-
     return dataset
 
 
 def load_dataset():
-    '''
-    load raw datasets.
-    :return: a list of networkx/deepsnap graphs, plus additional info if needed
-    '''
+    r"""
+
+    Load dataset objects.
+
+    Returns: PyG dataset object
+
+    """
     format = cfg.dataset.format
     name = cfg.dataset.name
     dataset_dir = cfg.dataset.dir
@@ -163,20 +196,25 @@ def load_dataset():
 
 
 def set_dataset_info(dataset):
-    # set shared variables
-    # todo: verify edge cases
+    r"""
+    Set global dataset information
+
+    Args:
+        dataset: PyG dataset object
+
+    """
 
     # get dim_in and dim_out
     try:
         cfg.share.dim_in = dataset.data.x.shape[1]
-    except:
+    except Exception:
         cfg.share.dim_in = 1
     try:
         if cfg.dataset.task_type == 'classification':
             cfg.share.dim_out = torch.unique(dataset.data.y).shape[0]
         else:
             cfg.share.dim_out = dataset.data.y.shape[1]
-    except:
+    except Exception:
         cfg.share.dim_out = 1
 
     # count number of dataset splits
@@ -192,10 +230,13 @@ def set_dataset_info(dataset):
 
 
 def create_dataset():
-    ## todo: add new PyG dataset split functionality
-    ## Load dataset
-    dataset = load_dataset()
+    r"""
+    Create dataset object
 
+    Returns: PyG dataset object
+
+    """
+    dataset = load_dataset()
     set_dataset_info(dataset)
 
     return dataset
@@ -207,12 +248,10 @@ def get_loader(dataset, sampler, batch_size, shuffle=True):
                                   shuffle=shuffle, num_workers=cfg.num_workers,
                                   pin_memory=True)
     elif sampler == "neighbor":
-        loader_train = NeighborSampler(dataset[0],
-                                       sizes=cfg.train.neighbor_sizes[
-                                             :cfg.gnn.layers_mp],
-                                       batch_size=batch_size, shuffle=shuffle,
-                                       num_workers=cfg.num_workers,
-                                       pin_memory=True)
+        loader_train = NeighborSampler(
+            dataset[0], sizes=cfg.train.neighbor_sizes[:cfg.gnn.layers_mp],
+            batch_size=batch_size, shuffle=shuffle,
+            num_workers=cfg.num_workers, pin_memory=True)
     elif sampler == "random_node":
         loader_train = RandomNodeSampler(dataset[0],
                                          num_parts=cfg.train.train_parts,
@@ -220,35 +259,39 @@ def get_loader(dataset, sampler, batch_size, shuffle=True):
                                          num_workers=cfg.num_workers,
                                          pin_memory=True)
     elif sampler == "saint_rw":
-        loader_train = GraphSAINTRandomWalkSampler(dataset[0],
-                                                   batch_size=batch_size,
-                                                   walk_length=cfg.train.walk_length,
-                                                   num_steps=cfg.train.iter_per_epoch,
-                                                   sample_coverage=0,
-                                                   shuffle=shuffle,
-                                                   num_workers=cfg.num_workers,
-                                                   pin_memory=True)
+        loader_train = \
+            GraphSAINTRandomWalkSampler(dataset[0],
+                                        batch_size=batch_size,
+                                        walk_length=cfg.train.walk_length,
+                                        num_steps=cfg.train.iter_per_epoch,
+                                        sample_coverage=0,
+                                        shuffle=shuffle,
+                                        num_workers=cfg.num_workers,
+                                        pin_memory=True)
     elif sampler == "saint_node":
-        loader_train = GraphSAINTNodeSampler(dataset[0], batch_size=batch_size,
-                                             num_steps=cfg.train.iter_per_epoch,
-                                             sample_coverage=0, shuffle=shuffle,
-                                             num_workers=cfg.num_workers,
-                                             pin_memory=True)
+        loader_train = \
+            GraphSAINTNodeSampler(dataset[0], batch_size=batch_size,
+                                  num_steps=cfg.train.iter_per_epoch,
+                                  sample_coverage=0, shuffle=shuffle,
+                                  num_workers=cfg.num_workers,
+                                  pin_memory=True)
     elif sampler == "saint_edge":
-        loader_train = GraphSAINTEdgeSampler(dataset[0], batch_size=batch_size,
-                                             num_steps=cfg.train.iter_per_epoch,
-                                             sample_coverage=0, shuffle=shuffle,
-                                             num_workers=cfg.num_workers,
-                                             pin_memory=True)
+        loader_train = \
+            GraphSAINTEdgeSampler(dataset[0], batch_size=batch_size,
+                                  num_steps=cfg.train.iter_per_epoch,
+                                  sample_coverage=0, shuffle=shuffle,
+                                  num_workers=cfg.num_workers,
+                                  pin_memory=True)
     elif sampler == "cluster":
-        loader_train = ClusterLoader(dataset[0],
-                                     num_parts=cfg.train.train_parts,
-                                     save_dir="{}/{}".format(cfg.dataset.dir,
-                                                             cfg.dataset.name.replace(
-                                                                 "-", "_")),
-                                     batch_size=batch_size, shuffle=shuffle,
-                                     num_workers=cfg.num_workers,
-                                     pin_memory=True)
+        loader_train = \
+            ClusterLoader(dataset[0],
+                          num_parts=cfg.train.train_parts,
+                          save_dir="{}/{}".format(cfg.dataset.dir,
+                                                  cfg.dataset.name.replace(
+                                                      "-", "_")),
+                          batch_size=batch_size, shuffle=shuffle,
+                          num_workers=cfg.num_workers,
+                          pin_memory=True)
 
     else:
         raise NotImplementedError("%s sampler is not implemented!" % sampler)
@@ -256,22 +299,31 @@ def get_loader(dataset, sampler, batch_size, shuffle=True):
 
 
 def create_loader():
+    """
+    Create data loader object
+
+    Returns: List of PyTorch data loaders
+
+    """
     dataset = create_dataset()
     # train loader
     if cfg.dataset.task == 'graph':
         id = dataset.data['train_graph_index']
         loaders = [
             get_loader(dataset[id], cfg.train.sampler, cfg.train.batch_size,
-                       shuffle=True)]
+                       shuffle=True)
+        ]
         delattr(dataset.data, 'train_graph_index')
     else:
-        loaders = [get_loader(dataset, cfg.train.sampler, cfg.train.batch_size,
-                              shuffle=True)]
+        loaders = [
+            get_loader(dataset, cfg.train.sampler, cfg.train.batch_size,
+                       shuffle=True)
+        ]
 
     # val and test loaders
-    split_names = ['val_graph_index', 'test_graph_index']
     for i in range(cfg.share.num_splits - 1):
         if cfg.dataset.task == 'graph':
+            split_names = ['val_graph_index', 'test_graph_index']
             id = dataset.data[split_names[i]]
             loaders.append(
                 get_loader(dataset[id], cfg.val.sampler, cfg.train.batch_size,
