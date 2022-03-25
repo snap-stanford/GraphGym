@@ -249,7 +249,7 @@ python configs_gen.py --config configs/${DIR}/${CONFIG}.yaml \
 **2.5 Launch the batch of experiments.**
 For example, in [`run/run_batch.sh`](run/run_batch.sh):
 ```bash
-bash parallel.sh configs/${CONFIG}_grid_${GRID} $REPEAT $MAX_JOBS $SLEEP
+bash parallel.sh configs/${CONFIG}_grid_${GRID} $REPEAT $MAX_JOBS
 ```
 Each experiment will be repeated for `$REPEAT` times. 
 We implemented a queue system to sequentially launch all the jobs, with `$MAX_JOBS` concurrent jobs running at the same time.
