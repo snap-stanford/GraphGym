@@ -118,6 +118,50 @@ class Logger(object):
         pred_int = self._get_pred_int(pred_score)
         return {'accuracy': round(accuracy_score(true, pred_int), cfg.round)}
 
+    def collate_dict(self, pred):
+        ''' Collate list of dict'''
+        pred_all = pred[0]
+        for i in range(1, len(pred)):
+            pred_tmp = pred[i]
+            for key, val in pred_tmp.items():
+                if key in pred_all:
+                    pred_all[key] = torch.cat((pred_all[key], val), dim=-1)
+                else:
+                    pred_all[key] = val
+        return pred_all
+
+    def classification_binary_multi(self):
+        from sklearn.metrics import (accuracy_score, f1_score, precision_score,
+                                     recall_score, roc_auc_score)
+        true_dict = self.collate_dict(self._true)
+        pred_score_dict = self.collate_dict(self._pred)
+        count = 0
+        stats = None
+        for key in true_dict.keys():
+            true = true_dict[key]
+            if len(torch.unique(true)) == 1:
+                continue
+            pred_score = pred_score_dict[key]
+            pred_int = self._get_pred_int(pred_score_dict[key])
+            if stats is None:
+                stats = {
+                    'accuracy': accuracy_score(true, pred_int),
+                    'precision': precision_score(true, pred_int),
+                    'recall': recall_score(true, pred_int),
+                    'f1': f1_score(true, pred_int),
+                    'auc': roc_auc_score(true, pred_score),
+                }
+            else:
+                stats['accuracy'] += accuracy_score(true, pred_int)
+                stats['precision'] += precision_score(true, pred_int)
+                stats['recall'] += recall_score(true, pred_int)
+                stats['f1'] += f1_score(true, pred_int)
+                stats['auc'] += roc_auc_score(true, pred_score)
+            count += 1
+        for key in stats.keys():
+            stats[key] = round(stats[key] / count, cfg.round)
+        return stats
+
     def regression(self):
         from sklearn.metrics import mean_absolute_error, mean_squared_error
 
@@ -140,11 +184,15 @@ class Logger(object):
         return time_per_epoch * (self._epoch_total - epoch_current)
 
     def update_stats(self, true, pred, loss, lr, time_used, params, **kwargs):
-        assert true.shape[0] == pred.shape[0]
         self._iter += 1
-        self._true.append(true)
-        self._pred.append(pred)
-        batch_size = true.shape[0]
+        if type(true) is dict and type(pred) is dict:
+            self._true.append(true)
+            self._pred.append(pred)
+            batch_size = sum([val.shape[0] for val in true.values()])
+        else:
+            self._true.append(true)
+            self._pred.append(pred)
+            batch_size = true.shape[0]
         self._size_current += batch_size
         self._loss += loss * batch_size
         self._lr = lr
@@ -180,6 +228,8 @@ class Logger(object):
                 task_stats = self.classification_binary()
             elif self.task_type == 'classification_multi':
                 task_stats = self.classification_multi()
+            elif self.task_type == 'classification_binary_multi':
+                task_stats = self.classification_binary_multi()
             else:
                 raise ValueError('Task has to be regression or classification')
 
@@ -221,7 +271,10 @@ def infer_task():
     num_label = cfg.share.dim_out
     if cfg.dataset.task_type == 'classification':
         if num_label <= 2:
-            task_type = 'classification_binary'
+            if cfg.share.num_task == 1:
+                task_type = 'classification_binary'
+            else:
+                task_type = 'classification_binary_multi'
         else:
             task_type = 'classification_multi'
     else:

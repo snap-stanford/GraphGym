@@ -1,0 +1,12 @@
+# name in config.py; short name; range to search
+
+dataset.name dataset ['sider','tox21','toxcast']
+gnn.layers_mp l_mp [2,3,4,5]
+kg.head head ['mphetenew']
+kg.layers_mp kg_layers [1,2,3,4,5]
+kg.meta meta [False,True]
+kg.meta_ratio meta_ratio [0.2]
+kg.setting setting ['relation']
+kg.setting_ratio keep_ratio [0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]
+optim.max_epoch ep [30]
+

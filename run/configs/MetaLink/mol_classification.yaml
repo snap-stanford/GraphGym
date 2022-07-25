@@ -1,0 +1,61 @@
+out_dir: results
+dataset:
+  format: mol
+  name: tox21
+  task: graph
+  task_type: classification_binary_multi
+  transductive: False
+  split: [0.8, 0.1, 0.1]
+  transform: none
+  task_main: []
+  subgraph: False
+train:
+  batch_size: 128
+  eval_period: 1
+  ckpt_period: 100
+model:
+  type: metalink
+  loss_fun: cross_entropy
+  size_average: True
+  edge_decoding: dot
+  graph_pooling: add
+gnn:
+  layers_pre_mp: 1
+  layers_mp: 2
+  layers_post_mp: 2
+  self_msg: add
+  dim_inner: 256
+  layer_type: generaledgeconv
+  stage_type: stack
+  batchnorm: True
+  act: prelu
+  dropout: 0.0
+  agg: add
+  normalize_adj: False
+  msg_direction: both
+  att_heads: 4
+  att_final_linear: False
+  att_final_linear_bn: False
+  l2norm: False
+optim:
+  optimizer: adam
+  base_lr: 0.001
+  max_epoch: 30
+  scheduler: cos
+kg:
+  meta: False
+  setting: relation
+  setting_ratio: 0.2
+  aux: True
+  head: mphetenew
+  self_msg: add
+  layer_type: kgheteconv
+  decode: dot
+  layers_mp: 1
+  norm_emb: True
+  has_bn: False
+  gate_self: True
+  gate_msg: True
+  gate_bias: False
+  edge_feature: raw
+view_emb: False
