@@ -3,7 +3,7 @@ GraphGym is a platform for designing and evaluating Graph Neural Networks (GNN).
 GraphGym is proposed in *[Design Space for Graph Neural Networks](https://arxiv.org/abs/2011.08843)*, 
 Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
 
-Please refer to [PyG](https://www.pyg.org) for a tightly integrated version of GraphGym and PyG.
+Please also refer to [PyG](https://www.pyg.org) for a tightly integrated version of GraphGym and PyG.
 
 ### Highlights
 **1. Highly modularized pipeline for GNN**
@@ -32,6 +32,13 @@ Please refer to [PyG](https://www.pyg.org) for a tightly integrated version of G
 cd run
 bash run_single_pyg.sh 
 ```
+
+### Example use cases
+- *[Design Space for Graph Neural Networks](https://arxiv.org/abs/2011.08843)*, Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
+- *[Identity-aware Graph Neural Networks](https://arxiv.org/abs/2101.10320)*, Jiaxuan You, Jonathan Gomes-Selman, Rex Ying, Jure Leskovec, **AAAI 2021**.
+- *[Relational Multi-Task Learning: Modeling Relations between Data and Tasks](https://openreview.net/pdf?id=8Py-W8lSUgy)*, Kaidi Cao&ast;, Jiaxuan You&ast;, Jure Leskovec, **ICLR 2022 Spotlight**.
+- *[ROLAND: Graph Learning Framework for Dynamic Graphs](https://arxiv.org/abs/2208.07239)*, Jiaxuan You, Tianyu Du, Jure Leskovec, **KDD 2022**.
+
 
 
 ## Why GraphGym?
@@ -313,7 +320,7 @@ To do so, you may follow our example in
 GraphGym currently accepts a list of [NetworkX](https://networkx.org/documentation/stable/index.html) graphs 
 or [PyG](https://pytorch-geometric.readthedocs.io/en/latest/) datasets.
 
-## Use case: Design Space for Graph Neural Networks (NeurIPS 2020 Spotlight)
+### Use case: Design Space for Graph Neural Networks (NeurIPS 2020 Spotlight)
 
 Reproducing experiments in *[Design Space for Graph Neural Networks](https://arxiv.org/abs/2011.08843)*, Jiaxuan You, Rex Ying, Jure Leskovec, **NeurIPS 2020 Spotlight**.
 You may refer to the [paper](https://arxiv.org/abs/2011.08843) or [project webpage](http://snap.stanford.edu/gnn-design/) for more details. 
@@ -337,7 +344,7 @@ design_space.ipynb   # reproducing all the analyses in the paper
 
 
 
-## Use case: Identity-aware Graph Neural Networks (AAAI 2021)
+### Use case: Identity-aware Graph Neural Networks (AAAI 2021)
 
 Reproducing experiments in *[Identity-aware Graph Neural Networks](https://arxiv.org/abs/2101.10320)*, Jiaxuan You, Jonathan Gomes-Selman, Rex Ying, Jure Leskovec, **AAAI 2021**.
 You may refer to the [paper](https://arxiv.org/abs/2101.10320) or [project webpage](http://snap.stanford.edu/idgnn/) for more details. 
@@ -355,6 +362,26 @@ bash run_idgnn_graph.sh   # Reproduce ID-GNN graph-level results
   <b><br>Figure 5: Overview of Identity-aware Graph Neural Networks (ID-GNN).</b>
 </div>
 
+
+### Use case: Relational Multi-Task Learning: Modeling Relations between Data and Tasks (ICLR 2022 Spotlight)
+
+Reproducing experiments in *[Relational Multi-Task Learning: Modeling Relations between Data and Tasks](https://openreview.net/pdf?id=8Py-W8lSUgy)*, Kaidi Cao&ast;, Jiaxuan You&ast;, Jure Leskovec, **ICLR 2022**.
+
+```bash
+# NOTE: We include the raw results for ID-GNN in analysis/idgnn.csv
+git checkout meta_link
+cd run/scripts/MetaLink/
+bash run_metalink.sh.sh   # Reproduce MetaLink results for graph classification
+```
+
+<div align="center">
+  <img align="center" src="https://github.com/snap-stanford/GraphGym/raw/master/docs/IDGNN.png" width="900px" />
+  <b><br>Figure 5: Overview of Identity-aware Graph Neural Networks (ID-GNN).</b>
+</div>
+
+### Use case: ROLAND: Graph Learning Framework for Dynamic Graphs (KDD 2022)
+*[ROLAND: Graph Learning Framework for Dynamic Graphs](https://arxiv.org/abs/2208.07239)*, Jiaxuan You, Tianyu Du, Jure Leskovec, **KDD 2022**.
+ROLAND forks GraphGym implementation. Please checkout the [corresponding repository for ROLAND](https://github.com/snap-stanford/roland).
 
 ## Contributors
 [Jiaxuan You](https://cs.stanford.edu/~jiaxuan/) initiates the project and majorly contributes to the entire GraphGym platform. 
