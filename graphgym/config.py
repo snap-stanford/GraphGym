@@ -606,8 +606,8 @@ def from_config(func):
 # 1. set default cfg values first, some modules in contrib might rely on this
 set_cfg(cfg) 
 
-# 2. load the graph contrib tree to register custom configs
-import graph.contrib.config
+# 2. load the graphgym contrib tree to register custom configs
+import graphgym.contrib.config
 
 # 3. re-register custom configs into cfg
 for func in register.config_dict.values():
