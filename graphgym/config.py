@@ -94,6 +94,9 @@ def set_cfg(cfg):
     # Number of dataset splits: train/val/test
     cfg.share.num_splits = 1
 
+    # Number of task in targets. For multilabel tasks, this number > 1
+    cfg.share.num_task = 1
+
     # ----------------------------------------------------------------------- #
     # Dataset options
     # ----------------------------------------------------------------------- #

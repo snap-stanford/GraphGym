@@ -16,6 +16,7 @@ from torch_geometric.datasets import (PPI, Amazon, Coauthor, KarateClub,
 import graphgym.models.feature_augment as preprocess
 import graphgym.register as register
 from graphgym.config import cfg
+from graphgym.contrib.loader.molecule import load_mol_datasets
 from graphgym.models.transform import (edge_nets, ego_nets, path_len,
                                        remove_node_feature)
 
@@ -119,6 +120,17 @@ def load_dataset():
         # Note this is only used for custom splits from OGB
         split_idx = dataset.get_idx_split()
         return graphs, split_idx
+    elif cfg.dataset.format == 'mol':
+        # names = ['bace', 'bbbp']
+        names = cfg.dataset.name.split('_')
+        graphs, splits, motifs, targets = load_mol_datasets(names,
+                                                            use_cache=True)
+        if 'aux' not in cfg.kg.setting:
+            for i in range(len(graphs)):
+                graphs[i].graph_targets_id = graphs[i].graph_targets_id[2:]
+                graphs[i].graph_targets_value = graphs[i].graph_targets_value[
+                    2:]
+        return graphs, splits, motifs, targets
     else:
         raise ValueError('Unknown data format: {}'.format(cfg.dataset.format))
     return graphs
@@ -207,6 +219,9 @@ def set_dataset_info(datasets):
         if 'classification' in cfg.dataset.task_type and \
                 cfg.share.dim_out == 2:
             cfg.share.dim_out = 1
+        elif 'binary' in cfg.dataset.task_type:
+            cfg.share.dim_out = 1
+
     except Exception:
         cfg.share.dim_out = 1
 
@@ -219,6 +234,10 @@ def create_dataset():
     time1 = time.time()
     if cfg.dataset.format == 'OGB':
         graphs, splits = load_dataset()
+    elif cfg.dataset.format == 'mol':
+        graphs, splits, motifs, targets = load_dataset()
+        cfg.dataset.edge_dim = graphs[0].num_edge_features
+        cfg.share.num_task = len(targets)
     else:
         graphs = load_dataset()
 
@@ -247,6 +266,12 @@ def create_dataset():
         datasets.append(dataset[splits['train']])
         datasets.append(dataset[splits['valid']])
         datasets.append(dataset[splits['test']])
+    elif cfg.dataset.format == 'mol':
+        datasets = []
+        # seed starts from 1
+        datasets.append(dataset[splits['train'][cfg.seed - 1]])
+        datasets.append(dataset[splits['valid'][cfg.seed - 1]])
+        datasets.append(dataset[splits['test'][cfg.seed - 1]])
     # Use random split, supported by DeepSNAP
     else:
         datasets = dataset.split(transductive=cfg.dataset.transductive,
@@ -271,21 +296,43 @@ def create_dataset():
 
 
 def create_loader(datasets):
-    loader_train = DataLoader(datasets[0],
-                              collate_fn=Batch.collate(),
-                              batch_size=cfg.train.batch_size,
-                              shuffle=True,
-                              num_workers=cfg.num_workers,
-                              pin_memory=False)
+    if cfg.dataset.format == 'mol':
+        follow_batch = ['edge_index', 'graph_targets_id']
+        loader_train = DataLoader(
+            datasets[0],
+            collate_fn=Batch.collate(follow_batch=follow_batch),
+            batch_size=cfg.train.batch_size,
+            shuffle=True,
+            num_workers=cfg.num_workers,
+            pin_memory=False,
+            drop_last=False)
 
-    loaders = [loader_train]
-    for i in range(1, len(datasets)):
-        loaders.append(
-            DataLoader(datasets[i],
-                       collate_fn=Batch.collate(),
-                       batch_size=cfg.train.batch_size,
-                       shuffle=False,
-                       num_workers=cfg.num_workers,
-                       pin_memory=False))
+        loaders = [loader_train]
+        for i in range(1, len(datasets)):
+            loaders.append(
+                DataLoader(datasets[i],
+                           collate_fn=Batch.collate(follow_batch=follow_batch),
+                           batch_size=cfg.train.batch_size,
+                           shuffle=True,
+                           num_workers=cfg.num_workers,
+                           pin_memory=False,
+                           drop_last=False))
+    else:
+        loader_train = DataLoader(datasets[0],
+                                  collate_fn=Batch.collate(),
+                                  batch_size=cfg.train.batch_size,
+                                  shuffle=True,
+                                  num_workers=cfg.num_workers,
+                                  pin_memory=False)
+
+        loaders = [loader_train]
+        for i in range(1, len(datasets)):
+            loaders.append(
+                DataLoader(datasets[i],
+                           collate_fn=Batch.collate(),
+                           batch_size=cfg.train.batch_size,
+                           shuffle=False,
+                           num_workers=cfg.num_workers,
+                           pin_memory=False))
 
     return loaders
