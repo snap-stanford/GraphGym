@@ -313,12 +313,21 @@ Within each directory, (at least) an example is provided, showing how to registe
 Note that new user customized modules may result in new configurations; in these cases, new configuration fields
 can be registered at [`graphgym/contrib/config/`](graphgym/contrib/config).
 
-**Note: Applying to your own datasets.**
+### Applying to your own datasets
 A common use case will be applying GraphGym to your favorite datasets.
 To do so, you may follow our example in 
 [`graphgym/contrib/loader/example.py`](graphgym/contrib/loader/example.py).
 GraphGym currently accepts a list of [NetworkX](https://networkx.org/documentation/stable/index.html) graphs 
 or [PyG](https://pytorch-geometric.readthedocs.io/en/latest/) datasets.
+
+Alterernatively:
+1. Save your pytorch geometric dataset as a .pt file.
+1. Place that .pt file in an otherwise empty folder.
+1. Send the folder into a .zip file
+1. Upload that .zip file somewhere on the internet.
+1. Alter the "name" section in the yaml file to the following structure: "Custom,[NAME_OF_FILE],[URL_TO_FOLDER]". For example, to run the MNISTSuperdigit dataset, set "name" to "Custom,MNISTSuperPixels,https://data.pyg.org/datasets/MNISTSuperpixels.zip"
+
+
 
 ### Use case: Design Space for Graph Neural Networks (NeurIPS 2020 Spotlight)
 
