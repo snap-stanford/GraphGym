@@ -3,3 +3,10 @@ run/datasets/data/
 **/__pycache__/
 **/.ipynb_checkpoints
 .idea/
+
+results/
+datasets/
+
+example_custom.yaml
+run_custom.sh
+Custom Loader.txt
