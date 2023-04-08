@@ -13,7 +13,7 @@ from torch_geometric.datasets import (PPI, Amazon, Coauthor, KarateClub,
                                       MNISTSuperpixels, Planetoid, QM7b,
                                       TUDataset)
 
-from .custom_loader import custom_loader
+from .custom_dataset import custom_dataset
 
 import graphgym.models.feature_augment as preprocess
 import graphgym.register as register
@@ -29,9 +29,10 @@ def load_pyg(name, dataset_dir):
     :param dataset_dir: data directory
     :return: a list of networkx/deepsnap graphs
     '''
-    if not str(name[0:6] == "Custom"):
+    print(not str(name[0:6]) == "Custom")
+    if not str(name[0:6]) == "Custom":
         dataset_dir = '{}/{}'.format(dataset_dir, name)
-    else :
+    else:
         parts = name.split(",")     # in custom sets, the names field must contain names and urls
         dataset_dir = '{}/{}'.format(dataset_dir, parts[1])
 
@@ -76,7 +77,7 @@ def load_pyg(name, dataset_dir):
         dataset_raw = QM7b(dataset_dir)
     elif name[0:6] == "Custom":
         parts = name.split(",")     # in custom sets, the names field must contain names and urls
-        dataset_raw = custom_loader(root=dataset_dir, name=parts[1], url=parts[2])
+        dataset_raw = custom_dataset(root=dataset_dir, name=parts[1], url=parts[2])
         name = parts[1] # give it a new name
     else:
         raise ValueError('{} not support'.format(name))

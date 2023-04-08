@@ -11,7 +11,7 @@ from torch_geometric.data import (
 )
 
 
-class custom_loader(InMemoryDataset):
+class custom_dataset(InMemoryDataset):
     url = "temp"
     def __init__(
         self,
@@ -25,9 +25,10 @@ class custom_loader(InMemoryDataset):
     ):
         self.name = name
         self.url = url
+        self.train = train
         super().__init__(root, transform, pre_transform, pre_filter)
         path = self.processed_paths[0] if train else self.processed_paths[1]
-        self.data, self.slices = torch.load(path)
+        self.path = path
 
     @property
     def raw_file_names(self) -> str:
@@ -45,13 +46,5 @@ class custom_loader(InMemoryDataset):
     def process(self):
         inputs = torch.load(self.raw_paths[0])
         inputs.process()
-        for i in range(len(inputs)):
-            data_list = [Data(**data_dict) for data_dict in inputs[i]]
+        self.data = inputs
 
-            if self.pre_filter is not None:
-                data_list = [d for d in data_list if self.pre_filter(d)]
-
-            if self.pre_transform is not None:
-                data_list = [self.pre_transform(d) for d in data_list]
-
-            torch.save(self.collate(data_list), self.processed_paths[i])
