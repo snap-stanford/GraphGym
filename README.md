@@ -322,10 +322,11 @@ or [PyG](https://pytorch-geometric.readthedocs.io/en/latest/) datasets.
 
 Alterernatively:
 1. Save your pytorch geometric dataset as a .pt file.
-1. Place that .pt file in an otherwise empty folder.
-1. Send the folder into a .zip file
-1. Upload that .zip file somewhere on the internet.
-1. Alter the "name" section in the yaml file to the following structure: "Custom,[NAME_OF_FILE],[URL_TO_FOLDER]". For example, to run the MNISTSuperdigit dataset, set "name" to "Custom,MNISTSuperPixels,https://data.pyg.org/datasets/MNISTSuperpixels.zip"
+1. Compress the .pt file into a .zip file
+1. Upload that .zip file somewhere on the internet, such as google drive.
+1. Generate a download link for the zip file; that is, a link that begins a download of the zip file, rather than show a preview
+1. Alter the "name" section in the yaml file to the following structure: "Custom,[NAME_OF_FILE],[DOWNLOAD_URL]". For example, to run the MNISTSuperdigit dataset, set "name" to "Custom,MNISTSuperPixels,https://data.pyg.org/datasets/MNISTSuperpixels.zip"
+1. Add the dataset class file of your dataset to the run folder, and import it into main.py
 
 
 
