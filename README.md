@@ -326,7 +326,7 @@ Alterernatively:
 1. Upload that .zip file somewhere on the internet, such as google drive.
 1. Generate a download link for the zip file; that is, a link that begins a download of the zip file, rather than show a preview
 1. Alter the "name" section in the yaml file to the following structure: "Custom,[NAME_OF_FILE],[DOWNLOAD_URL]". For example, to run the MNISTSuperdigit dataset, set "name" to "Custom,MNISTSuperPixels,https://data.pyg.org/datasets/MNISTSuperpixels.zip"
-1. Add the dataset class file of your dataset to the run folder, and import it into main.py
+1. Add the dataset class file of your dataset to the run folder, and import it into main.py. Update the dataset's processed_dir attribute to "dataset/name/processed
 
 
 

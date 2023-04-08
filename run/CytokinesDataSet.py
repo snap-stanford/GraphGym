@@ -47,11 +47,11 @@ class CytokinesDataSet(Dataset):
         pass
 
     def process(self):
+        name = self.graphName[:-10]
+        self.new_dir = "datasets\\" + name + "\\processed\\"# "datasets\\" + name + "\\processed"   # new processed dir
 
         # runs once for each patient
-        print("processing")
         index = 0
-        name = self.graphName[:-9]
         for patient in self.patients:
             # Get node features of a single patient
             node_feats = self._get_node_features(patient)
@@ -71,11 +71,11 @@ class CytokinesDataSet(Dataset):
                         ) 
             if self.test:
                 torch.save(data, 
-                    os.path.join(self.processed_dir, 
+                    os.path.join(self.new_dir, 
                                  f'{name}_data_test_{index}.pt'))
             else:
                 torch.save(data, 
-                    os.path.join(self.processed_dir, 
+                    os.path.join(self.new_dir, 
                                  f'{name}_data_{index}.pt'))
             
             index += 1
@@ -131,12 +131,12 @@ class CytokinesDataSet(Dataset):
         """ - Equivalent to __getitem__ in pytorch
             - Is not needed for PyG's InMemoryDataset
         """
-        name = self.graphName[:-9]
+        name = self.graphName[:-10]
 
         if self.test:
-            data = torch.load(os.path.join(self.processed_dir, 
+            data = torch.load(os.path.join(self.new_dir, 
                                  f'{name}_data_test_{idx}.pt'))
         else:
-            data = torch.load(os.path.join(self.processed_dir, 
+            data = torch.load(os.path.join(self.new_dir, 
                                  f'{name}_data_{idx}.pt'))   
         return data

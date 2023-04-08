@@ -44,6 +44,7 @@ class custom_loader(InMemoryDataset):
 
     def process(self):
         inputs = torch.load(self.raw_paths[0])
+        inputs.process()
         for i in range(len(inputs)):
             data_list = [Data(**data_dict) for data_dict in inputs[i]]
 
