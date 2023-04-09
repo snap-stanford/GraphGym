@@ -29,7 +29,6 @@ def load_pyg(name, dataset_dir):
     :param dataset_dir: data directory
     :return: a list of networkx/deepsnap graphs
     '''
-    print(not str(name[0:6]) == "Custom")
     if not str(name[0:6]) == "Custom":
         dataset_dir = '{}/{}'.format(dataset_dir, name)
     else:
