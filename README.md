@@ -327,6 +327,16 @@ Alterernatively:
 1. Generate a download link for the zip file; that is, a link that begins a download of the zip file, rather than show a preview
 1. Alter the "name" section in the yaml file to the following structure: "Custom,[NAME_OF_FILE],[DOWNLOAD_URL]". For example, to run the MNISTSuperdigit dataset, set "name" to "Custom,MNISTSuperPixels,https://data.pyg.org/datasets/MNISTSuperpixels.zip"
 1. Add the dataset class file of your dataset to the run folder, and import it into main.py. Update the dataset's processed_dir attribute to "dataset/name/processed
+1. Alter the process() function to do follow the instructions below
+
+#### Process function requirements
+1. Your dataset's process function must create 2 tuples, one for training data and one for testing. The tuples must have 2 objects in them. First, a Data() object containing an x tensor, a y tensor, and an edge_index tensor. Second, a dict that serves as the "slices" array for each of the x tensor, y tensor, and edge_index tensor.
+1. If your dataset is a node classifaction task, then the 2nd object should just be None. 
+1. If your data.x must contain a 2D tensor. There must be as many rows as there are node inputs in your entire dataset, and as many collumns as there are values in each individual node. If each node only has 1 single value, then it should only have 1 collumn.
+1. Your data.y field must be a 1D tensor. It represents the desired target. For graph classification, it must have as many elements as graphs you wish to classify. For node classification, it must have as many elements as nodes.
+1. Your data.edge_index field must be a 2D tensor with 2 rows and as many collumns as their are connections in your entire dataset (not just one graph). The ith elment in the first row tells you where the ith connection originates, and the ith element in the 2nd row tells you where the ith connection terminates.
+1. YOur slices dict must have 3 key-value pairs. The keys must be the following string literals: 'x', 'y', 'edge_index'. The values must be 1D tensors, with the first value for all 3 being 0. All 3 tensors one more element than the number of graphs you want to classify. The 2nd value should state the index of the first value that is not in the first graph, the 3rd value should be the first value that is not in the 2nd graph. For example, if slices['x'] = tensor([0, 100, 200]), that means there are 2 graphs to classify. The first graph should take values 0 to 99 inclusive from the data.x tensor, and the 2nd graph should take values 100 to 199.
+1. Once all these tuples are made, save the training and testing tuples using torch.save() as 'train_data.pt' and 'test_dat.pt' respectively
 
 
 
