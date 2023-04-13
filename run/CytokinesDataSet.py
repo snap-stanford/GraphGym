@@ -94,11 +94,11 @@ class CytokinesDataSet(Dataset):
         node_vector_len = len(self._get_node_features(self.patients[0]).numpy()[0]) # the length of a node vector
         # preparing data
         train_x_tensor = torch.empty((0, node_vector_len), dtype=torch.float32)
-        train_edge_index_tensor = torch.empty((2, 0), dtype=torch.float32)
+        train_edge_index_tensor = torch.empty((2, 0), dtype=torch.int32)
         train_y_list = [] # It's just easier to make a list than figure out how to do 1d concats
 
         test_x_tensor = torch.empty((0, node_vector_len), dtype=torch.float32)
-        test_edge_index_tensor = torch.empty((2, 0), dtype=torch.float32)
+        test_edge_index_tensor = torch.empty((2, 0), dtype=torch.int32)
         test_y_list = [] # It's just easier to make a list than figure out how to do 1d concats
 
 

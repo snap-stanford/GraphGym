@@ -29,6 +29,7 @@ class custom_dataset(InMemoryDataset):
         super().__init__(root, transform, pre_transform, pre_filter)
         path = self.processed_paths[0] if train else self.processed_paths[1]
         self.path = path
+        self.data, self.slices = torch.load(path)
 
     @property
     def raw_file_names(self) -> str:
