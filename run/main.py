@@ -15,6 +15,7 @@ from graphgym.train import train
 from graphgym.utils.agg_runs import agg_runs
 from graphgym.utils.comp_budget import params_count
 from graphgym.utils.device import auto_select_device
+from CytokinesDataSet import CytokinesDataSet
 
 if __name__ == '__main__':
     # Load cmd line args
