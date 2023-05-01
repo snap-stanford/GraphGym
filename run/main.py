@@ -16,6 +16,7 @@ from graphgym.utils.agg_runs import agg_runs
 from graphgym.utils.comp_budget import params_count
 from graphgym.utils.device import auto_select_device
 from CytokinesDataSet import CytokinesDataSet
+from Visualization import Visualize
 
 if __name__ == '__main__':
     # Load cmd line args
@@ -57,3 +58,6 @@ if __name__ == '__main__':
     # When being launched in batch mode, mark a yaml as done
     if args.mark_done:
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
+    
+
+    Visualize.visualize_graph(model)
