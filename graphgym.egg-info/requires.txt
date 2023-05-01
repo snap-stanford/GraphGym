@@ -1,0 +1,8 @@
+yacs
+tensorboardx
+torch
+torch-geometric
+networkx
+numpy
+deepsnap
+ogb
