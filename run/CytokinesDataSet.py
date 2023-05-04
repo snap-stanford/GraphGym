@@ -6,17 +6,20 @@ import os
 CLASS_NAME = "DISEASE"
 
 class CytokinesDataSet(Dataset):
-    def __init__(self, root, filename, graphName, test=False, transform=None, pre_transform=None, patients = None, adjacency = None):
+    def __init__(self, root, filename, graphName, test=False, transform=None, pre_transform=None, patients = None, adjacency = None, nodeNames = None):
         """
         root = Where the dataset should be stored. This folder is split
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
         """
+
         self.test = test
         self.filename = filename
         self.patients = patients
         self.adjacency = adjacency
         self.graphName = graphName
+        self.nodeNames = nodeNames
         self.process()
+
 
         super(CytokinesDataSet, self).__init__(root, transform, pre_transform)
         
@@ -135,9 +138,10 @@ class CytokinesDataSet(Dataset):
 
 
         test_data.x = test_x_tensor
-        test_data.y = test_edge_index_tensor
+        test_data.y = test_y_tensor
         test_data.edge_index = test_edge_index_tensor
-
+        print(os.path.join(self.new_dir, 'nodeNames.pt'))
+        torch.save(self.nodeNames, os.path.join(self.new_dir, 'nodeNames.pt'))
         torch.save(train_tuple, os.path.join(self.new_dir, 'train_data.pt'))
         torch.save(test_tuple, os.path.join(self.new_dir, 'test_data.pt'))
 
