@@ -58,6 +58,5 @@ if __name__ == '__main__':
     # When being launched in batch mode, mark a yaml as done
     if args.mark_done:
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
-    
 
-    Visualize.visualize_graph(model)
+    Visualize.visualize_graph(model, datasets[0].graphs[0].G)
