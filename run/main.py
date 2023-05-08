@@ -15,8 +15,10 @@ from graphgym.train import train
 from graphgym.utils.agg_runs import agg_runs
 from graphgym.utils.comp_budget import params_count
 from graphgym.utils.device import auto_select_device
+from graphgym.models.gnn import GNNStackStage
 from CytokinesDataSet import CytokinesDataSet
 from Visualization import Visualize
+from graphgym.models.layer import GeneralConv
 
 if __name__ == '__main__':
     # Load cmd line args
@@ -60,4 +62,12 @@ if __name__ == '__main__':
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
 
     name = cfg.dataset.name.split(",")[1]
-    Visualize.visualize_graph(model, datasets[0].graphs[0].G, name)
+    for child in model.children(): # get the GNNSTackStage
+        if(isinstance(child, GNNStackStage)): 
+            for grandChild in child.children(): # get the first General Layer
+                for object in grandChild.children(): # get the generalconv object
+                    if(isinstance(object, GeneralConv)):
+                        for layer in object.children(): # get the generalconvLayer
+                            print(size(layer.weight))
+                break
+    #Visualize.visualize_graph(model, datasets[0].graphs[0].G, name)
