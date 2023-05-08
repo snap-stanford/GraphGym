@@ -18,7 +18,7 @@ from graphgym.utils.device import auto_select_device
 from graphgym.models.gnn import GNNStackStage
 from CytokinesDataSet import CytokinesDataSet
 from Visualization import Visualize
-from graphgym.models.layer import GeneralConv
+from graphgym.models.layer import GeneralMultiLayer, Linear
 
 if __name__ == '__main__':
     # Load cmd line args
@@ -62,12 +62,14 @@ if __name__ == '__main__':
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
 
     name = cfg.dataset.name.split(",")[1]
-    for child in model.children(): # get the GNNSTackStage
-        if(isinstance(child, GNNStackStage)): 
-            for grandChild in child.children(): # get the first General Layer
-                for object in grandChild.children(): # get the generalconv object
-                    if(isinstance(object, GeneralConv)):
-                        for layer in object.children(): # get the generalconvLayer
-                            print(size(layer.weight))
-                break
+    for child in model.children(): # We are at the network level.
+        if(isinstance(child, GeneralMultiLayer)): 
+            for grandchild in child.children(): # we are at the MultiLayer object
+                for object in grandchild.children(): # we are at the GeneralLayer object
+                    if(isinstance(object, Linear)):
+                        for layer in object.children(): # we are at the Linear object
+                            print(layer.weight)
+                            print(layer.weight[0].size())
+                            print(layer.weight.size())
+
     #Visualize.visualize_graph(model, datasets[0].graphs[0].G, name)
