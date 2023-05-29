@@ -68,8 +68,15 @@ if __name__ == '__main__':
                 for object in grandchild.children(): # we are at the GeneralLayer object
                     if(isinstance(object, Linear)):
                         for layer in object.children(): # we are at the Linear object
-                            print(layer.weight)
-                            print(layer.weight[0].size())
-                            print(layer.weight.size())
+                            colorWeights = layer.weight
 
-    #Visualize.visualize_graph(model, datasets[0].graphs[0].G, name)
+    Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name)
+
+
+"""
+Okay, the layer.weight is a 256  * 732 matrix. 
+256 rows, 732 collumns.
+Squish reach collumn together into one value with 732. Average it all out.
+Then do the same for divisions. Then, find the min and the max, and color with respect to it. 
+Blue is negative, red is positive.
+"""

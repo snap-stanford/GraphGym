@@ -6,7 +6,9 @@ run/datasets/data/
 
 results/
 datasets/
+configs/
 
 example_custom.yaml
 run_custom.sh
 Custom Loader.txt
+example_custom.txt
