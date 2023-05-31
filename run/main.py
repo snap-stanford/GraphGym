@@ -18,7 +18,8 @@ from graphgym.utils.device import auto_select_device
 from graphgym.models.gnn import GNNStackStage
 from CytokinesDataSet import CytokinesDataSet
 from Visualization import Visualize
-from graphgym.models.layer import GeneralMultiLayer, Linear
+from graphgym.models.layer import GeneralMultiLayer, Linear, GeneralConv
+from graphgym.models.gnn import GNNStackStage
 
 if __name__ == '__main__':
     # Load cmd line args
@@ -42,7 +43,25 @@ if __name__ == '__main__':
         loaders = create_loader(datasets)
         loggers = create_logger()
         model = create_model()
-        optimizer = create_optimizer(model.parameters())
+
+        # Add edge_weights attribute to the datasets so that they can be accessed in batches
+        num_edges = len(datasets[0][0].edge_index[0])
+        edge_weights = torch.nn.Parameter(torch.ones(num_edges))
+        loaders[0].dataset[0].edge_weights = edge_weights
+        loaders[1].dataset[0].edge_weights = edge_weights
+        for loader in loaders:
+            for dataset in loader.dataset:
+                dataset.edge_weights = edge_weights
+
+
+        #add edge weights to the set of parameters
+        newParam = list()
+        for param in model.parameters():
+            newParam.append(param)
+        
+        newParam.append(edge_weights)
+
+        optimizer = create_optimizer(newParam)
         scheduler = create_scheduler(optimizer)
         # Print model info
         logging.info(model)
@@ -61,6 +80,8 @@ if __name__ == '__main__':
     if args.mark_done:
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
 
+
+"""
     name = cfg.dataset.name.split(",")[1]
     for child in model.children(): # We are at the network level.
         if(isinstance(child, GeneralMultiLayer)): 
@@ -70,7 +91,8 @@ if __name__ == '__main__':
                         for layer in object.children(): # we are at the Linear object
                             colorWeights = layer.weight
 
-    Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name)
+    Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name)\
+    """
 
 
 """
