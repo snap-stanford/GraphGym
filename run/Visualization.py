@@ -4,21 +4,37 @@ import networkx as nx
 from torch_geometric.utils import to_networkx
 
 class Visualize:
-    def visualize_graph(colorWeights, graph, name):
+    def visualize_graph(colorWeights, graph, name, edge_weights):
         nodeNameLocation = "datasets\\" + name + "\\processed\\nodeNames.pt"
         divisionsLocation = "datasets\\" + name + "\\processed\\divisions.pt"
         nodeNames = torch.load(nodeNameLocation)
         divisions = torch.load(divisionsLocation)
+
+        print(graph.edges)
+        print(edge_weights)
+
+        largest_edge = max(edge_weights).item()
+        smallest_edge = min(edge_weights).item()
+
+        diff_edge = largest_edge - smallest_edge
+        print(largest_edge)
+
+        edge_colours = []
+
+        for edge in edge_weights:
+            color = [0]*3
+            color[1] = (edge.item() - smallest_edge) / diff_edge
+            edge_colours.append(color)
+
+        print(edge_colours)
+
 
         inv_map = {v: k for k, v in nodeNames.items()}
 
         graph = nx.relabel_nodes(graph, inv_map)
 
 
-        red_edges = []
-        edge_colours = ['black' if not edge in red_edges else 'red'
-                        for edge in graph.edges]
-        black_edges = [edge for edge in graph.edges if edge not in red_edges]
+
 
 
         sampleSource = Visualize.nodeColourings(colorWeights, divisions)
@@ -33,8 +49,7 @@ class Visualize:
         nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'), 
                             node_color = values, node_size = 1000)
         nx.draw_networkx_labels(graph, pos)
-        nx.draw_networkx_edges(graph, pos, edgelist=red_edges, edge_color='r', arrows=False)
-        nx.draw_networkx_edges(graph, pos, edgelist=black_edges, arrows=False)
+        nx.draw_networkx_edges(graph, pos, edgelist=graph.edges, edge_color=edge_colours, arrows=False)
         plt.show()
     
     """

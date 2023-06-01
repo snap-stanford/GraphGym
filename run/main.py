@@ -81,7 +81,8 @@ if __name__ == '__main__':
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
 
 
-"""
+    print(edge_weights)
+
     name = cfg.dataset.name.split(",")[1]
     for child in model.children(): # We are at the network level.
         if(isinstance(child, GeneralMultiLayer)): 
@@ -91,8 +92,8 @@ if __name__ == '__main__':
                         for layer in object.children(): # we are at the Linear object
                             colorWeights = layer.weight
 
-    Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name)\
-    """
+    Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name, edge_weights)\
+
 
 
 """
