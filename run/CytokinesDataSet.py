@@ -192,10 +192,14 @@ class CytokinesDataSet(Dataset):
 
         edge_indices = []
         for edge in self.adjacency:
-            edge_indices += edge
+            edge_indices.append(edge[0])
+
+        for edge in self.adjacency:
+            edge_indices.append(edge[1])
 
         edge_indices = torch.tensor(edge_indices)
         edge_indices = edge_indices.t().to(torch.long).view(2, -1)
+        print(edge_indices)
         return edge_indices
 
     

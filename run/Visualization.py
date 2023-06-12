@@ -10,6 +10,8 @@ class Visualize:
         nodeNames = torch.load(nodeNameLocation)
         divisions = torch.load(divisionsLocation)
 
+        print(len(edge_weights))
+
         print(graph.edges)
         print(edge_weights)
 

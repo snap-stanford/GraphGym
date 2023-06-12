@@ -47,8 +47,6 @@ if __name__ == '__main__':
         # Add edge_weights attribute to the datasets so that they can be accessed in batches
         num_edges = len(datasets[0][0].edge_index[0])
         edge_weights = torch.nn.Parameter(torch.ones(num_edges))
-        loaders[0].dataset[0].edge_weights = edge_weights
-        loaders[1].dataset[0].edge_weights = edge_weights
         for loader in loaders:
             for dataset in loader.dataset:
                 dataset.edge_weights = edge_weights
@@ -80,9 +78,7 @@ if __name__ == '__main__':
     if args.mark_done:
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
 
-
-    print(edge_weights)
-
+"""
     name = cfg.dataset.name.split(",")[1]
     for child in model.children(): # We are at the network level.
         if(isinstance(child, GeneralMultiLayer)): 
@@ -92,14 +88,13 @@ if __name__ == '__main__':
                         for layer in object.children(): # we are at the Linear object
                             colorWeights = layer.weight
 
-    Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name, edge_weights)\
+    Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name, edge_weights)
+    """
 
 
 
 """
-Okay, the layer.weight is a 256  * 732 matrix. 
-256 rows, 732 collumns.
-Squish reach collumn together into one value with 732. Average it all out.
-Then do the same for divisions. Then, find the min and the max, and color with respect to it. 
-Blue is negative, red is positive.
+This is obnoxious. Now, we get converted into a graph, where the lowest number edge always comes first.
+
+So, I'm gonna need to manually change the first half to the right order, then show the reverse.
 """
