@@ -2,7 +2,7 @@
 
 CONFIG=example_custom
 GRID=example_custom
-REPEAT=3
+REPEAT=1
 MAX_JOBS=8
 
 # generate configs (after controlling computational budget)

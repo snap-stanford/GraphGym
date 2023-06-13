@@ -52,6 +52,7 @@ class CytokinesDataSet(Dataset):
 
     def process(self):
         name = self.graphName[:-10]
+        print(self.graphName)
         self.new_dir = "datasets\\" + name + "\\processed\\"# "datasets\\" + name + "\\processed"   # new processed dir
         train_data = Data()
         train_slices = dict()
@@ -141,6 +142,7 @@ class CytokinesDataSet(Dataset):
         test_data.x = test_x_tensor
         test_data.y = test_y_tensor
         test_data.edge_index = test_edge_index_tensor
+        print(self.new_dir)
         torch.save(self.divisions, os.path.join(self.new_dir, 'divisions.pt'))
         torch.save(self.nodeNames, os.path.join(self.new_dir, 'nodeNames.pt'))
         torch.save(train_tuple, os.path.join(self.new_dir, 'train_data.pt'))
@@ -199,7 +201,6 @@ class CytokinesDataSet(Dataset):
 
         edge_indices = torch.tensor(edge_indices)
         edge_indices = edge_indices.t().to(torch.long).view(2, -1)
-        print(edge_indices)
         return edge_indices
 
     
