@@ -92,10 +92,12 @@ if __name__ == '__main__':
 
     last_layer_tensor = torch.stack(last_layers)
     truths_tensor = torch.cat(truths)
-    print(last_layer_tensor)
-    print(truths_tensor.size())
-    
-    1/0
+
+    numpy_matrix = last_layer_tensor.numpy()
+    numpy_truth = truths_tensor.numpy()
+
+
+    Visualize.visualize_TSNE(numpy_matrix, numpy_truth)
 
 
     for child in model.children(): # We are at the network level.

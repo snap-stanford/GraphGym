@@ -2,8 +2,23 @@ import torch
 import matplotlib.pyplot as plt
 import networkx as nx
 from torch_geometric.utils import to_networkx
+from sklearn.manifold import TSNE
 
 class Visualize:
+    def visualize_TSNE(matrix, classification):
+
+
+
+        # Apply t-SNE to the matrix
+        tsne = TSNE(n_components=2)
+        embedded_matrix = tsne.fit_transform(matrix)
+
+        # Plot the points based on the classification array
+        plt.scatter(embedded_matrix[:, 0], embedded_matrix[:, 1], c=classification)
+        plt.colorbar()
+        plt.show()
+        return
+
     def visualize_graph(colorWeights, graph, name, edge_weights):
         nodeNameLocation = "datasets\\" + name + "\\processed\\nodeNames.pt"
         divisionsLocation = "datasets\\" + name + "\\processed\\divisions.pt"
@@ -30,7 +45,6 @@ class Visualize:
         graph = nx.relabel_nodes(graph, inv_map)
         graph = graph.to_directed()
 
-        print(type(graph))
 
 
 
@@ -39,7 +53,6 @@ class Visualize:
         sampleSource = Visualize.nodeColourings(colorWeights, divisions)
         num_edges = len(graph.edges)
         
-        print(nx.is_directed(graph))
         values = []
 
         for i in range(len(graph.nodes)):
