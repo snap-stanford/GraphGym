@@ -81,6 +81,22 @@ if __name__ == '__main__':
 
     name = cfg.dataset.name.split(",")[1]
 
+    last_layers = []
+    truths = []
+
+    for loader in loaders:
+        for batch in loader:
+            last_layer, truth = model.get_last_hidden_layer_pooled(batch) # first one gives me the vector output of the neural network. 
+            last_layers += (last_layer)
+            truths.append(truth)
+
+    last_layer_tensor = torch.stack(last_layers)
+    truths_tensor = torch.cat(truths)
+    print(last_layer_tensor)
+    print(truths_tensor.size())
+    
+    1/0
+
 
     for child in model.children(): # We are at the network level.
         if(isinstance(child, GeneralMultiLayer)): 
@@ -96,7 +112,7 @@ if __name__ == '__main__':
 
 
 """
-This is obnoxious. Now, we get converted into a graph, where the lowest number edge always comes first.
+Next steps. Create a new function in visualization that takes in the matrix and the classifications.
 
-So, I'm gonna need to manually change the first half to the right order, then show the reverse.
+Draw a nice TSNE grpah with that. 
 """
