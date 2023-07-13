@@ -34,7 +34,8 @@ class Visualize:
 
         for edge in edge_weights:
             color = [0]*3
-            color[1] = (edge.item() - smallest_edge) / diff_edge
+            if((edge.item() - smallest_edge) / diff_edge > 0.9):
+                color[1] = 1.0
             edge_colours.append(color)
 
 
