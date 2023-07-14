@@ -5,6 +5,32 @@ from torch_geometric.utils import to_networkx
 from sklearn.manifold import TSNE
 
 class Visualize:
+    def visualize_correlations(name, graph, correlationMatrix):
+        nodeNameLocation = "datasets\\" + name + "\\processed\\nodeNames.pt"
+        nodeNames = torch.load(nodeNameLocation)
+        graphCopy = nx.create_empty_copy(graph)
+        cutoff = 0.9
+
+        inv_map = {v: k for k, v in nodeNames.items()}
+        num_nodes = len(graphCopy.nodes)
+
+
+        for row in range(num_nodes):
+            for col in range(row + 1, num_nodes):
+                if(correlationMatrix[row][col] >= cutoff):
+                    graphCopy.add_edge(row, col)
+
+
+        graphCopy = nx.relabel_nodes(graphCopy, inv_map)
+
+
+        pos = nx.shell_layout(graphCopy)
+        nx.draw_networkx_nodes(graphCopy, pos, cmap=plt.get_cmap('jet'))
+        nx.draw_networkx_labels(graphCopy, pos, font_color = "red")
+        nx.draw_networkx_edges(graphCopy, pos, edgelist=graphCopy.edges)
+        plt.show()
+        return
+
     def visualize_TSNE(matrix, classification):
 
 

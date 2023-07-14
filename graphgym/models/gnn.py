@@ -13,6 +13,7 @@ from graphgym.models.head import (head_dict, GNNGraphHead)
 from graphgym.models.layer import (BatchNorm1dEdge, BatchNorm1dNode,
                                    GeneralLayer, GeneralMultiLayer)
 
+import numpy as np
 
 # Layer
 def GNNLayer(dim_in, dim_out, has_act=True):
@@ -194,6 +195,28 @@ class GNN(nn.Module):
         
         
         return last_hidden_layer_pooled, labels # add true as well
+    
+    # returns a 2D matrix of n x h, where n is the number of nodes, and h is the hidden size
+    def get_correlations(self, batch):
+        for module in self.children():
+            # don't do the final output layer. Keep the last hidden layer
+            if(isinstance(module, GNNGraphHead)):
+                break
+            batch = module(batch)
+        num_nodes = batch.G[0].number_of_nodes()
+
+        correlationMatricies = []
+
+
+        for i in range(0, len(batch.node_feature), num_nodes):
+            relevant_vectors = batch.node_feature.detach()[i:(i + num_nodes)]
+            relevant_vectors = relevant_vectors.numpy()
+            correlationMatrix = np.corrcoef(relevant_vectors)
+
+            correlationMatricies.append(correlationMatrix)
+            
+        
+        return correlationMatricies
 
     def forward(self, batch):
         for module in self.children():

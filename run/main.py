@@ -79,23 +79,33 @@ if __name__ == '__main__':
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
 
 
+
     name = cfg.dataset.name.split(",")[1]
 
-    last_layers = []
+    last_layers_pooled = []
     truths = []
 
     for loader in loaders:
         for batch in loader:
-            last_layer, truth = model.get_last_hidden_layer_pooled(batch) # first one gives me the vector output of the neural network. 
-            last_layers += (last_layer)
+            last_layer_pooled, truth = model.get_last_hidden_layer_pooled(batch) # first one gives me the vector output of the neural network. 
+            last_layers_pooled += last_layer_pooled
             truths.append(truth)
 
-    last_layer_tensor = torch.stack(last_layers)
+    last_layer_tensor = torch.stack(last_layers_pooled)
     truths_tensor = torch.cat(truths)
 
     numpy_matrix = last_layer_tensor.numpy()
     numpy_truth = truths_tensor.numpy()
 
+    correlations = []
+
+    for loader in loaders:
+        for batch in loader:
+            correlation = model.get_correlations(batch) # first one gives me the vector output of the neural network. 
+            correlations += correlation
+
+
+    Visualize.visualize_correlations(name, datasets[0].graphs[0].G, correlations[0])
 
     Visualize.visualize_TSNE(numpy_matrix, numpy_truth)
 
@@ -109,6 +119,7 @@ if __name__ == '__main__':
                             colorWeights = layer.weight
 
     Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name, edge_weights)
+    
 
 
 
