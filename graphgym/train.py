@@ -3,7 +3,7 @@ import time
 
 import torch
 
-from graphgym.checkpoint import clean_ckpt, load_ckpt, save_ckpt, re
+from graphgym.checkpoint import clean_ckpt, load_ckpt, save_ckpt, remove_ckpt
 from graphgym.config import cfg
 from graphgym.loss import compute_loss
 from graphgym.utils.epoch import is_ckpt_epoch, is_eval_epoch
