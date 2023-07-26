@@ -330,7 +330,7 @@ Alterernatively:
 1. Alter the process() function to do follow the instructions below
 
 #### Process function requirements
-1. Your dataset's process function must create 2 tuples, one for training data and one for testing. The tuples must have 2 objects in them. First, a Data() object containing an x tensor, a y tensor, and an edge_index tensor. Second, a dict that serves as the "slices" array for each of the x tensor, y tensor, and edge_index tensor.
+1. Your dataset's process function must create 3 tuples, one for training data, one for all data, and one for testing. The tuples must have 2 objects in them. First, a Data() object containing an x tensor, a y tensor, and an edge_index tensor. Second, a dict that serves as the "slices" array for each of the x tensor, y tensor, and edge_index tensor.
 1. If your dataset is a node classifaction task, then the 2nd object should just be None. 
 1. If your data.x must contain a 2D tensor of type float. There must be as many rows as there are node inputs in your entire dataset, and as many collumns as there are values in each individual node. If each node only has 1 single value, then it should only have 1 collumn.
 1. Your data.y field must be a 1D tensor of type int. It represents the desired target. For graph classification, it must have as many elements as graphs you wish to classify. For node classification, it must have as many elements as nodes.
