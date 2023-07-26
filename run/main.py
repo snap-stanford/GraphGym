@@ -48,18 +48,10 @@ if __name__ == '__main__':
         dataset_all += datasets[0]
         dataset_all += datasets[1]
         merged_dataset = GraphDataset(dataset_all)
-        print("all")
-        print(len(merged_dataset))
-        print(type(merged_dataset))
-        print(type(datasets[0]))
-
-
         offset = int(len(merged_dataset) / 2)
 
-        print(offset)
-        print(type(offset))
-        print(int(offset))
-
+        correct = 0
+        total = 0
         for i in range(offset):
             new_test_dataset = []
             new_train_dataset = []
@@ -80,6 +72,10 @@ if __name__ == '__main__':
             loaders = create_loader(datasets)
             loggers = create_logger()
             model = create_model()
+
+
+
+
 
             # Add edge_weights attribute to the datasets so that they can be accessed in batches
             num_edges = len(datasets[0][0].edge_index[0])
@@ -109,6 +105,29 @@ if __name__ == '__main__':
             else:
                 train_dict[cfg.train.mode](loggers, loaders, model, optimizer,
                                         scheduler)
+                
+
+            for batch in loaders[1]:
+                print("here")
+                pred, true = model(batch)
+                # this only works in this very specific case. Work needs to be done to generalize it
+                if(pred[0] < 0.5):
+                    correct += 1
+
+                if(pred[1] > 0.5):
+                   correct +=1
+                
+                total += 2
+
+
+        
+
+            
+        print("correct")
+        print(correct)
+        print("total")
+        print(total)
+                
     """
     # Aggregate results from different seeds
     agg_runs(cfg.out_dir, cfg.metric_best)
