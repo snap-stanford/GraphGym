@@ -44,7 +44,10 @@ if __name__ == '__main__':
         loggers = create_logger()
         model = create_model()
 
-        print(datasets[0])
+
+        torch.set_printoptions(precision=10)
+
+        print([num * 20 for num in datasets[1][4].node_feature[0]])
         1/0
 
         # Add edge_weights attribute to the datasets so that they can be accessed in batches

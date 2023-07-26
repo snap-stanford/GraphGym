@@ -201,7 +201,6 @@ class CytokinesDataSet(Dataset):
         """
         all_node_feats = np.asarray(patient['data'])
 
-
         return torch.tensor(all_node_feats, dtype=torch.float)
 
     # todo: REturn list of 1 each time

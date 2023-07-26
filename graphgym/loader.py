@@ -262,7 +262,7 @@ def create_dataset():
     else:
         datasets = dataset.split(transductive=cfg.dataset.transductive,
                                  split_ratio=cfg.dataset.split,
-                                 shuffle=cfg.dataset.shuffle_split)
+                                 shuffle=False)
     # We only change the training negative sampling ratio
     for i in range(1, len(datasets)):
         dataset.edge_negative_sampling_ratio = 1
