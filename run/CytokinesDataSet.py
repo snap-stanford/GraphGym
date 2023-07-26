@@ -53,13 +53,16 @@ class CytokinesDataSet(Dataset):
     def process(self):
         name = self.graphName[:-10]
         print(self.graphName)
-        self.new_dir = "datasets\\" + name + "\\processed\\"# "datasets\\" + name + "\\processed"   # new processed dir
+        self.new_dir = "datasets/" + name + "/processed/"# "datasets\\" + name + "\\processed"   # new processed dir
         train_data = Data()
         train_slices = dict()
         test_data = Data()
         test_slices = dict()
+        all_data = Data()
+        all_slices = dict()
         train_tuple = (train_data, train_slices)
         test_tuple = (test_data, test_slices)
+        all_tuple = (all_data, all_slices)
 
         num_patients = len(self.patients)
         num_training = int(0.8*num_patients) # when index <= num_training, the patient goes into training data. Else, testing
@@ -77,6 +80,10 @@ class CytokinesDataSet(Dataset):
         test_x_slice = []
         test_edge_index_slice = []
 
+        all_y_slice = []
+        all_x_slice = []
+        all_edge_index_slice = []
+
         for i in range(num_training + 1):
             train_y_slice.append(i)
             train_x_slice.append(num_nodes*i)
@@ -86,6 +93,11 @@ class CytokinesDataSet(Dataset):
             test_y_slice.append(i)
             test_x_slice.append(num_nodes*i)
             test_edge_index_slice.append(num_edges * i)
+
+        for i in range(num_patients + 1):
+            all_y_slice.append(i)
+            all_x_slice.append(num_nodes*i)
+            all_edge_index_slice.append(num_edges * i)
         
         train_slices['y'] = torch.tensor(train_y_slice)
         train_slices['x'] = torch.tensor(train_x_slice)
@@ -94,6 +106,11 @@ class CytokinesDataSet(Dataset):
         test_slices['y'] = torch.tensor(test_y_slice)
         test_slices['x'] = torch.tensor(test_x_slice)
         test_slices['edge_index'] = torch.tensor(test_edge_index_slice)
+
+
+        all_slices['y'] = torch.tensor(all_y_slice)
+        all_slices['x'] = torch.tensor(all_x_slice)
+        all_slices['edge_index'] = torch.tensor(all_edge_index_slice)
         
 
         node_vector_len = len(self._get_node_features(self.patients[0]).numpy()[0]) # the length of a node vector
@@ -105,6 +122,11 @@ class CytokinesDataSet(Dataset):
         test_x_tensor = torch.empty((0, node_vector_len), dtype=torch.float32)
         test_edge_index_tensor = torch.empty((2, 0), dtype=torch.int32)
         test_y_list = [] # It's just easier to make a list than figure out how to do 1d concats
+
+
+        all_x_tensor = torch.empty((0, node_vector_len), dtype=torch.float32)
+        all_edge_index_tensor = torch.empty((2, 0), dtype=torch.int32)
+        all_y_list = [] # It's just easier to make a list than figure out how to do 1d concats
 
 
         # runs once for each patient
@@ -127,12 +149,17 @@ class CytokinesDataSet(Dataset):
                 test_x_tensor = torch.cat((test_x_tensor,node_feats), 0)
                 test_edge_index_tensor = torch.cat((test_edge_index_tensor,edge_index), 1)
                 test_y_list.append(int(patient[CLASS_NAME]))
+            
+            all_x_tensor = torch.cat((all_x_tensor,node_feats), 0)
+            all_edge_index_tensor = torch.cat((all_edge_index_tensor,edge_index), 1)
+            all_y_list.append(int(patient[CLASS_NAME]))
 
             index += 1
 
         # turn y_lists into tensors
         train_y_tensor = torch.tensor(train_y_list)
         test_y_tensor = torch.tensor(test_y_list)
+        all_y_tensor = torch.tensor(all_y_list)
 
         train_data.x = train_x_tensor
         train_data.y = train_y_tensor
@@ -142,11 +169,22 @@ class CytokinesDataSet(Dataset):
         test_data.x = test_x_tensor
         test_data.y = test_y_tensor
         test_data.edge_index = test_edge_index_tensor
+
+
+        all_data.x = all_x_tensor
+        all_data.y = all_y_list
+        all_data.edge_index = all_edge_index_tensor
         print(self.new_dir)
-        torch.save(self.divisions, os.path.join(self.new_dir, 'divisions.pt'))
+        print(self.divisions)
+        print(train_tuple)
+        print(test_tuple)
+        print(all_tuple)
+        1/0
+        torch.save(self.divisions, os.path.join(self.new_dir, 'divisions.pt')) # states which genes belong to which cytokine
         torch.save(self.nodeNames, os.path.join(self.new_dir, 'nodeNames.pt'))
         torch.save(train_tuple, os.path.join(self.new_dir, 'train_data.pt'))
         torch.save(test_tuple, os.path.join(self.new_dir, 'test_data.pt'))
+        torch.save(all_tuple, os.path.join(self.new_dir, 'all_data.pt'))
 
 
         # last step, just save everything in the right .pt files

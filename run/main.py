@@ -44,6 +44,9 @@ if __name__ == '__main__':
         loggers = create_logger()
         model = create_model()
 
+        print(datasets[0])
+        1/0
+
         # Add edge_weights attribute to the datasets so that they can be accessed in batches
         num_edges = len(datasets[0][0].edge_index[0])
         edge_weights = torch.nn.Parameter(torch.ones(num_edges))
@@ -78,7 +81,7 @@ if __name__ == '__main__':
     if args.mark_done:
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
 
-
+    """
 
     name = cfg.dataset.name.split(",")[1]
 
@@ -124,8 +127,4 @@ if __name__ == '__main__':
 
 
 
-"""
-Next steps. Create a new function in visualization that takes in the matrix and the classifications.
-
-Draw a nice TSNE grpah with that. 
 """
