@@ -18,7 +18,7 @@ class custom_dataset(InMemoryDataset):
         name,
         url,
         root: str,
-        train: bool = True,
+        train: bool = -1,
         transform: Optional[Callable] = None,
         pre_transform: Optional[Callable] = None,
         pre_filter: Optional[Callable] = None,
@@ -27,7 +27,14 @@ class custom_dataset(InMemoryDataset):
         self.url = url
         self.train = train
         super().__init__(root, transform, pre_transform, pre_filter)
-        path = self.processed_paths[0] if train else self.processed_paths[1]
+
+        if train == True:
+            path = self.processed_paths[0]
+        elif train == False:
+            path = self.processed_paths[1]
+        elif train == -1:
+            path = self.processed_paths[2]
+
         self.path = path
         self.data, self.slices = torch.load(path)
 
@@ -37,7 +44,7 @@ class custom_dataset(InMemoryDataset):
 
     @property
     def processed_file_names(self) -> List[str]:
-        return ['train_data.pt', 'test_data.pt']
+        return ['train_data.pt', 'test_data.pt','all_data.pt']
 
     def download(self):
         path = download_url(self.url, self.raw_dir)

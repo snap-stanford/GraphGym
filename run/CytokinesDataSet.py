@@ -111,8 +111,8 @@ class CytokinesDataSet(Dataset):
         all_slices['y'] = torch.tensor(all_y_slice)
         all_slices['x'] = torch.tensor(all_x_slice)
         all_slices['edge_index'] = torch.tensor(all_edge_index_slice)
-        
 
+        
         node_vector_len = len(self._get_node_features(self.patients[0]).numpy()[0]) # the length of a node vector
         # preparing data
         train_x_tensor = torch.empty((0, node_vector_len), dtype=torch.float32)
@@ -172,14 +172,10 @@ class CytokinesDataSet(Dataset):
 
 
         all_data.x = all_x_tensor
-        all_data.y = all_y_list
+        all_data.y = all_y_tensor
         all_data.edge_index = all_edge_index_tensor
-        print(self.new_dir)
-        print(self.divisions)
-        print(train_tuple)
-        print(test_tuple)
-        print(all_tuple)
-        1/0
+
+
         torch.save(self.divisions, os.path.join(self.new_dir, 'divisions.pt')) # states which genes belong to which cytokine
         torch.save(self.nodeNames, os.path.join(self.new_dir, 'nodeNames.pt'))
         torch.save(train_tuple, os.path.join(self.new_dir, 'train_data.pt'))
