@@ -205,6 +205,9 @@ def gen_grid(args, config, config_budget={}):
                     ptr = ptr[item]
                 ptr[var_label[-1]] = vars[j]
                 var_repr = str(vars[j]).strip("[]").strip("''")
+                if ',' in var_repr:
+                    parts = var_repr.split(",")
+                    var_repr = parts[1]
                 fname_out += f'-{vars_alias[j]}={var_repr}'
             if len(config_budget) > 0:
                 config_out = match_baseline_cfg(config_out, config_budget)

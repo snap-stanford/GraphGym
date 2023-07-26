@@ -15,7 +15,11 @@ from graphgym.train import train
 from graphgym.utils.agg_runs import agg_runs
 from graphgym.utils.comp_budget import params_count
 from graphgym.utils.device import auto_select_device
+from graphgym.models.gnn import GNNStackStage
 from CytokinesDataSet import CytokinesDataSet
+from Visualization import Visualize
+from graphgym.models.layer import GeneralMultiLayer, Linear, GeneralConv
+from graphgym.models.gnn import GNNStackStage
 
 if __name__ == '__main__':
     # Load cmd line args
@@ -39,7 +43,26 @@ if __name__ == '__main__':
         loaders = create_loader(datasets)
         loggers = create_logger()
         model = create_model()
-        optimizer = create_optimizer(model.parameters())
+
+        print(datasets[0])
+        1/0
+
+        # Add edge_weights attribute to the datasets so that they can be accessed in batches
+        num_edges = len(datasets[0][0].edge_index[0])
+        edge_weights = torch.nn.Parameter(torch.ones(num_edges))
+        for loader in loaders:
+            for dataset in loader.dataset:
+                dataset.edge_weights = edge_weights
+
+
+        #add edge weights to the set of parameters
+        newParam = list()
+        for param in model.parameters():
+            newParam.append(param)
+        
+        newParam.append(edge_weights)
+
+        optimizer = create_optimizer(newParam)
         scheduler = create_scheduler(optimizer)
         # Print model info
         logging.info(model)
@@ -57,3 +80,51 @@ if __name__ == '__main__':
     # When being launched in batch mode, mark a yaml as done
     if args.mark_done:
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
+
+    """
+
+    name = cfg.dataset.name.split(",")[1]
+
+    last_layers_pooled = []
+    truths = []
+
+    for loader in loaders:
+        for batch in loader:
+            last_layer_pooled, truth = model.get_last_hidden_layer_pooled(batch) # first one gives me the vector output of the neural network. 
+            last_layers_pooled += last_layer_pooled
+            truths.append(truth)
+
+    last_layer_tensor = torch.stack(last_layers_pooled)
+    truths_tensor = torch.cat(truths)
+
+    numpy_matrix = last_layer_tensor.numpy()
+    numpy_truth = truths_tensor.numpy()
+
+    correlations = []
+
+    for loader in loaders:
+        for batch in loader:
+            correlation = model.get_correlations(batch) # first one gives me the vector output of the neural network. 
+            correlations += correlation
+
+
+    Visualize.visualize_correlations(name, datasets[0].graphs[0].G, correlations[0])
+
+    Visualize.visualize_TSNE(numpy_matrix, numpy_truth)
+
+
+    for child in model.children(): # We are at the network level.
+        if(isinstance(child, GeneralMultiLayer)): 
+            for grandchild in child.children(): # we are at the MultiLayer object
+                for object in grandchild.children(): # we are at the GeneralLayer object
+                    if(isinstance(object, Linear)):
+                        for layer in object.children(): # we are at the Linear object
+                            colorWeights = layer.weight
+
+    Visualize.visualize_graph(colorWeights, datasets[0].graphs[0].G, name, edge_weights)
+    
+
+
+
+
+"""
