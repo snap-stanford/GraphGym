@@ -3,7 +3,7 @@ import os
 
 import torch
 from torch_geometric import seed_everything
-
+from deepsnap.dataset import GraphDataset
 from graphgym.cmd_args import parse_args
 from graphgym.config import cfg, dump_cfg, load_cfg, set_run_dir, set_out_dir
 from graphgym.loader import create_dataset, create_loader
@@ -40,51 +40,83 @@ if __name__ == '__main__':
         auto_select_device()
         # Set machine learning pipeline
         datasets = create_dataset()
-        loaders = create_loader(datasets)
-        loggers = create_logger()
-        model = create_model()
 
 
-        torch.set_printoptions(precision=10)
+        # last 6 are testing
 
-        print([num * 20 for num in datasets[1][4].node_feature[0]])
-        1/0
+        dataset_all = []
+        dataset_all += datasets[0]
+        dataset_all += datasets[1]
+        merged_dataset = GraphDataset(dataset_all)
+        print("all")
+        print(len(merged_dataset))
+        print(type(merged_dataset))
+        print(type(datasets[0]))
 
-        # Add edge_weights attribute to the datasets so that they can be accessed in batches
-        num_edges = len(datasets[0][0].edge_index[0])
-        edge_weights = torch.nn.Parameter(torch.ones(num_edges))
-        for loader in loaders:
-            for dataset in loader.dataset:
-                dataset.edge_weights = edge_weights
+
+        offset = int(len(merged_dataset) / 2)
+
+        print(offset)
+        print(type(offset))
+        print(int(offset))
+
+        for i in range(offset):
+            new_test_dataset = []
+            new_train_dataset = []
+
+            for j in range(len(dataset_all)):
+                if j == i or j == i + offset:
+                    new_test_dataset.append(dataset_all[j])
+                else:
+                    new_train_dataset.append(dataset_all[j])
+            
+            new_test_dataset = GraphDataset(new_test_dataset)
+            new_train_dataset = GraphDataset(new_train_dataset)
+            datasets[0] = new_train_dataset
+            datasets[1] = new_test_dataset
 
 
-        #add edge weights to the set of parameters
-        newParam = list()
-        for param in model.parameters():
-            newParam.append(param)
-        
-        newParam.append(edge_weights)
 
-        optimizer = create_optimizer(newParam)
-        scheduler = create_scheduler(optimizer)
-        # Print model info
-        logging.info(model)
-        logging.info(cfg)
-        cfg.params = params_count(model)
-        logging.info('Num parameters: %s', cfg.params)
-        # Start training
-        if cfg.train.mode == 'standard':
-            train(loggers, loaders, model, optimizer, scheduler)
-        else:
-            train_dict[cfg.train.mode](loggers, loaders, model, optimizer,
-                                       scheduler)
+            loaders = create_loader(datasets)
+            loggers = create_logger()
+            model = create_model()
+
+            # Add edge_weights attribute to the datasets so that they can be accessed in batches
+            num_edges = len(datasets[0][0].edge_index[0])
+            edge_weights = torch.nn.Parameter(torch.ones(num_edges))
+            for loader in loaders:
+                for dataset in loader.dataset:
+                    dataset.edge_weights = edge_weights
+
+
+            #add edge weights to the set of parameters
+            newParam = list()
+            for param in model.parameters():
+                newParam.append(param)
+            
+            newParam.append(edge_weights)
+
+            optimizer = create_optimizer(newParam)
+            scheduler = create_scheduler(optimizer)
+            # Print model info
+            logging.info(model)
+            logging.info(cfg)
+            cfg.params = params_count(model)
+            logging.info('Num parameters: %s', cfg.params)
+            # Start training
+            if cfg.train.mode == 'standard':
+                train(loggers, loaders, model, optimizer, scheduler)
+            else:
+                train_dict[cfg.train.mode](loggers, loaders, model, optimizer,
+                                        scheduler)
+    """
     # Aggregate results from different seeds
     agg_runs(cfg.out_dir, cfg.metric_best)
     # When being launched in batch mode, mark a yaml as done
     if args.mark_done:
         os.rename(args.cfg_file, f'{args.cfg_file}_done')
 
-    """
+    
 
     name = cfg.dataset.name.split(",")[1]
 
