@@ -20,6 +20,8 @@ from CytokinesDataSet import CytokinesDataSet
 from Visualization import Visualize
 from graphgym.models.layer import GeneralMultiLayer, Linear, GeneralConv
 from graphgym.models.gnn import GNNStackStage
+import numpy as np
+
 
 if __name__ == '__main__':
     # Load cmd line args
@@ -40,17 +42,93 @@ if __name__ == '__main__':
         auto_select_device()
         # Set machine learning pipeline
         datasets = create_dataset()
+        loaders = create_loader(datasets)
+        loggers = create_logger()
+        model = create_model()
 
 
-        # last 6 are testing
+        
 
+
+        # Add edge_weights attribute to the datasets so that they can be accessed in batches
+        num_edges = len(datasets[0][0].edge_index[0])
+        edge_weights = torch.nn.Parameter(torch.ones(num_edges))
+        for loader in loaders:
+            for dataset in loader.dataset:
+                dataset.edge_weights = edge_weights
+
+
+        #add edge weights to the set of parameters
+        newParam = list()
+        for param in model.parameters():
+            newParam.append(param)
+        
+        newParam.append(edge_weights)
+
+        optimizer = create_optimizer(newParam)
+        scheduler = create_scheduler(optimizer)
+        # Print model info
+        logging.info(model)
+        logging.info(cfg)
+        cfg.params = params_count(model)
+        logging.info('Num parameters: %s', cfg.params)
+
+
+        name = cfg.dataset.name.split(",")[1]
+
+
+        # Start training
+        if cfg.train.mode == 'standard':
+            train(loggers, loaders, model, optimizer, scheduler)
+        else:
+            train_dict[cfg.train.mode](loggers, loaders, model, optimizer,
+                                    scheduler)
+        # Aggregate results from different seeds
+        agg_runs(cfg.out_dir, cfg.metric_best)
+        # When being launched in batch mode, mark a yaml as done
+        if args.mark_done:
+            os.rename(args.cfg_file, f'{args.cfg_file}_done')
+
+        last_layers_pooled = []
+        truths = []
+
+        print("starting loaders")
+
+        for loader in loaders:
+            for batch in loader:
+                last_layer_pooled, truth = model.get_last_hidden_layer_pooled(batch) # first one gives me the vector output of the neural network. 
+                last_layers_pooled += last_layer_pooled
+                truths.append(truth)
+
+            break
+        
+        for loader in loaders:
+            for batch in loader:
+                last_layer_pooled, truth = model.get_last_hidden_layer_pooled(batch) # first one gives me the vector output of the neural network. 
+                last_layers_pooled += last_layer_pooled
+                truths.append(truth)
+
+            break
+
+        print(len(last_layers_pooled))
+
+        last_layer_tensor = torch.stack(last_layers_pooled)
+        truths_tensor = torch.cat(truths)
+
+        numpy_matrix = last_layer_tensor.numpy()
+        numpy_truth = truths_tensor.numpy()
+
+        Visualize.visualize_TSNE(numpy_matrix, numpy_truth)
+
+
+"""        
         dataset_all = []
         dataset_all += datasets[0]
         dataset_all += datasets[1]
-        merged_dataset = GraphDataset(dataset_all)
+        merged_dataset = GraphDataset(dataset_all, minimum_node_per_graph = 0)
         offset = int(len(merged_dataset) / 2)
+correct = 0
 
-        correct = 0
         total = 0
         for i in range(offset):
             new_test_dataset = []
@@ -62,8 +140,8 @@ if __name__ == '__main__':
                 else:
                     new_train_dataset.append(dataset_all[j])
             
-            new_test_dataset = GraphDataset(new_test_dataset)
-            new_train_dataset = GraphDataset(new_train_dataset)
+            new_test_dataset = GraphDataset(new_test_dataset, minimum_node_per_graph = 0)
+            new_train_dataset = GraphDataset(new_train_dataset, minimum_node_per_graph = 0)
             datasets[0] = new_train_dataset
             datasets[1] = new_test_dataset
 
@@ -126,9 +204,9 @@ if __name__ == '__main__':
         print("correct")
         print(correct)
         print("total")
-        print(total)
+        print(total)"""
                 
-    """
+"""
     # Aggregate results from different seeds
     agg_runs(cfg.out_dir, cfg.metric_best)
     # When being launched in batch mode, mark a yaml as done
@@ -154,6 +232,11 @@ if __name__ == '__main__':
     numpy_matrix = last_layer_tensor.numpy()
     numpy_truth = truths_tensor.numpy()
 
+    Visualize.visualize_correlations(name, datasets[0].graphs[0].G, correlations[0])
+
+    Visualize.visualize_TSNE(numpy_matrix, numpy_truth)
+
+    
     correlations = []
 
     for loader in loaders:
@@ -162,9 +245,6 @@ if __name__ == '__main__':
             correlations += correlation
 
 
-    Visualize.visualize_correlations(name, datasets[0].graphs[0].G, correlations[0])
-
-    Visualize.visualize_TSNE(numpy_matrix, numpy_truth)
 
 
     for child in model.children(): # We are at the network level.

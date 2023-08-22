@@ -11,7 +11,8 @@ from graphgym.models.feature_encoder import (edge_encoder_dict,
                                              node_encoder_dict)
 from graphgym.models.head import (head_dict, GNNGraphHead)
 from graphgym.models.layer import (BatchNorm1dEdge, BatchNorm1dNode,
-                                   GeneralLayer, GeneralMultiLayer)
+                                   GeneralLayer, GeneralMultiLayer,
+                                   Linear)
 
 import numpy as np
 
@@ -182,7 +183,13 @@ class GNN(nn.Module):
         for module in self.children():
             # don't do the final output layer. Keep the last hidden layer
             if(isinstance(module, GNNGraphHead)):
+                for child in module.children():
+                    for grandChild in child.children():
+                        for greatGrandChild in grandChild.children():
+                            if not isinstance(greatGrandChild, Linear):
+                                batch = greatGrandChild(batch)
                 break
+            
             batch = module(batch)
         
         labels = (batch.graph_label)

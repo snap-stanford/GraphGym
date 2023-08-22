@@ -73,21 +73,23 @@ class Visualize:
         graph = graph.to_directed()
 
 
+        num_nodes = len(graph.nodes)
 
 
 
 
-        sampleSource = Visualize.nodeColourings(colorWeights, divisions)
         num_edges = len(graph.edges)
         
-        values = []
+        """ values = []
+        sampleSource = Visualize.nodeColourings(colorWeights, divisions)
 
+        
         for i in range(len(graph.nodes)):
-            values.append(sampleSource[i])
+            values.append(sampleSource[i])"""
 
         pos = nx.shell_layout(graph)
-        nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'),  node_color = values, node_size = 1000)
-        nx.draw_networkx_labels(graph, pos, font_color = "red")
+        nx.draw_networkx_nodes(graph, pos, cmap=plt.get_cmap('jet'),  node_color = 'black', node_size = 1000)
+        #nx.draw_networkx_labels(graph, pos, font_color = "red")
         nx.draw_networkx_edges(graph, pos, edgelist=graph.edges, edge_color=edge_colours[:num_edges], node_size = 1000, arrows=True, connectionstyle='arc3, rad = 0.1')
         plt.show()
     
@@ -115,9 +117,15 @@ class Visualize:
         # we have an array that has the average of every gene. Now we need to average across nodes
         node_avg = []
         start = 0
+        print(division)
+        print(len(colorWeights[0]))
+        1/0
         for end in division:
             total = 0
             for i in range(start, end): #average out, then print list, then return
+                print("stop")
+                print(i)
+                print(len(averages))
                 total += averages[i]
             average = total / (end - start)
             node_avg.append(average)
