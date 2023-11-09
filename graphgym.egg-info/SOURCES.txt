@@ -1,3 +1,4 @@
+LICENSE
 README.md
 setup.py
 graphgym/__init__.py
@@ -78,10 +79,9 @@ graphgym/utils/io.py
 graphgym/utils/plot.py
 graphgym/utils/tools.py
 run/CytokinesDataSet.py
+run/Visualization.py
 run/__init__.py
 run/agg_batch.py
 run/configs_gen.py
 run/main.py
 run/main_pyg.py
-run/datasets/__init__.py
-run/datasets/syn_graph.py
