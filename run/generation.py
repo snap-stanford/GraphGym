@@ -1,10 +1,10 @@
 import os
-
+import numpy as np
 
 # A file that is meant to generate all the files needed to run the underlying graphgym.
 
 # things we need to be provided
-GSE = os.path.join("rawData", "GSE40240_ESET")
+eset = os.path.join("rawData", "GSE40240_ESET.csv")
 patients = os.path.join("rawData", "GSE40240_patients.csv")
 CYTOKINE = "CCL2"
 
@@ -19,6 +19,97 @@ layers_post_mp = 2
 dim_inner = 137
 max_epoch = 400
 
+def normalize_vector(vector):
+    min_val = np.min(vector)
+    max_val = np.max(vector)
+    normalized_vector = (vector - min_val) / (max_val - min_val)
+    return normalized_vector    
+
+def process_tissues(blood_only):
+    tissue_gene_dict = dict() # maps tissues to the genes associated with them
+
+    gene_set = set()
+
+    tissue_file = open("GenesToTissues.csv")
+
+    tissue_lines = tissue_file.read().splitlines()
+
+    for i in range(0, len(tissue_lines), 2):
+        tissue_line = tissue_lines[i]
+        
+        tissue_line_arr = tissue_line.split(",")
+
+        if (blood_only and (tissue_line_arr[1] == "N")):
+            continue
+
+        tissue = tissue_line_arr[0]
+        genes_array = tissue_lines[i + 1].split(',')
+
+        tissue_gene_dict[tissue] = genes_array
+
+        gene_set.update(genes_array)
+
+    return tissue_gene_dict, gene_set
+
+def process_eset(eset, gene_set, patient_dict, tissue_gene_dict):
+    eset_file = open(eset, 'r')
+
+    eset_lines = eset_file.read().splitlines()
+
+    
+    # read the first line, and see if it matches with the patient file provided
+    patients = eset_lines[0].replace("\"", "").split(",")[2:]
+    
+    patient_set = set(patient_dict.keys())
+
+    for patient in patients:
+        try:
+            patient_set.remove(patient)
+        except(KeyError):
+            raise(ValueError("{} is not found in the patients file.".format(patient)))
+
+
+    if (len(patient_set) != 0):
+        raise(ValueError("The eset file does not contain {}".format(patient_set)))
+
+
+    gene_to_patient = dict() # maps the name of a gene to a dict of patients
+    for line_num in range(1, len(eset_lines)):
+        line = eset_lines[line_num].replace("\"", "")
+        parts = line.split(",")
+        new_gene = parts[1]
+
+
+        if (new_gene not in gene_set):
+            continue
+        # get all the gene expression numbers, and then normalize them
+        gene_nums = parts[2:]
+        gene_nums = [float(gene_num) for gene_num in gene_nums]
+        gene_nums = normalize_vector(gene_nums)
+
+
+        
+        patient_gene_data_dict = dict() # maps the patients code to their gene expression data of this one specific gene
+        for index, patient in enumerate(patients):
+            patient_gene_data_dict[patient] = gene_nums[index]
+
+        gene_to_patient[new_gene] = patient_gene_data_dict
+        
+    # make a new tissue_gene_dict
+
+    active_tissue_gene_dict = dict()
+
+    for tissue in tissue_gene_dict.keys():
+            gene_array = []
+
+            original_genes = tissue_gene_dict[tissue]
+
+            for gene in original_genes:
+                if gene in gene_to_patient.keys():
+                    gene_array.append(gene)
+            
+            active_tissue_gene_dict[tissue] = gene_array
+    return (gene_to_patient, active_tissue_gene_dict)
 
 def process_graphs(blood_only):
     if(blood_only):
@@ -104,3 +195,10 @@ patient_dict, patient_list = process_patients(patients) # a dict that matches a 
 
 # process graph data
 cyto_list,cyto_adjacency_dict,cyto_tissue_dict  = process_graphs(blood_only) # list of cytokines, maps a cytokine's name to their adjacency matrix, maps a cytokine's name to the tissues they need
+
+tissue_gene_dict, gene_set = process_tissues(blood_only) # dict that matches tissues to the genes associated with them, a set of all genes we have
+
+
+gene_to_patient, active_tissue_gene_dict = process_eset(eset, gene_set, patient_dict, tissue_gene_dict) # 2 layer deep dict. First layer maps gene name to a dict. Second layer matches patient code to gene expresion data of the given gene.
+
+
