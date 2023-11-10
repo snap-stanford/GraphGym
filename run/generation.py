@@ -343,11 +343,51 @@ def write_lines_to_file(self, input_file, output_file_name):
         print(f"Error: An unexpected error occurred - {e}")
 
 
-def make_grid():
-    pass
+def make_grid(name):
+    if (not os.path.exists(os.path.abspath("grids"))):
+        os.makedirs(os.path.abspath("grids"))
 
-def make_grid_sh():
-    pass
+    # using with statement
+    with open(os.path.join('grids', name + ".txt"), 'w') as file:
+        file.write("dataset.format format ['PyG']\n")
+        file.write("dataset.name dataset ['Custom," + name + ",','Custom," + name + ",']\n")
+        file.write("dataset.task task ['graph']\n")
+        file.write("dataset.transductive trans [False]\n")
+        file.write("dataset.augment_feature feature [[]]\n")
+        file.write("dataset.augment_label label ['']\n")
+        file.write("gnn.layers_pre_mp l_pre [1,2]\n")
+        file.write("gnn.layers_mp l_mp [2,4,6,8]\n")
+        file.write("gnn.layers_post_mp l_post [2,3]\n")
+        file.write("gnn.stage_type stage ['skipsum','skipconcat']\n")
+        file.write("gnn.agg agg ['add','mean']\n")
+
+def make_grid_sh(eset_name, cyto, name):
+    with open("run_custom_batch_" + eset_name + "_" + cyto + ".sh", 'w') as file:
+        file.write("#!/usr/bin/env bash\n")
+        file.write("\n")
+        file.write("CONFIG=" + name + "\n")
+        file.write("GRID=" + name + "\n")
+        file.write("REPEAT=1\n")
+        file.write("MAX_JOBS=20\n")
+        file.write("\n")
+        file.write("# generate configs (after controlling computational budget)\n")
+        file.write("# please remove --config_budget, if don't control computational budget\n")
+        file.write("python configs_gen.py --config configs/${CONFIG}.yaml \\\n")
+        file.write(" --config_budget configs/${CONFIG}.yaml \\\n")
+        file.write(" --grid grids/${GRID}.txt \\\n")
+        file.write(" --out_dir configs\n")
+        file.write("#python configs_gen.py --config configs/ChemKG/${CONFIG}.yaml --config_budget configs/ChemKG/${CONFIG}.yaml --grid grids/ChemKG/${GRID}.txt --out_dir configs\n")
+        file.write("# run batch of configs\n")
+        file.write("# Args: config_dir, num of repeats, max jobs running\n")
+        file.write("bash parallel.sh configs/${CONFIG}_grid_${GRID} $REPEAT $MAX_JOBS\n")
+        file.write("# rerun missed / stopped experiments\n")
+        file.write("bash parallel.sh configs/${CONFIG}_grid_${GRID} $REPEAT $MAX_JOBS\n")
+        file.write("# rerun missed / stopped experiments\n")
+        file.write("bash parallel.sh configs/${CONFIG}_grid_${GRID} $REPEAT $MAX_JOBS\n")
+        file.write("\n")
+        file.write("# aggregate results for the batch\n")
+        file.write("python agg_batch.py --dir results/${CONFIG}_grid_${GRID}\n")
+
 
 def make_single_sh(eset_name, cyto, config_name):
     # using with statement
@@ -385,10 +425,8 @@ config_name = makeConfigFile(name, batch_size, eval_period, layers_pre_mp, layer
 
 
 if (grid) :
-    make_grid_sh()
-    make_grid()
+    make_grid_sh(sys.argv[1], cyto, name)
+    make_grid(name)
 else:
-    print("name")
-    print(sys.argv[1])
     make_single_sh(sys.argv[1], cyto, config_name)
 #also need to make the grid file and the sh file
