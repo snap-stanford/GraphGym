@@ -1,0 +1,15 @@
+plasmacytoid DC,memory B-cell
+intermediate monocyte,memory B-cell
+myeloid DC,memory B-cell
+classical monocyte,naive B-cell
+classical monocyte,memory B-cell
+plasmacytoid DC,neutrophil
+eosinophil,naive B-cell
+intermediate monocyte,naive B-cell
+classical monocyte,neutrophil
+eosinophil,neutrophil
+myeloid DC,naive B-cell
+intermediate monocyte,neutrophil
+plasmacytoid DC,naive B-cell
+myeloid DC,neutrophil
+eosinophil,memory B-cell

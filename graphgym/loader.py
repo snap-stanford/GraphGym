@@ -13,6 +13,8 @@ from torch_geometric.datasets import (PPI, Amazon, Coauthor, KarateClub,
                                       MNISTSuperpixels, Planetoid, QM7b,
                                       TUDataset)
 
+from .custom_dataset import custom_dataset
+
 import graphgym.models.feature_augment as preprocess
 import graphgym.register as register
 from graphgym.config import cfg
@@ -27,7 +29,12 @@ def load_pyg(name, dataset_dir):
     :param dataset_dir: data directory
     :return: a list of networkx/deepsnap graphs
     '''
-    dataset_dir = '{}/{}'.format(dataset_dir, name)
+    if not str(name[0:6]) == "Custom":
+        dataset_dir = '{}/{}'.format(dataset_dir, name)
+    else:
+        parts = name.split(",")     # in custom sets, the names field must contain names and urls
+        dataset_dir = '{}/{}'.format(dataset_dir, parts[1])
+
     if name in ['Cora', 'CiteSeer', 'PubMed']:
         dataset_raw = Planetoid(dataset_dir, name)
     elif name[:3] == 'TU_':
@@ -67,6 +74,10 @@ def load_pyg(name, dataset_dir):
         dataset_raw = PPI(dataset_dir)
     elif name == 'QM7b':
         dataset_raw = QM7b(dataset_dir)
+    elif name[0:6] == "Custom":
+        parts = name.split(",")     # in custom sets, the names field must contain names and urls
+        dataset_raw = custom_dataset(root=dataset_dir, name=parts[1], url=parts[2])
+        name = parts[1] # give it a new name
     else:
         raise ValueError('{} not support'.format(name))
     graphs = GraphDataset.pyg_to_graphs(dataset_raw)
@@ -251,7 +262,7 @@ def create_dataset():
     else:
         datasets = dataset.split(transductive=cfg.dataset.transductive,
                                  split_ratio=cfg.dataset.split,
-                                 shuffle=cfg.dataset.shuffle_split)
+                                 shuffle=False)
     # We only change the training negative sampling ratio
     for i in range(1, len(datasets)):
         dataset.edge_negative_sampling_ratio = 1

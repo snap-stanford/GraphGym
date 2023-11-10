@@ -1,0 +1,11 @@
+T-reg,memory CD4 T-cell
+T-reg,skin 1
+memory CD8 T-cell,skin 1
+MAIT T-cell,skin 1
+memory CD8 T-cell,memory CD4 T-cell
+MAIT T-cell,memory CD4 T-cell
+memory CD4 T-cell,skin 1
+urinary bladder,skin 1
+urinary bladder,memory CD4 T-cell
+tongue,memory CD4 T-cell
+tongue,skin 1

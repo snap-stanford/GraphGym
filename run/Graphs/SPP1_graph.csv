@@ -1,0 +1,15 @@
+kidney,basophil
+kidney,gdT-cell
+gallbladder,gdT-cell
+neutrophil,gdT-cell
+neutrophil,thyroid gland
+gallbladder,basophil
+kidney,neutrophil
+placenta,basophil
+gallbladder,thyroid gland
+neutrophil,basophil
+kidney,thyroid gland
+placenta,gdT-cell
+gallbladder,neutrophil
+placenta,thyroid gland
+placenta,neutrophil

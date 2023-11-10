@@ -1,0 +1,15 @@
+classical monocyte,eosinophil
+classical monocyte,plasmacytoid DC
+lung,eosinophil
+non-classical monocyte,eosinophil
+intermediate monocyte,plasmacytoid DC
+intermediate monocyte,eosinophil
+non-classical monocyte,plasmacytoid DC
+lung,basophil
+prostate,basophil
+lung,plasmacytoid DC
+prostate,eosinophil
+non-classical monocyte,basophil
+prostate,plasmacytoid DC
+classical monocyte,basophil
+intermediate monocyte,basophil

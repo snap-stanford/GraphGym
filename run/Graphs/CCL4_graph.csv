@@ -1,0 +1,39 @@
+lung,T-reg
+lung,eosinophil
+MAIT T-cell,T-reg
+lung,NK-cell
+lung,placenta
+MAIT T-cell,urinary bladder
+naive CD8 T-cell,salivary gland
+lung,salivary gland
+memory CD8 T-cell,urinary bladder
+lung,urinary bladder
+naive CD8 T-cell,MAIT T-cell
+gdT-cell,salivary gland
+gdT-cell,basophil
+MAIT T-cell,basophil
+MAIT T-cell,eosinophil
+memory CD8 T-cell,T-reg
+MAIT T-cell,NK-cell
+naive CD8 T-cell,basophil
+gdT-cell,placenta
+memory CD8 T-cell,MAIT T-cell
+memory CD8 T-cell,salivary gland
+naive CD8 T-cell,eosinophil
+MAIT T-cell,placenta
+gdT-cell,NK-cell
+naive CD8 T-cell,T-reg
+lung,MAIT T-cell
+lung,basophil
+naive CD8 T-cell,placenta
+naive CD8 T-cell,urinary bladder
+memory CD8 T-cell,placenta
+naive CD8 T-cell,NK-cell
+memory CD8 T-cell,NK-cell
+gdT-cell,urinary bladder
+MAIT T-cell,salivary gland
+gdT-cell,MAIT T-cell
+memory CD8 T-cell,basophil
+gdT-cell,eosinophil
+gdT-cell,T-reg
+memory CD8 T-cell,eosinophil

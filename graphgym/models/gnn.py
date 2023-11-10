@@ -9,10 +9,12 @@ from graphgym.models.act import act_dict
 from graphgym.models.feature_augment import Preprocess
 from graphgym.models.feature_encoder import (edge_encoder_dict,
                                              node_encoder_dict)
-from graphgym.models.head import head_dict
+from graphgym.models.head import (head_dict, GNNGraphHead)
 from graphgym.models.layer import (BatchNorm1dEdge, BatchNorm1dNode,
-                                   GeneralLayer, GeneralMultiLayer)
+                                   GeneralLayer, GeneralMultiLayer,
+                                   Linear)
 
+import numpy as np
 
 # Layer
 def GNNLayer(dim_in, dim_out, has_act=True):
@@ -176,6 +178,52 @@ class GNN(nn.Module):
         self.post_mp = GNNHead(dim_in=d_in, dim_out=dim_out)
 
         self.apply(init_weights)
+    
+    def get_last_hidden_layer_pooled(self, batch):
+        for module in self.children():
+            # don't do the final output layer. Keep the last hidden layer
+            if(isinstance(module, GNNGraphHead)):
+                for child in module.children():
+                    for grandChild in child.children():
+                        for greatGrandChild in grandChild.children():
+                            if not isinstance(greatGrandChild, Linear):
+                                batch = greatGrandChild(batch)
+                break
+            
+            batch = module(batch)
+        
+        labels = (batch.graph_label)
+        num_nodes = batch.G[0].number_of_nodes()
+        last_hidden_layer_pooled = []
+
+        for i in range(0, len(batch.node_feature), num_nodes):
+            relevant_vectors = batch.node_feature.detach()[i:(i + num_nodes)]
+            last_hidden_layer_pooled.append(torch.mean(relevant_vectors, dim = 0))
+        
+        
+        return last_hidden_layer_pooled, labels # add true as well
+    
+    # returns a 2D matrix of n x h, where n is the number of nodes, and h is the hidden size
+    def get_correlations(self, batch):
+        for module in self.children():
+            # don't do the final output layer. Keep the last hidden layer
+            if(isinstance(module, GNNGraphHead)):
+                break
+            batch = module(batch)
+        num_nodes = batch.G[0].number_of_nodes()
+
+        correlationMatricies = []
+
+
+        for i in range(0, len(batch.node_feature), num_nodes):
+            relevant_vectors = batch.node_feature.detach()[i:(i + num_nodes)]
+            relevant_vectors = relevant_vectors.numpy()
+            correlationMatrix = np.corrcoef(relevant_vectors)
+
+            correlationMatricies.append(correlationMatrix)
+            
+        
+        return correlationMatricies
 
     def forward(self, batch):
         for module in self.children():

@@ -1,0 +1,19 @@
+MAIT T-cell,T-reg
+naive CD8 T-cell,MAIT T-cell
+gdT-cell,basophil
+MAIT T-cell,basophil
+MAIT T-cell,eosinophil
+memory CD8 T-cell,T-reg
+MAIT T-cell,NK-cell
+naive CD8 T-cell,basophil
+memory CD8 T-cell,MAIT T-cell
+naive CD8 T-cell,eosinophil
+gdT-cell,NK-cell
+naive CD8 T-cell,T-reg
+naive CD8 T-cell,NK-cell
+memory CD8 T-cell,NK-cell
+gdT-cell,MAIT T-cell
+memory CD8 T-cell,basophil
+gdT-cell,eosinophil
+gdT-cell,T-reg
+memory CD8 T-cell,eosinophil

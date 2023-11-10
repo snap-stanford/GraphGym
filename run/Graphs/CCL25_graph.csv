@@ -1,0 +1,24 @@
+intestine,basophil
+memory B-cell,basophil
+memory B-cell,salivary gland
+NK-cell,eosinophil
+intestine,eosinophil
+intestine,T-reg
+memory B-cell,placenta
+NK-cell,placenta
+memory B-cell,naive B-cell
+intestine,salivary gland
+memory B-cell,T-reg
+NK-cell,intestine
+NK-cell,naive B-cell
+memory B-cell,NK-cell
+intestine,NK-cell
+NK-cell,salivary gland
+intestine,memory B-cell
+intestine,naive B-cell
+memory B-cell,eosinophil
+NK-cell,memory B-cell
+NK-cell,T-reg
+intestine,placenta
+memory B-cell,intestine
+NK-cell,basophil

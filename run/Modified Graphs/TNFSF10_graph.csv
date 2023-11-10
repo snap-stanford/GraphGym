@@ -1,0 +1,7 @@
+classical monocyte,neutrophil
+intermediate monocyte,naive CD4 T-cell
+classical monocyte,naive CD4 T-cell
+neutrophil,naive CD4 T-cell
+intermediate monocyte,neutrophil
+basophil,neutrophil
+basophil,naive CD4 T-cell

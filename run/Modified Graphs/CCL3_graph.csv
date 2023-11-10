@@ -1,0 +1,14 @@
+bone marrow,NK-cell
+bone marrow,memory B-cell
+bone marrow,naive B-cell
+gdT-cell,NK-cell
+gdT-cell,memory B-cell
+gdT-cell,basophil
+bone marrow,basophil
+gdT-cell,MAIT T-cell
+bone marrow,eosinophil
+bone marrow,MAIT T-cell
+bone marrow,T-reg
+gdT-cell,eosinophil
+gdT-cell,naive B-cell
+gdT-cell,T-reg

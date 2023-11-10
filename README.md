@@ -313,12 +313,32 @@ Within each directory, (at least) an example is provided, showing how to registe
 Note that new user customized modules may result in new configurations; in these cases, new configuration fields
 can be registered at [`graphgym/contrib/config/`](graphgym/contrib/config).
 
-**Note: Applying to your own datasets.**
+### Applying to your own datasets
 A common use case will be applying GraphGym to your favorite datasets.
 To do so, you may follow our example in 
 [`graphgym/contrib/loader/example.py`](graphgym/contrib/loader/example.py).
 GraphGym currently accepts a list of [NetworkX](https://networkx.org/documentation/stable/index.html) graphs 
 or [PyG](https://pytorch-geometric.readthedocs.io/en/latest/) datasets.
+
+Alterernatively:
+1. Save your pytorch geometric dataset as a .pt file.
+1. Compress the .pt file into a .zip file
+1. Upload that .zip file somewhere on the internet, such as google drive.
+1. Generate a download link for the zip file; that is, a link that begins a download of the zip file, rather than show a preview
+1. Alter the "name" section in the yaml file to the following structure: "Custom,[NAME_OF_FILE],[DOWNLOAD_URL]". For example, to run the MNISTSuperdigit dataset, set "name" to "Custom,MNISTSuperPixels,https://data.pyg.org/datasets/MNISTSuperpixels.zip"
+1. Add the dataset class file of your dataset to the run folder, and import it into main.py. Update the dataset's processed_dir attribute to "dataset/name/processed
+1. Alter the process() function to do follow the instructions below
+
+#### Process function requirements
+1. Your dataset's process function must create 3 tuples, one for training data, one for all data, and one for testing. The tuples must have 2 objects in them. First, a Data() object containing an x tensor, a y tensor, and an edge_index tensor. Second, a dict that serves as the "slices" array for each of the x tensor, y tensor, and edge_index tensor.
+1. If your dataset is a node classifaction task, then the 2nd object should just be None. 
+1. If your data.x must contain a 2D tensor of type float. There must be as many rows as there are node inputs in your entire dataset, and as many collumns as there are values in each individual node. If each node only has 1 single value, then it should only have 1 collumn.
+1. Your data.y field must be a 1D tensor of type int. It represents the desired target. For graph classification, it must have as many elements as graphs you wish to classify. For node classification, it must have as many elements as nodes.
+1. Your data.edge_index field must be a 2D tensor of type int with 2 rows and as many collumns as their are connections in your entire dataset (not just one graph). The ith elment in the first row tells you where the ith connection originates, and the ith element in the 2nd row tells you where the ith connection terminates.
+1. Your slices dict must have 3 key-value pairs. The keys must be the following string literals: 'x', 'y', 'edge_index'. The values must be 1D tensors, with the first value for all 3 being 0. All 3 tensors one more element than the number of graphs you want to classify. The 2nd value should state the index of the first value that is not in the first graph, the 3rd value should be the first value that is not in the 2nd graph. For example, if slices['x'] = tensor([0, 100, 200]), that means there are 2 graphs to classify. The first graph should take values 0 to 99 inclusive from the data.x tensor, and the 2nd graph should take values 100 to 199.
+1. Once all these tuples are made, save the training and testing tuples using torch.save() as 'train_data.pt' and 'test_dat.pt' respectively into the processed folder in the newly created subfolder for your dataset, which is located in run/datasets
+
+
 
 ### Use case: Design Space for Graph Neural Networks (NeurIPS 2020 Spotlight)
 

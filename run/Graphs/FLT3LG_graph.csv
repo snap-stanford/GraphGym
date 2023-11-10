@@ -1,0 +1,21 @@
+memory CD8 T-cell,plasmacytoid DC
+memory CD4 T-cell,brain
+naive CD4 T-cell,myeloid DC
+naive CD8 T-cell,brain
+memory CD8 T-cell,brain
+MAIT T-cell,myeloid DC
+memory CD4 T-cell,myeloid DC
+naive CD8 T-cell,myeloid DC
+T-reg,plasmacytoid DC
+MAIT T-cell,brain
+memory CD4 T-cell,plasmacytoid DC
+T-reg,brain
+MAIT T-cell,plasmacytoid DC
+naive CD8 T-cell,plasmacytoid DC
+gdT-cell,plasmacytoid DC
+naive CD4 T-cell,brain
+naive CD4 T-cell,plasmacytoid DC
+T-reg,myeloid DC
+gdT-cell,brain
+gdT-cell,myeloid DC
+memory CD8 T-cell,myeloid DC

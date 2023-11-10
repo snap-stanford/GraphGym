@@ -1,0 +1,10 @@
+memory B-cell,basophil
+NK-cell,eosinophil
+memory B-cell,naive B-cell
+memory B-cell,T-reg
+NK-cell,naive B-cell
+memory B-cell,NK-cell
+memory B-cell,eosinophil
+NK-cell,memory B-cell
+NK-cell,T-reg
+NK-cell,basophil

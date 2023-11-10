@@ -1,0 +1,14 @@
+esophagus,brain
+skin 1,lung
+skin 1,brain
+myeloid DC,skin 1
+skin 1,bone marrow
+esophagus,bone marrow
+myeloid DC,lung
+esophagus,skin 1
+esophagus,lung
+esophagus,NK-cell
+myeloid DC,bone marrow
+skin 1,NK-cell
+myeloid DC,brain
+myeloid DC,NK-cell

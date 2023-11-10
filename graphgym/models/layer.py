@@ -214,7 +214,7 @@ class GeneralConv(nn.Module):
         self.model = GeneralConvLayer(dim_in, dim_out, bias=bias)
 
     def forward(self, batch):
-        batch.node_feature = self.model(batch.node_feature, batch.edge_index)
+        batch.node_feature = self.model(batch.node_feature, batch.edge_index, edge_weight = batch.edge_weights)
         return batch
 
 
