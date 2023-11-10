@@ -15,7 +15,6 @@ patients = sys.argv[2]
 
 patients = os.path.join("rawData", patients + ".csv")
 cyto = sys.argv[3]
-print(sys.argv[4])
 grid = sys.argv[4]
 
 if grid[0] == "F":
@@ -411,12 +410,12 @@ tissue_gene_dict, gene_set = process_tissues(blood_only) # dict that matches tis
 
 gene_to_patient, active_tissue_gene_dict = process_eset(eset, gene_set, patient_dict, tissue_gene_dict) # 2 layer deep dict. First layer maps gene name to a dict. Second layer matches patient code to gene expresion data of the given gene.
 
-eset_name = os.path.basename(eset)
+eset_name = sys.argv[1]
 
 create_cyto_database(cyto, eset_name, cyto_tissue_dict, active_tissue_gene_dict, patient_list, 
                             patient_dict, gene_to_patient, cyto_adjacency_dict)
 
-name = cyto + "_" + os.path.basename(eset_name)[:eset_name.index(".")]  
+name = cyto + "_" + eset_name
 
 
 config_name = makeConfigFile(name, batch_size, eval_period, layers_pre_mp, layers_mp, 
