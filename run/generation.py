@@ -1,12 +1,21 @@
 import os
+import torch
 import numpy as np
+from CytokinesDataSet import CytokinesDataSet
+import sys
 
 # A file that is meant to generate all the files needed to run the underlying graphgym.
 
 # things we need to be provided
-eset = os.path.join("rawData", "GSE40240_ESET.csv")
-patients = os.path.join("rawData", "GSE40240_patients.csv")
-CYTOKINE = "CCL2"
+eset = sys.argv[1]
+eset = os.path.join("rawData", eset + ".csv")
+
+patients = sys.argv[2]
+
+patients = os.path.join("rawData", patients + ".csv")
+cyto = sys.argv[3]
+grid = bool(sys.arggv[4])
+
 
 
 # general configs that we can keep as they are, unless changed.
@@ -18,6 +27,147 @@ layers_mp = 6
 layers_post_mp = 2
 dim_inner = 137
 max_epoch = 400
+
+def makeConfigFile(name, batch_size, eval_period, layers_pre_mp, layers_mp, 
+                    layers_post_mp, dim_inner, max_epoch):
+    if (not os.path.exists(os.path.abspath("configs"))):
+        os.makedirs(os.path.abspath("configs"))
+
+    # using with statement
+    with open(os.path.join('configs', name + ".yaml"), 'w') as file:
+        file.write('out_dir: results\n')
+        file.write('dataset:\n')
+        file.write(' format: PyG\n')
+        file.write(' name: Custom,' + name + ',,\n')
+        file.write(' task: graph\n')
+        file.write(' task_type: classification\n')
+        file.write(' transductive: True\n')
+        file.write(' split: [0.8, 0.2]\n')
+        file.write(' augment_feature: []\n')
+        file.write(' augment_feature_dims: [0]\n')
+        file.write(' augment_feature_repr: position\n')
+        file.write(' augment_label: \'\'\n')
+        file.write(' augment_label_dims: 0\n')
+        file.write(' transform: none\n')
+        file.write('train:\n')
+        file.write(' batch_size: ' + str(batch_size) + '\n' )
+        file.write(' eval_period: ' + str(eval_period) + '\n')
+        file.write(' ckpt_period: 100\n')
+        file.write('model:\n')
+        file.write(' type: gnn\n')
+        file.write(' loss_fun: cross_entropy\n')
+        file.write(' edge_decoding: dot\n')
+        file.write(' graph_pooling: add\n')
+        file.write('gnn:\n')
+        file.write(' layers_pre_mp: ' + str(layers_pre_mp) + '\n')
+        file.write(' layers_mp: ' + str(layers_mp) + '\n')
+        file.write(' layers_post_mp: ' + str(layers_post_mp) + '\n')
+        file.write(' dim_inner: ' + str(dim_inner) + '\n')
+        file.write(' layer_type: generalconv\n')
+        file.write(' stage_type: skipsum\n')
+        file.write(' batchnorm: True\n')
+        file.write(' act: prelu\n')
+        file.write(' dropout: 0.0\n')
+        file.write(' agg: add\n')
+        file.write(' normalize_adj: False\n')
+        file.write('optim:\n')
+        file.write(' optimizer: adam\n')
+        file.write(' base_lr: 0.01\n')
+        file.write(' max_epoch: ' +  str(max_epoch) + '\n')
+    
+    return name + ".yaml"
+
+
+
+def create_cyto_database(cyto, eset, cyto_tissue_dict, active_tissue_gene_dict, patient_list, 
+                            patient_dict, gene_to_patient, cyto_adjacency_dict):
+
+    # creates graphname
+    graphName = cyto + "_" + eset[:eset.index(".")]
+
+    #create patientArray
+    patientArray = []
+
+    # count the number of active genes in each tissue.
+    tissues = cyto_tissue_dict[cyto]
+
+    gene_count = []
+    for tissue in tissues:
+        count = len(active_tissue_gene_dict[tissue])
+        
+        gene_count.append(count)
+    
+    total_genes = sum(gene_count)
+
+
+    for patient in patient_list:
+        patient_data = {}
+
+        patient_data["DISEASE"] = str(patient_dict[patient])
+
+
+        data = []
+        # create the information that goes into each node
+        for i, tissue in enumerate(tissues):
+            tissue_data = [0]*total_genes
+            start = sum(gene_count[:i])
+
+            tissue_genes = active_tissue_gene_dict[tissue]
+            
+            offset = 0
+            for gene in tissue_genes:                        
+                tissue_data[start + offset] = gene_to_patient[gene][patient] / 20
+                offset +=  1
+            
+            data.append(tissue_data)
+
+        patient_data["data"] = data
+        patientArray.append(patient_data)
+
+            
+    nodeList = cyto_tissue_dict[cyto]
+    graphAdjacency = cyto_adjacency_dict[cyto]
+
+    nodeIntMap = {}
+    i = 0
+
+    for node in nodeList:
+        nodeIntMap[node] = i
+        i += 1
+
+    intAdjacency = []
+    # turn the adjacency names into int
+    for edge in graphAdjacency:
+        newEdge = [nodeIntMap[edge[0]], nodeIntMap[edge[1]]]
+        intAdjacency.append(newEdge)
+
+    try:
+        os.mkdir(os.path.join("datasets"))
+    except OSError:
+        pass
+
+    try:
+        os.mkdir(os.path.join("datasets", graphName))
+    except OSError:
+        pass
+
+    try:
+        os.mkdir(os.path.join("datasets", graphName ,"raw"))
+    except OSError:
+        pass
+
+    try:
+        os.mkdir(os.path.join("datasets", graphName, "processed"))
+    except OSError:
+        pass
+    
+    full_dataset = CytokinesDataSet(root="data/", graphName=graphName, filename="full.csv", 
+                                    test=True, patients=patientArray, adjacency=intAdjacency, 
+                                    nodeNames = nodeIntMap, divisions = gene_count)
+    
+
+    torch.save(full_dataset, (os.path.join("datasets", graphName, "raw",  graphName + ".pt")))
+
 
 def normalize_vector(vector):
     min_val = np.min(vector)
@@ -187,6 +337,20 @@ def write_lines_to_file(self, input_file, output_file_name):
         print(f"Error: An unexpected error occurred - {e}")
 
 
+def make_grid():
+    pass
+
+def make_grid_sh():
+    pass
+
+def make_single_sh(eset_name, cyto, config_name):
+    # using with statement
+    with open("run_custom_" + eset_name + "_" + cyto + ".sh", 'w') as file:
+        file.write('#!/usr/bin/env bash\n')
+        file.write('\n')
+        escaped_path = os.path.join("configs",config_name).replace("\\", "/")
+        file.write('python main.py --cfg ' + escaped_path + ' --repeat 1')
+
 #MAIN
 
 
@@ -201,4 +365,23 @@ tissue_gene_dict, gene_set = process_tissues(blood_only) # dict that matches tis
 
 gene_to_patient, active_tissue_gene_dict = process_eset(eset, gene_set, patient_dict, tissue_gene_dict) # 2 layer deep dict. First layer maps gene name to a dict. Second layer matches patient code to gene expresion data of the given gene.
 
+eset_name = os.path.basename(eset)
 
+create_cyto_database(cyto, eset_name, cyto_tissue_dict, active_tissue_gene_dict, patient_list, 
+                            patient_dict, gene_to_patient, cyto_adjacency_dict)
+
+name = cyto + "_" + os.path.basename(eset_name)[:eset_name.index(".")]  
+
+
+config_name = makeConfigFile(name, batch_size, eval_period, layers_pre_mp, layers_mp, 
+                             layers_post_mp, dim_inner, max_epoch)
+
+
+
+short_name = eset_name[:eset_name.index("_")]
+if (grid) :
+    make_grid_sh()
+    make_grid()
+else:
+    make_single_sh(short_name, cyto, config_name)
+#also need to make the grid file and the sh file

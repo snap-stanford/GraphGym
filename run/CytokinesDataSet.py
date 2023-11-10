@@ -51,9 +51,9 @@ class CytokinesDataSet(Dataset):
         pass
 
     def process(self):
-        name = self.graphName[:-10]
+        name = self.graphName
         print(self.graphName)
-        self.new_dir = "datasets/" + name + "/processed/"# "datasets\\" + name + "\\processed"   # new processed dir
+        self.new_dir = os.path.join("datasets", name, "processed")# "datasets\\" + name + "\\processed"   # new processed dir
         train_data = Data()
         train_slices = dict()
         test_data = Data()
@@ -174,7 +174,6 @@ class CytokinesDataSet(Dataset):
         all_data.x = all_x_tensor
         all_data.y = all_y_tensor
         all_data.edge_index = all_edge_index_tensor
-
 
         torch.save(self.divisions, os.path.join(self.new_dir, 'divisions.pt')) # states which genes belong to which cytokine
         torch.save(self.nodeNames, os.path.join(self.new_dir, 'nodeNames.pt'))
