@@ -7,6 +7,7 @@ import sys
 # A file that is meant to generate all the files needed to run the underlying graphgym.
 
 # things we need to be provided
+
 eset = sys.argv[1]
 eset = os.path.join("rawData", eset + ".csv")
 
@@ -14,8 +15,13 @@ patients = sys.argv[2]
 
 patients = os.path.join("rawData", patients + ".csv")
 cyto = sys.argv[3]
-grid = bool(sys.arggv[4])
+print(sys.argv[4])
+grid = sys.argv[4]
 
+if grid[0] == "F":
+    grid = False
+else:
+    grid = bool(grid)
 
 
 # general configs that we can keep as they are, unless changed.
@@ -83,7 +89,7 @@ def create_cyto_database(cyto, eset, cyto_tissue_dict, active_tissue_gene_dict, 
                             patient_dict, gene_to_patient, cyto_adjacency_dict):
 
     # creates graphname
-    graphName = cyto + "_" + eset[:eset.index(".")]
+    graphName = cyto + "_" + eset
 
     #create patientArray
     patientArray = []
@@ -378,10 +384,11 @@ config_name = makeConfigFile(name, batch_size, eval_period, layers_pre_mp, layer
 
 
 
-short_name = eset_name[:eset_name.index("_")]
 if (grid) :
     make_grid_sh()
     make_grid()
 else:
-    make_single_sh(short_name, cyto, config_name)
+    print("name")
+    print(sys.argv[1])
+    make_single_sh(sys.argv[1], cyto, config_name)
 #also need to make the grid file and the sh file
