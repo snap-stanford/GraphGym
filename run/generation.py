@@ -19,6 +19,51 @@ layers_post_mp = 2
 dim_inner = 137
 max_epoch = 400
 
+
+def process_graphs(blood_only):
+    if(blood_only):
+        graph_folder_path = "Modified Graphs"
+    else:
+        graph_folder_path = "Graphs"
+    
+    cyto_list = []
+    cyto_adjacency_dict = dict() # maps a cytokine's name to their adjacency matrix
+    cyto_tissue_dict = dict() # maps a cytokine's name to the tissues they need
+
+    for filename in os.listdir(graph_folder_path):
+        cyto_name = filename[:-10]
+        cyto_list.append(cyto_name) # drop the _graph.csv
+        graph_file_path = os.path.join(graph_folder_path, filename)
+        if (filename == '__pycache__'):
+            continue
+        graphAdjacency = []
+        tissue_set = set()
+
+        f = open(graph_file_path, 'r')
+        graphLines = f.read().splitlines()
+        
+        for line in graphLines:
+            parts = line.upper().split(",") # remove newline, capitalize, and remove spaces
+            graphAdjacency.append(parts)
+            newParts = [parts[1], parts[0]]
+            tissue_set.update(newParts)
+
+            graphAdjacency.append(newParts)
+        
+
+        # put the tissues into a list, and then sort them
+        tissue_list = []
+        for tissue in tissue_set:
+            tissue_list.append(tissue)
+        
+        tissue_list.sort()
+
+        cyto_adjacency_dict[cyto_name] = graphAdjacency
+        cyto_tissue_dict[cyto_name] = tissue_list
+
+
+    return cyto_list,cyto_adjacency_dict,cyto_tissue_dict
+
 def process_patients(patients):
         patient_file = open(patients, 'r')
         patient_dict = dict()
@@ -57,5 +102,5 @@ def write_lines_to_file(self, input_file, output_file_name):
 #get patient data
 patient_dict, patient_list = process_patients(patients) # a dict that matches a patient name to their classification
 
-print(patient_dict)
-print(patient_list)
+# process graph data
+cyto_list,cyto_adjacency_dict,cyto_tissue_dict  = process_graphs(blood_only) # list of cytokines, maps a cytokine's name to their adjacency matrix, maps a cytokine's name to the tissues they need
