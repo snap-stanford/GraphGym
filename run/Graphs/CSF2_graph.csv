@@ -1,0 +1,33 @@
+lung,eosinophil
+lung,liver
+lung,placenta
+NK-cell,plasmacytoid DC
+NK-cell,neutrophil
+NK-cell,classical monocyte
+pancreas,myeloid DC
+pancreas,basophil
+NK-cell,placenta
+NK-cell,myeloid DC
+pancreas,classical monocyte
+NK-cell,basophil
+lung,intermediate monocyte
+pancreas,intermediate monocyte
+lung,myeloid DC
+NK-cell,liver
+pancreas,plasmacytoid DC
+lung,basophil
+lung,plasmacytoid DC
+NK-cell,eosinophil
+lung,thyroid gland
+NK-cell,intermediate monocyte
+pancreas,eosinophil
+pancreas,placenta
+NK-cell,thyroid gland
+pancreas,thyroid gland
+lung,breast
+pancreas,liver
+lung,classical monocyte
+NK-cell,breast
+pancreas,neutrophil
+lung,neutrophil
+pancreas,breast

@@ -1,0 +1,9 @@
+classical monocyte,eosinophil
+classical monocyte,NK-cell
+eosinophil,T-reg
+eosinophil,basophil
+eosinophil,MAIT T-cell
+classical monocyte,basophil
+classical monocyte,MAIT T-cell
+eosinophil,NK-cell
+classical monocyte,T-reg

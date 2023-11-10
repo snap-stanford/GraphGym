@@ -1,0 +1,23 @@
+lung,adipose tissue
+gallbladder,intestine
+lung,T-reg
+gallbladder,memory B-cell
+MAIT T-cell,T-reg
+MAIT T-cell,naive B-cell
+gallbladder,MAIT T-cell
+lung,MAIT T-cell
+MAIT T-cell,adipose tissue
+MAIT T-cell,memory CD4 T-cell
+lung,intestine
+MAIT T-cell,memory B-cell
+lung,plasmacytoid DC
+gallbladder,T-reg
+gallbladder,adipose tissue
+MAIT T-cell,plasmacytoid DC
+lung,memory B-cell
+lung,naive B-cell
+lung,memory CD4 T-cell
+gallbladder,plasmacytoid DC
+gallbladder,naive B-cell
+MAIT T-cell,intestine
+gallbladder,memory CD4 T-cell

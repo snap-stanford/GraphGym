@@ -1,0 +1,11 @@
+bone marrow,adipose tissue
+lung,adipose tissue
+neutrophil,adipose tissue
+lung,liver
+bone marrow,neutrophil
+bone marrow,liver
+bone marrow,thyroid gland
+neutrophil,thyroid gland
+neutrophil,liver
+lung,thyroid gland
+lung,neutrophil

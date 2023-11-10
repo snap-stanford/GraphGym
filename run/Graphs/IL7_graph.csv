@@ -1,0 +1,17 @@
+intestine,memory CD8 T-cell
+intestine,naive CD4 T-cell
+memory B-cell,MAIT T-cell
+memory B-cell,memory CD4 T-cell
+intestine,MAIT T-cell
+intestine,naive CD8 T-cell
+memory B-cell,naive CD8 T-cell
+memory B-cell,naive CD4 T-cell
+memory B-cell,NK-cell
+intestine,NK-cell
+memory B-cell,memory CD8 T-cell
+intestine,gdT-cell
+memory B-cell,gdT-cell
+intestine,lung
+memory B-cell,lung
+intestine,memory CD4 T-cell
+memory B-cell,intestine

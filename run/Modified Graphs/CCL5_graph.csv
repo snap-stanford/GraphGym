@@ -1,0 +1,12 @@
+memory CD8 T-cell,MAIT T-cell
+memory CD8 T-cell,plasmacytoid DC
+gdT-cell,NK-cell
+gdT-cell,basophil
+memory CD8 T-cell,NK-cell
+gdT-cell,MAIT T-cell
+memory CD8 T-cell,T-reg
+gdT-cell,plasmacytoid DC
+memory CD8 T-cell,basophil
+gdT-cell,eosinophil
+gdT-cell,T-reg
+memory CD8 T-cell,eosinophil

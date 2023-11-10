@@ -1,0 +1,17 @@
+classical monocyte,eosinophil
+classical monocyte,placenta
+eosinophil,placenta
+classical monocyte,intestine
+classical monocyte,NK-cell
+eosinophil,salivary gland
+classical monocyte,adipose tissue
+eosinophil,T-reg
+classical monocyte,salivary gland
+eosinophil,basophil
+eosinophil,MAIT T-cell
+classical monocyte,basophil
+classical monocyte,MAIT T-cell
+eosinophil,NK-cell
+eosinophil,intestine
+eosinophil,adipose tissue
+classical monocyte,T-reg

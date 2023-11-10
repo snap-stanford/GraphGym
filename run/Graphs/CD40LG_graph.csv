@@ -1,0 +1,10 @@
+naive CD4 T-cell,naive B-cell
+MAIT T-cell,naive B-cell
+memory CD4 T-cell,memory B-cell
+memory CD4 T-cell,naive B-cell
+naive CD4 T-cell,memory B-cell
+intestine,memory B-cell
+intestine,naive B-cell
+MAIT T-cell,memory B-cell
+gdT-cell,memory B-cell
+gdT-cell,naive B-cell

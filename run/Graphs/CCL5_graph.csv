@@ -1,0 +1,22 @@
+memory CD8 T-cell,MAIT T-cell
+memory CD8 T-cell,plasmacytoid DC
+memory CD8 T-cell,salivary gland
+gdT-cell,NK-cell
+memory CD8 T-cell,brain
+memory CD8 T-cell,intestine
+memory CD8 T-cell,placenta
+gdT-cell,salivary gland
+gdT-cell,basophil
+memory CD8 T-cell,NK-cell
+gdT-cell,MAIT T-cell
+memory CD8 T-cell,T-reg
+gdT-cell,adipose tissue
+gdT-cell,plasmacytoid DC
+memory CD8 T-cell,adipose tissue
+memory CD8 T-cell,basophil
+gdT-cell,brain
+gdT-cell,eosinophil
+gdT-cell,intestine
+gdT-cell,T-reg
+gdT-cell,placenta
+memory CD8 T-cell,eosinophil
